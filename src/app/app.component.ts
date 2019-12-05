@@ -13,6 +13,10 @@ import {MeasurementStore} from './measurement-store';
 import {UserStore} from './user-store';
 import {EowDataLayer} from './eow-data-layer';
 
+const defaultCoord = [133.945313, -26.431228];
+const canberra = [149.130005, -35.280937];
+const theZoom = 12;
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -37,18 +41,18 @@ export class AppComponent implements OnInit {
 
     this.userStore = new UserStore(this.document);
     this.popupObject = new Popup(this.document, this.pieChart, this.userStore);
+    this.eowData = new EowDataLayer();
     this.layers = new Layers(this.document, this.http);
     this.measurementStore = new MeasurementStore();
-    this.eowData = new EowDataLayer();
   }
 
   ngOnInit() {
     this.initMap();
     this.popupObject.init(this.map);
     this.measurementStore.init(this.map, this.dataLayer, this.allDataSource);
+    this.eowData.init(this.map, this.htmlDocument, this.userStore, this.measurementStore);
     this.layers.addLayers(this.map);
     this.userStore.init();
-    this.eowData.init(this.map, this.htmlDocument, this.userStore, this.measurementStore);
 
     this.setupEventHandlers();
   }
@@ -65,8 +69,8 @@ export class AppComponent implements OnInit {
         mainMap,
       ],
       view: new View({
-        center: fromLonLat([133.945313, -26.431228]),
-        zoom: 4
+        center: fromLonLat(canberra),
+        zoom: theZoom
       }),
       controls: [],
     });
