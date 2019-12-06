@@ -20,6 +20,9 @@
     "@angular/platform-browser": "~8.2.11",
     "@angular/platform-browser-dynamic": "~8.2.11",
     "@angular/router": "~8.2.11",
+    "@turf/helpers": "^6.1.4",
+    "@turf/line-to-polygon": "^6.0.1",
+    "@turf/points-within-polygon": "^5.1.5",
     "highcharts": "^7.2.1",
     "lodash": "^4.17.15",
     "luxon": "^1.19.3",
@@ -27,6 +30,7 @@
     "rimraf": "^3.0.0",
     "rxjs": "~6.4.0",
     "tslib": "^1.10.0",
+    "turf-line-to-polygon": "^0.2.1",
     "zone.js": "~0.9.1"
   },
   "devDependencies": {
@@ -34,9 +38,9 @@
     "@angular/cli": "~8.3.14",
     "@angular/compiler-cli": "~8.2.11",
     "@angular/language-service": "~8.2.11",
-    "@types/node": "~8.9.4",
     "@types/jasmine": "~3.3.8",
     "@types/jasminewd2": "~2.0.3",
+    "@types/node": "~8.9.4",
     "codelyzer": "^5.0.0",
     "jasmine-core": "~3.4.0",
     "jasmine-spec-reporter": "~4.2.1",

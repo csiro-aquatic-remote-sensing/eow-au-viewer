@@ -9,7 +9,6 @@ import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
 import Map from 'ol/Map';
 import TileLayer from 'ol/layer/Tile';
-
 import {HttpClient} from '@angular/common/http';
 
 export class Layers {
@@ -65,7 +64,7 @@ export class Layers {
       newLayer.setVisible(options.hasOwnProperty('visible') ? options.visible : true);
       return newLayer;
     };
-    // Original data
+
     this.shapesLayerShape = createLayer('Waterbodies shape', '../assets/waterbodies/Australia/aus25wgd_l.geojson');
     this.shapesLayerFill = createLayer('Waterbodies fill', '../assets/waterbodies/Australia/aus25wgd_r.geojson',
       {style: fillStyle});
