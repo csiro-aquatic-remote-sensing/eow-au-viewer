@@ -57,13 +57,14 @@ export class AppComponent implements OnInit {
     this.initMap();
     this.popupObject.init(this.map);
     this.measurementStore.init(this.map, this.dataLayer, this.allDataSource);
-    this.eowData.init(this.map, this.htmlDocument, this.userStore, this.measurementStore);
+    await this.eowData.init(this.map, this.htmlDocument, this.userStore, this.measurementStore);
+    await this.eowDataGeometries.init();
     this.layers.addLayers(this.map);
     this.userStore.init();
 
     this.setupEventHandlers();
     await this.layersGeometries.init();
-    // GeometryOps.calculateIntersections(this.eowDataGeometries.features, this.layersGeometries, 'i5516 reservoirs');
+    GeometryOps.calculateIntersections(this.eowDataGeometries.points, this.layersGeometries, 'i5516 reservoirs');
   }
 
   private initMap() {

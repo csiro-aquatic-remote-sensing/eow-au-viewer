@@ -1,6 +1,6 @@
 import GeoJSON from 'ol/format/GeoJSON';
 import {Feature as GeoJsonFeature} from 'ol/format/GeoJSON';
-import {Feature, lineString, LineString, multiLineString, polygon} from '@turf/helpers';
+import {Feature, lineString, LineString, multiLineString, Polygon, polygon} from '@turf/helpers';
 import lineToPolygon from '@turf/line-to-polygon';
 
 /**
@@ -9,7 +9,7 @@ import lineToPolygon from '@turf/line-to-polygon';
  */
 
 export default class LayerGeometries {
-  layerFeatures: { [name: string]: Feature<LineString>[] } = {};  // Each Layer passed to createGeometry() has multiple polygons
+  layerFeatures: { [name: string]: Feature<Polygon>[] } = {};  // Each Layer passed to createGeometry() has multiple polygons
 
   constructor() {
   }
