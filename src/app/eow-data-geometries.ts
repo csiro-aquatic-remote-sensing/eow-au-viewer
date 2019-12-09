@@ -1,5 +1,17 @@
 import GeoJSON from 'ol/format/GeoJSON';
-import {Feature, FeatureCollection, featureCollection as turfFeatureCollection, point as turfPoint, Point} from '@turf/helpers';
+import {
+  Feature,
+  FeatureCollection,
+  featureCollection as turfFeatureCollection, Geometry,
+  GeometryCollection,
+  point as turfPoint,
+  Point
+} from '@turf/helpers';
+import {
+  Brolog,
+} from 'brolog';
+
+const theClass = 'EowDataGeometries';
 
 /**
  * We need to determine the Waterbodies (defined through various other layers) and the contained EOW Data so we can perform actions on
@@ -10,9 +22,9 @@ const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia?se
   + '&version=1.0.0&request=GetFeature&typeName=eow_australia&maxFeatures=5000&outputFormat=application%2Fjson';
 
 export default class EowDataGeometries {
-  points: FeatureCollection;
+  points: FeatureCollection<Point>;
 
-  constructor() {
+  constructor(private log: Brolog) {
   }
 
   async init() {
@@ -20,14 +32,14 @@ export default class EowDataGeometries {
       return response.json();
     }).then((json) => {
         const geoJSONFeatures = new GeoJSON().readFeatures(json, {featureProjection: 'EPSG:3857'});
-        const features: Feature[] = [];
+        const features: Feature<Point>[] = [];
         for (const feature of geoJSONFeatures) {
           const featurePoint: Feature<Point> = turfPoint(feature.getGeometry().getCoordinates(), feature);
           features.push(featurePoint);
         }
         this.points = turfFeatureCollection(features);
 
-        console.log(`EOWDataGeometries - ${JSON.stringify(this.points)}`);
+        this.log.verbose(theClass, `EOWDataGeometries - ${JSON.stringify(this.points)}`);
       }
     );
   }

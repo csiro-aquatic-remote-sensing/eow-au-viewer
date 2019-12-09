@@ -2,6 +2,11 @@ import GeoJSON from 'ol/format/GeoJSON';
 import {Feature as GeoJsonFeature} from 'ol/format/GeoJSON';
 import {Feature, lineString, LineString, multiLineString, Polygon, polygon} from '@turf/helpers';
 import lineToPolygon from '@turf/line-to-polygon';
+import {
+  Brolog,
+} from 'brolog';
+
+const theClass = 'LayerGeometries';
 
 /**
  * We need to determine the Waterbodies (defined through various other layers) and the contained EOW Data so we can perform actions on
@@ -11,7 +16,7 @@ import lineToPolygon from '@turf/line-to-polygon';
 export default class LayerGeometries {
   layerFeatures: { [name: string]: Feature<Polygon>[] } = {};  // Each Layer passed to createGeometry() has multiple polygons
 
-  constructor() {
+  constructor(private log: Brolog) {
   }
 
   async init() {
@@ -27,13 +32,13 @@ export default class LayerGeometries {
     await this.createGeometry('i5516 lakes', '../assets/waterbodies/Canberra/i5516_waterholes.geojson');
     await this.createGeometry('i5516 reservoirs', '../assets/waterbodies/Canberra/i5516_reservoirs.geojson');
 
-    console.log(`Layer geometries: ${Object.keys(this.layerFeatures)}`);
+    this.log.verbose(theClass, `Layer geometries: ${Object.keys(this.layerFeatures)}`);
   }
 
   async createGeometry(name, layerUrl) {
     let features: any;
     let json: any;
-    console.log(`%cCreateGeomety - name: ${name}`, 'font-weight: bold');
+    this.log.verbose(theClass, `CreateGeomety - name: ${name}`);
     try {
       const response = await fetch(layerUrl);
       if (!response.ok) {
@@ -41,7 +46,7 @@ export default class LayerGeometries {
       }
       json = await response.json();
     } catch (error) {
-      console.error(`Fetch Network error - ${error}`);
+      this.log.error(theClass, `Fetch Network error - ${error}`);
     }
 
     try {
@@ -53,7 +58,7 @@ export default class LayerGeometries {
 
       this.layerFeatures[this.mapNames(name)] = [];
       features.forEach(feature => {
-        console.log(`%c  feature: ${feature.getGeometry().getType()}`, 'font-weight: bold; color: green');
+        this.log.verbose(theClass, `feature: ${feature.getGeometry().getType()}`);
         switch (feature.getGeometry().getType().toLowerCase()) {
           case  'linestring':
             this.convertLineString(this.layerFeatures[this.mapNames(name)], feature);
@@ -71,9 +76,9 @@ export default class LayerGeometries {
             throw new Error(`Unhandled type: ${feature.getGeometry().getType()}`);
         }
       });
-      console.log(`LayerGeometries add new item at '${this.mapNames(name)}`);
+      this.log.verbose(theClass, `LayerGeometries add new item at '${this.mapNames(name)}`);
     } catch (error) {
-      console.error(`Turf Error - ${error}`);
+      this.log.error(theClass, `Turf Error - ${error}`);
     }
   }
 
@@ -85,7 +90,7 @@ export default class LayerGeometries {
       const polygonObj = lineToPolygon(turfLine);
       dataDestination.push(polygonObj);
     } else {
-      console.warn(`Turfline has < 3 coords: ${turfLine.geometry.coordinates.length} - `
+      this.log.warn(theClass, `Turfline has < 3 coords: ${turfLine.geometry.coordinates.length} - `
         + `${JSON.stringify(turfLine.geometry.coordinates)}`);
     }
   }

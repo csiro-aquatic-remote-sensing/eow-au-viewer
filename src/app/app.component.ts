@@ -15,10 +15,13 @@ import {EowDataLayer} from './eow-data-layer';
 import EowDataGeometries from './eow-data-geometries';
 import LayerGeometries from './layers-geometries';
 import GeometryOps from './geometry-ops';
+import {Brolog} from 'brolog';
 
 const defaultCoord = [133.945313, -26.431228];
 const canberra = [149.130005, -35.280937];
 const theZoom = 12;
+
+const theClass = 'AppComponent';
 
 @Component({
   selector: 'app-root',
@@ -40,17 +43,17 @@ export class AppComponent implements OnInit {
   eowDataGeometries: EowDataGeometries;
   layersGeometries: LayerGeometries;
 
-  constructor(@Inject(DOCUMENT) private document: Document, private http: HttpClient) {
+  constructor(@Inject(DOCUMENT) private document: Document, private http: HttpClient, private log: Brolog) {
     this.htmlDocument = document;
-    this.pieChart = new PieChart();
+    this.pieChart = new PieChart(log);
 
-    this.userStore = new UserStore(this.document);
-    this.popupObject = new Popup(this.document, this.pieChart, this.userStore);
+    this.userStore = new UserStore(document);
+    this.popupObject = new Popup(document, this.pieChart, this.userStore);
     this.eowData = new EowDataLayer();
-    this.layers = new Layers(this.document, this.http);
+    this.layers = new Layers(document, http, log);
     this.measurementStore = new MeasurementStore();
-    this.eowDataGeometries = new EowDataGeometries();
-    this.layersGeometries = new LayerGeometries();
+    this.eowDataGeometries = new EowDataGeometries(log);
+    this.layersGeometries = new LayerGeometries(log);
   }
 
   async ngOnInit() {
@@ -98,7 +101,7 @@ export class AppComponent implements OnInit {
       });
 
       if (features.length) {
-        console.log(`Clicked on map at: ${JSON.stringify(coordinate)}`);
+        this.log.verbose(theClass, `Clicked on map at: ${JSON.stringify(coordinate)}`);
         this.popupObject.draw(features, coordinate);
       }
     });

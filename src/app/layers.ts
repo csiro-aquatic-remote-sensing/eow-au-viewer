@@ -10,6 +10,11 @@ import GeoJSON from 'ol/format/GeoJSON';
 import Map from 'ol/Map';
 import TileLayer from 'ol/layer/Tile';
 import {HttpClient} from '@angular/common/http';
+import {
+  Brolog,
+} from 'brolog';
+
+const theClass = 'Layers';
 
 export class Layers {
   htmlDocument: Document;
@@ -19,7 +24,7 @@ export class Layers {
   wofsWMS: any;
   http: HttpClient;
 
-  constructor(htmlDocument: Document, http: HttpClient) {
+  constructor(htmlDocument: Document, http: HttpClient, private log: Brolog) {
     this.htmlDocument = htmlDocument;
     this.http = http;
   }
@@ -44,19 +49,22 @@ export class Layers {
     const fillStyle = new Style({
       fill: new Fill({color: 'rgba(224, 255, 255, 0.33)'})
     });
+
     interface Options {
       style?: any;
       minZoom?: number;
       visible?: boolean;
     }
+
     const createLayer = (title, url, options: Options = {}) => {
-      this.http.get(url).toPromise().then(d => console.log(`url exists: ${url}`)).catch(e => console.log(`URL DOES NOT EXIST: ${url}`));
+      this.http.get(url).toPromise().then(d => this.log.info(theClass, `url exists: ${url}`))
+        .catch(e => this.log.warn(theClass, `URL DOES NOT EXIST: ${url}`));
       const newLayer = new VectorLayer(Object.assign(options, {
         title,
         source: new VectorSource({
           url,
           format: new GeoJSON(),
-          projection : 'EPSG:4326'
+          projection: 'EPSG:4326'
         })
       }));
       newLayer.set('name', title);
@@ -111,7 +119,7 @@ export class Layers {
           LAYERS: 'wofs_filtered_summary',
           TILED: true
         },
-        extent: [ -5687813.782846, 12530995.153909, -15894844.529378, 3585760.291316 ] // -13884991, -7455066, 2870341, 6338219]
+        extent: [-5687813.782846, 12530995.153909, -15894844.529378, 3585760.291316] // -13884991, -7455066, 2870341, 6338219]
       })
     });
     this.wofsWMS.set('name', 'Water Observations from Space');  // 25m Filtered Summary (WOfS Filtered Statistics)');
@@ -137,7 +145,7 @@ export class Layers {
       const layer = layers[i];
       const layerId = 'layer_id_' + layers[i].get('id');
       const name = layers[i].get('name');
-      const checkbox = generateCheckbox( i, name, this.htmlDocument.querySelector('.layersSwitch'));
+      const checkbox = generateCheckbox(i, name, this.htmlDocument.querySelector('.layersSwitch'));
 
       // Manage when checkbox is (un)checked
       checkbox.addEventListener('change', function() {
