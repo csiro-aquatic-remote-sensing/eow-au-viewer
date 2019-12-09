@@ -2,8 +2,6 @@ import LayerGeometries from './layers-geometries';
 import {Feature, FeatureCollection, Point, Polygon} from '@turf/helpers';
 import pointsWithinPolygon from '@turf/points-within-polygon';
 
-// declare var jsts: any;  // https://github.com/bjornharrtell/jsts
-
 export default class GeometryOps {
   static calculateIntersections(eowDataGeometry: FeatureCollection<Point>, layerGeometries: LayerGeometries, layerName: string) {
     const layerGeometry: Feature<Polygon>[] = layerGeometries.getLayer(layerName);

@@ -81,11 +81,11 @@ export default class LayerGeometries {
     const data = feature.getGeometry().getCoordinates();
     // The difference between lineString and Polygon is that a Polygon is explicitly closed (ie. the first and last coords are same) ???
     const turfLine = lineString(data);
-    if (turfLine.geometry.coordinates.length >= 4) {
+    if (turfLine.geometry.coordinates.length >= 3) {
       const polygonObj = lineToPolygon(turfLine);
       dataDestination.push(polygonObj);
     } else {
-      console.warn(`Turfline has < 4 coords: ${turfLine.geometry.coordinates.length} - `
+      console.warn(`Turfline has < 3 coords: ${turfLine.geometry.coordinates.length} - `
         + `${JSON.stringify(turfLine.geometry.coordinates)}`);
     }
   }

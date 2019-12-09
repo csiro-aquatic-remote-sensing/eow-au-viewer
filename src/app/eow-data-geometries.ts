@@ -1,11 +1,5 @@
-import LinearRing from 'ol/geom/LinearRing';
-// import {Point, LineString, Polygon, MultiPoint, MultiLineString, MultiPolygon} from 'ol/geom';
 import GeoJSON from 'ol/format/GeoJSON';
-import Geometry from 'ol/geom/Geometry';
-import {
-  Feature, FeatureCollection, Point, point as turfPoint,
-  featureCollection as turfFeatureCollection, feature as turfFeature
-} from '@turf/helpers';
+import {Feature, FeatureCollection, featureCollection as turfFeatureCollection, point as turfPoint, Point} from '@turf/helpers';
 
 /**
  * We need to determine the Waterbodies (defined through various other layers) and the contained EOW Data so we can perform actions on
@@ -25,21 +19,13 @@ export default class EowDataGeometries {
     fetch(WFS_URL).then((response) => {
       return response.json();
     }).then((json) => {
-        const format = new GeoJSON();
-        const features = format.readFeatures(json, {featureProjection: 'EPSG:3857'});
-        // const theTurfFeature = turfFeature(features);
-        // this.points = featureCollectionFn(features.slice(0, 1));  // todo DEBUG DEBUG
-        const turfFeatures: Feature[] = [];
-        // features.foreach(feature => {
-        for (let i = 0; i < features.length; ++i) {
-          const feature = features[i];
-          const a = feature.getGeometry().getCoordinates();
-          const b: Feature<Point> = turfPoint(a);
-          // const c = turfFeature(b)
-          turfFeatures.push(a);
+        const geoJSONFeatures = new GeoJSON().readFeatures(json, {featureProjection: 'EPSG:3857'});
+        const features: Feature[] = [];
+        for (const feature of geoJSONFeatures) {
+          const featurePoint: Feature<Point> = turfPoint(feature.getGeometry().getCoordinates(), feature);
+          features.push(featurePoint);
         }
-        // );
-        this.points = turfFeatureCollection(turfFeatures);
+        this.points = turfFeatureCollection(features);
 
         console.log(`EOWDataGeometries - ${JSON.stringify(this.points)}`);
       }
