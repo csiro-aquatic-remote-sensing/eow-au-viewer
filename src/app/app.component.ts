@@ -17,6 +17,8 @@ import LayerGeometries from './layers-geometries';
 import GeometryOps from './geometry-ops';
 import {Brolog} from 'brolog';
 import {timeout} from 'rxjs/operators';
+import {FeatureCollection, Point} from '@turf/helpers';
+import EOWDataPieChart from './eow-data-piechart';
 
 const defaultCoord = [133.945313, -26.431228];
 const canberra = [149.130005, -35.280937];
@@ -70,7 +72,9 @@ export class AppComponent implements OnInit {
 
     this.setupEventHandlers();
     await this.layersGeometries.init();
-    GeometryOps.calculateIntersections(this.eowDataGeometries.points, this.layersGeometries, 'i5516 reservoirs');
+    const eowDataInWaterbodies: FeatureCollection<Point>[] = GeometryOps.calculateIntersections(this.eowDataGeometries.points,
+      this.layersGeometries, 'i5516 reservoirs');
+    EOWDataPieChart.plot(eowDataInWaterbodies);
   }
 
   private debug_compareUsersNMeasurements() {

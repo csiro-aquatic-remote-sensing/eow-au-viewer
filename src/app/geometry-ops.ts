@@ -41,10 +41,10 @@ export default class GeometryOps {
     const layerGeometry: Feature<Polygon>[] = layerGeometries.getLayer(layerName);
     const featureCollections: FeatureCollection<Point>[] = [];
 
-    Brolog.verbose(theClass, `GeometryOps / calculateIntersection for ${layerName}`);
+    Brolog.silly(theClass, `GeometryOps / calculateIntersection for ${layerName}`);
     layerGeometry.forEach(layerPolygon => {
       const intersection: FeatureCollection<Point> = pointsWithinPolygon(eowDataGeometry, layerPolygon) as FeatureCollection<Point>;
-      Brolog.verbose(theClass, `intersection: ${JSON.stringify(intersection, null, 2)}`);
+      Brolog.silly(theClass, `intersection: ${JSON.stringify(intersection, null, 2)}`);
       featureCollections.push(intersection);
     });
     return featureCollections;
