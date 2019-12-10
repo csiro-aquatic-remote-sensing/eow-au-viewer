@@ -12,6 +12,16 @@ import {Layers} from './layers';
 import {MeasurementStore} from './measurement-store';
 import {UserStore} from './user-store';
 import {EowDataLayer} from './eow-data-layer';
+import EowDataGeometries from './eow-data-geometries';
+import LayerGeometries from './layers-geometries';
+import GeometryOps from './geometry-ops';
+import {Brolog} from 'brolog';
+
+const defaultCoord = [133.945313, -26.431228];
+const canberra = [149.130005, -35.280937];
+const theZoom = 12;
+
+const theClass = 'AppComponent';
 
 @Component({
   selector: 'app-root',
@@ -30,27 +40,34 @@ export class AppComponent implements OnInit {
   pieChart: any;
   layers: Layers;
   htmlDocument: Document;
+  eowDataGeometries: EowDataGeometries;
+  layersGeometries: LayerGeometries;
 
-  constructor(@Inject(DOCUMENT) private document: Document, private http: HttpClient) {
+  constructor(@Inject(DOCUMENT) private document: Document, private http: HttpClient, private log: Brolog) {
     this.htmlDocument = document;
-    this.pieChart = new PieChart();
+    this.pieChart = new PieChart(log);
 
-    this.userStore = new UserStore(this.document);
-    this.popupObject = new Popup(this.document, this.pieChart, this.userStore);
-    this.layers = new Layers(this.document, this.http);
-    this.measurementStore = new MeasurementStore();
+    this.userStore = new UserStore(document);
+    this.popupObject = new Popup(document, this.pieChart, this.userStore);
     this.eowData = new EowDataLayer();
+    this.layers = new Layers(document, http, log);
+    this.measurementStore = new MeasurementStore();
+    this.eowDataGeometries = new EowDataGeometries(log);
+    this.layersGeometries = new LayerGeometries(log);
   }
 
-  ngOnInit() {
+  async ngOnInit() {
     this.initMap();
     this.popupObject.init(this.map);
     this.measurementStore.init(this.map, this.dataLayer, this.allDataSource);
+    await this.eowData.init(this.map, this.htmlDocument, this.userStore, this.measurementStore);
+    await this.eowDataGeometries.init();
     this.layers.addLayers(this.map);
     this.userStore.init();
-    this.eowData.init(this.map, this.htmlDocument, this.userStore, this.measurementStore);
 
     this.setupEventHandlers();
+    await this.layersGeometries.init();
+    GeometryOps.calculateIntersections(this.eowDataGeometries.points, this.layersGeometries, 'i5516 reservoirs');
   }
 
   private initMap() {
@@ -65,8 +82,8 @@ export class AppComponent implements OnInit {
         mainMap,
       ],
       view: new View({
-        center: fromLonLat([133.945313, -26.431228]),
-        zoom: 4
+        center: fromLonLat(canberra),
+        zoom: theZoom
       }),
       controls: [],
     });
@@ -84,7 +101,7 @@ export class AppComponent implements OnInit {
       });
 
       if (features.length) {
-        console.log(`Clicked on map at: ${JSON.stringify(coordinate)}`);
+        this.log.verbose(theClass, `Clicked on map at: ${JSON.stringify(coordinate)}`);
         this.popupObject.draw(features, coordinate);
       }
     });

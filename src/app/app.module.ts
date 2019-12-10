@@ -3,6 +3,7 @@ import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
 import {HttpClient, HttpClientModule} from '@angular/common/http';
+import {Brolog} from 'brolog';
 
 @NgModule({
   declarations: [
@@ -11,7 +12,12 @@ import {HttpClient, HttpClientModule} from '@angular/common/http';
   imports: [
     BrowserModule, HttpClientModule
   ],
-  providers: [],
+  providers: [
+    {
+      provide: Brolog,
+      useFactory: function brologFactory() { return Brolog.instance('verbose'); }
+    }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

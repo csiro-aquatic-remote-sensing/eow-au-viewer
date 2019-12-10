@@ -1,9 +1,18 @@
 import {chart, Color, SeriesPieOptions, setOptions, map as highchartsMap} from 'highcharts';
 import colors from './colors.json';
+import {
+  Brolog,
+} from 'brolog';
+import {HttpClient} from '@angular/common/http';
+
+const theClass = 'PieChart';
 
 export class PieChart {
   elementId = 'pieChart';
   highchart: any;
+
+  constructor(private log: Brolog) {
+  }
 
   /**
    * If features are passed in (since one or more clicked on) then draw PieChart containing them.  If it is empty then draw chart of all
@@ -80,7 +89,7 @@ export class PieChart {
     const eowData = Object.keys(eowDataFUValues).map(k => {
       return {name: k, y: eowDataFUValues[k]};
     });
-    console.log(`EOWData: ${JSON.stringify(eowData)}`);
+    this.log.verbose(theClass, `EOWData: ${JSON.stringify(eowData)}`);
 
     // Build the chart
     this.highchart = chart(this.elementId, {

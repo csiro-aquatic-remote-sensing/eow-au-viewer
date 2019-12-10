@@ -291,7 +291,8 @@ li.item {
 
 .layersSwitch {
   position: absolute;
-  bottom: 20px;
+  float: bottom;
+  /*bottom: 20px;*/
 }
 
 .highcharts-background {
