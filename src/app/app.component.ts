@@ -32,7 +32,7 @@ const theClass = 'AppComponent';
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements OnInit {
-  title = 'ng-eow';
+  title = 'Eye On Water';
   map: Map;
   popupObject: any;
   measurementStore: MeasurementStore;

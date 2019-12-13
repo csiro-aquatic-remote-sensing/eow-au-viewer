@@ -5,7 +5,8 @@
     "types": [],
     "resolveJsonModule": true,
     "module": "commonjs",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
   "files": [
     "src/main.ts",
@@ -15,7 +16,6 @@
     "src/**/*.ts"
   ],
   "exclude": [
-    "src/test.ts",
     "src/**/*.spec.ts"
   ]
 }
