@@ -8,8 +8,10 @@ describe('eow-data-piechart', () => {
     it('median of only 1 point is the point itself', () => {
       const coordinate = [-1000, 1000];
       const point = turfFeatureCollection([turfPoint(coordinate)]);
-      const value = EOWDataPieChart.plot([point]);
-      expect(value).to.equal(coordinate);
+      const value = EOWDataPieChart.findCentroid([point]);
+      const centroid = value.features[0].properties.centroid;
+      expect(centroid[0]).to.equal(coordinate[0]);
+      expect(centroid[1]).to.equal(coordinate[1]);
     });
   });
 });

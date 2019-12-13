@@ -35,19 +35,24 @@ export default class EOWDataPieChart {
     }
   }
 
-  static plot(eowDataInWaterbodies: FeatureCollection<Point>[]) {
+  static findCentroid(eowDataInWaterbodies: FeatureCollection<Point>[]): FeatureCollection<Point> {
     /*
       1. Loop through array
       2. If the FeatureCollection has property 'geometry'
-      3. Gather all the geometries and perform KMeansClustering with cluster size of 1 to find the middle point
+      3. Gather all the geometries and perform KMeansClustering with cluster size of 1 to find the centroid (middle point)
       4. Draw something at that point
      */
     for (const eowDatum of eowDataInWaterbodies) {
       if (eowDatum.hasOwnProperty('features') && eowDatum.features.length > 0) {
         // console.log(`%cEOWDatum: ${JSON.stringify(eowDatum)}`, 'color:red');
         const median = clustersKmeans(eowDatum, {numberOfClusters: 1});
-        console.log(`%cMedian: ${JSON.stringify(median)}`, 'color:purple');
+        console.log(`%cCentroid: ${JSON.stringify(median)}`, 'color:purple');
+        return median;
       }
     }
+  }
+
+  static plot(centroid: FeatureCollection<Point>) {
+    // TODO
   }
 }
