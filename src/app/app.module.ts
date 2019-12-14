@@ -15,6 +15,7 @@ import {Brolog} from 'brolog';
   providers: [
     {
       provide: Brolog,
+      // 'silent' | 'error' | 'warn' | 'info' | 'verbose' | 'silly'
       useFactory: function brologFactory() { return Brolog.instance('info'); }
     }
   ],

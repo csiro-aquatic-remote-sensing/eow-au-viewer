@@ -1,6 +1,7 @@
 import {Feature, FeatureCollection, Point} from '@turf/helpers';
 import {featureEach, featureReduce} from '@turf/meta';
 import clustersKmeans from '@turf/clusters-kmeans';
+import Brolog from 'brolog';
 
 type Coords = [number, number];
 
@@ -28,9 +29,9 @@ export default class EOWDataPieChart {
         }
       });
       if (points.length > 1) {
-        console.log(`%cEOWDatum points: ${JSON.stringify(points)}`, 'color:red');
+        Brolog.verbose(`%cEOWDatum points: ${JSON.stringify(points)}`, 'color:red');
         const median = clustersKmeans(points, {numberOfClusters: 1});
-        console.log(`%cMedian: ${JSON.stringify(median)}`, 'color:purple');
+        Brolog.verbose(`%cMedian: ${JSON.stringify(median)}`, 'color:purple');
       }
     }
   }
@@ -46,7 +47,7 @@ export default class EOWDataPieChart {
       if (eowDatum.hasOwnProperty('features') && eowDatum.features.length > 0) {
         // console.log(`%cEOWDatum: ${JSON.stringify(eowDatum)}`, 'color:red');
         const median = clustersKmeans(eowDatum, {numberOfClusters: 1});
-        console.log(`%cCentroid: ${JSON.stringify(median)}`, 'color:purple');
+        Brolog.verbose(`%cMedian: ${JSON.stringify(median)}`, 'color:purple');
         return median;
       }
     }

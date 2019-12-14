@@ -28,11 +28,12 @@ export default class EowDataGeometries {
   }
 
   async init() {
-    fetch(WFS_URL).then((response) => {
-      return response.json();
-    }).then((json) => {
-        const geoJSONFeatures = new GeoJSON().readFeatures(json, {featureProjection: 'EPSG:3857'});
+    return new Promise(async (resolve, reject) => {
+      try {
+        const response = await fetch(WFS_URL);
+        const geoJSONFeatures = new GeoJSON().readFeatures(await response.json(), {featureProjection: 'EPSG:3857'});
         const features: Feature<Point>[] = [];
+        // Should return a promise here
         for (const feature of geoJSONFeatures) {
           const featurePoint: Feature<Point> = turfPoint(feature.getGeometry().getCoordinates(), feature);
           features.push(featurePoint);
@@ -40,7 +41,27 @@ export default class EowDataGeometries {
         this.points = turfFeatureCollection(features);
 
         this.log.verbose(theClass, `EOWDataGeometries - ${JSON.stringify(this.points)}`);
+      } catch (error) {
+        this.log.error(error);
+        reject(error);
       }
-    );
+      resolve();
+    });
   }
+
+//     fetch(WFS_URL).then((response) => {
+//       return response.json();
+//     }).then((json) => {
+//         const geoJSONFeatures = new GeoJSON().readFeatures(json, {featureProjection: 'EPSG:3857'});
+//         const features: Feature<Point>[] = [];
+//         for (const feature of geoJSONFeatures) {
+//           const featurePoint: Feature<Point> = turfPoint(feature.getGeometry().getCoordinates(), feature);
+//           features.push(featurePoint);
+//         }
+//         this.points = turfFeatureCollection(features);
+
+//         this.log.verbose(theClass, `EOWDataGeometries - ${JSON.stringify(this.points)}`);
+//       }
+//     ).catch(error => this.log.error(error));
+//   }  }
 }
