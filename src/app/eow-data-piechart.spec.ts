@@ -1,6 +1,7 @@
 import {point as turfPoint, Point, feature as turfFeature, featureCollection as turfFeatureCollection} from '@turf/helpers';
 import EOWDataPieChart from './eow-data-piechart';
 import * as chai from 'chai';
+import GeometryOps from './geometry-ops';
 
 const expect = chai.expect;
 
@@ -88,21 +89,23 @@ describe('eow-data-piechart', () => {
       expect(centroid[1]).to.equal(expectedCentroid[1]);
     });
 
-    it('triangle with part of centroid of 5 points is the middle of the polygon', () => {
+    it('centroid of 5 points is the middle of the pentagram', () => {
       const coordinate1 = [2000, 0];
-      // const coordinate2 = [4000, 2000];
+      const coordinate2 = [4000, 2000];
       const coordinate3 = [2200, 4000];
       const coordinate4 = [1800, 4000];
-      // const coordinate5 = [0, 2000];
+      const coordinate5 = [0, 2000];
 
       const expectedCentroid = [2000, 2063];
 
-      const point = turfFeatureCollection([turfPoint(coordinate1), turfPoint(coordinate3), turfPoint(coordinate4)]);
-      const value = EOWDataPieChart.findCentroid([point]);
-      const centroid = value.features[0].properties.centroid;
+      const point = turfFeatureCollection([turfPoint(coordinate1), turfPoint(coordinate2), turfPoint(coordinate3),
+                                            turfPoint(coordinate4), turfPoint(coordinate5)]);
+      const value = GeometryOps.calculateCentroid(point);  //EOWDataPieChart.findCentroid([point]);
+      const centroid = value.geometry.coordinates;
+        // [-1, -1]; // value.features[0].properties.centroid;
 
-      console.log(`Centroid of polygon: ${JSON.stringify(centroid)}`);
-      console.log(`Expected Centroid: ${JSON.stringify(expectedCentroid)}`);
+      // console.log(`Centroid of polygon: ${JSON.stringify(centroid)}`);
+      // console.log(`Expected Centroid: ${JSON.stringify(expectedCentroid)}`);
 
       expect(centroid[0]).to.equal(expectedCentroid[0]);
       expect(centroid[1]).to.equal(expectedCentroid[1]);

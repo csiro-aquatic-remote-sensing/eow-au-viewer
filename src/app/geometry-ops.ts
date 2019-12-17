@@ -1,5 +1,6 @@
 import LayerGeometries from './layers-geometries';
-import {Feature, FeatureCollection, Point, Polygon} from '@turf/helpers';
+import {Feature, FeatureCollection, Point, Polygon, point as turfPoint} from '@turf/helpers';
+import centroid from '@turf/centroid';
 import pointsWithinPolygon from '@turf/points-within-polygon';
 import {
   Brolog,
@@ -49,5 +50,44 @@ export default class GeometryOps {
       featureCollections.push(intersection);
     }
     return featureCollections;
+  }
+
+  /**
+   * I don't think the Turf version of centroid, or k-means-cluster (clusterSize=1), is correct.  Hence my own below.
+   *
+   * @param featurePoints that makes a polygon to get he centroid for
+   */
+  static calculateCentroidTurfVer(featurePoints: FeatureCollection<Point>): Feature<Point> {
+    return centroid(featurePoints);
+  }
+
+  /**
+   * https://en.wikipedia.org/wiki/Centroid#Of_a_polygon
+   * @param featurePoints of points forming a polygon to return the centroid for
+   */
+  static calculateCentroid(featurePoints: FeatureCollection<Point>): Feature<Point> {
+    Brolog.verbose(`featurePoints: FeatureCollection<Point>: ${JSON.stringify(featurePoints)}`);
+    const points = featurePoints.features.map(f => f.geometry.coordinates);
+    Brolog.verbose(`  points: ${JSON.stringify(points)}`);
+    // let i = 0;
+    let area = 0;
+    let cx = 0;
+    let cy = 0;
+    for (let i = 0; i < points.length; ++i) {
+      const iP1 = (i + 1) % points.length;
+      const xI = points[i][0];
+      const xIp1 = points[iP1][0];
+      const yI = points[i][1];
+      const yIp1 = points[iP1][1];
+      area += ((xI * yIp1) - (xIp1 * yI));
+      cx += (xI + xIp1) * (xI * yIp1 - xIp1 * yI);
+      cy += (yI + yIp1) * (xI * yIp1 - xIp1 * yI);
+      Brolog.verbose(`iteration: ${i} - area: ${area}, cx: ${cx}, cy: ${cy}`);
+    }
+    area *= 1 / 2;
+    cx = Math.round(cx / (6 * area));
+    cy = Math.round(cy / (6 * area));
+    Brolog.verbose(`finished - area: ${area}, cx: ${cx}, cy: ${cy}`);
+    return turfPoint([cx, cy]);
   }
 }
