@@ -7,6 +7,7 @@ import {
 } from 'brolog';
 
 const theClass = 'GeometryOps';
+type Coords = [number, number];
 
 export default class GeometryOps {
   /**
@@ -65,23 +66,35 @@ export default class GeometryOps {
    * https://en.wikipedia.org/wiki/Centroid#Of_a_polygon
    * @param featurePoints of points forming a polygon to return the centroid for
    */
-  static calculateCentroid(featurePoints: FeatureCollection<Point>): Feature<Point> {
+  static calculateCentroidFromFeatureCollection(featurePoints: FeatureCollection<Point>): Feature<Point> {
     Brolog.verbose(`featurePoints: FeatureCollection<Point>: ${JSON.stringify(featurePoints)}`);
     const points = featurePoints.features.map(f => f.geometry.coordinates);
+    return GeometryOps.calculateCentroidFromPoints(points);
+  }
+
+  static calculateCentroidFromPoints(points: number[][]) {
     Brolog.verbose(`  points: ${JSON.stringify(points)}`);
     // let i = 0;
     let area = 0;
     let cx = 0;
     let cy = 0;
+    // Although the input is meant to be a polygon (3+ points), error handle to return correct values for points and lines
+    if (points.length === 1) {
+      return turfPoint(points[0]);
+    }
+    if (points.length === 2) {
+      return turfPoint([(points[0][0] + points[1][0]) / 2, (points[0][1] + points[1][1]) / 2]);
+    }
     for (let i = 0; i < points.length; ++i) {
       const iP1 = (i + 1) % points.length;
       const xI = points[i][0];
       const xIp1 = points[iP1][0];
       const yI = points[i][1];
       const yIp1 = points[iP1][1];
-      area += ((xI * yIp1) - (xIp1 * yI));
-      cx += (xI + xIp1) * (xI * yIp1 - xIp1 * yI);
-      cy += (yI + yIp1) * (xI * yIp1 - xIp1 * yI);
+      const currentArea = xI * yIp1 - xIp1 * yI;
+      area += currentArea;
+      cx += (xI + xIp1) * currentArea;
+      cy += (yI + yIp1) * currentArea;
       Brolog.verbose(`iteration: ${i} - area: ${area}, cx: ${cx}, cy: ${cy}`);
     }
     area *= 1 / 2;
