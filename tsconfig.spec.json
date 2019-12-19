@@ -4,9 +4,12 @@
     "outDir": "./out-tsc/spec",
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
+    "module": "commonjs",
     "types": [
       "jasmine",
-      "node"
+      "node",
+      "mocha",
+      "ol"
     ]
   },
   "files": [

@@ -1,21 +1,21 @@
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "outDir": "./out-tsc/app",
-    "types": [],
-    "resolveJsonModule": true,
-    "module": "commonjs",
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
-  },
-  "files": [
-    "src/main.ts",
-    "src/polyfills.ts"
-  ],
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "src/**/*.spec.ts"
-  ]
-}
+    {
+      "extends": "./tsconfig.json",
+      "compilerOptions": {
+        "outDir": "./out-tsc/app",
+        "types": [],
+        "resolveJsonModule": true,
+        "module": "commonjs",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true
+      },
+      "files": [
+        "src/main.ts",
+        "src/polyfills.ts"
+      ],
+      "include": [
+        "src/**/*.ts"
+      ],
+      "exclude": [
+        "src/**/*.spec.ts"
+      ]
+    }
