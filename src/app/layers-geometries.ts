@@ -1,10 +1,14 @@
-import GeoJSON from 'ol/format/GeoJSON';
-import {Feature as GeoJsonFeature} from 'ol/format/GeoJSON';
-import {Feature, lineString, LineString, multiLineString, Polygon, polygon} from '@turf/helpers';
+import {Feature as turfFeature, lineString, LineString, multiLineString, Polygon, polygon} from '@turf/helpers';
 import lineToPolygon from '@turf/line-to-polygon';
+import GeoJSONFeature from 'ol/format/Feature';
+import OLGeoJson from 'ol/format/GeoJSON';
+import Feature from 'ol/Feature';
+
 import {
   Brolog,
 } from 'brolog';
+import {FeatureLike} from 'ol/Feature';
+import SimpleGeometry from 'ol/geom/SimpleGeometry';
 
 const theClass = 'LayerGeometries';
 
@@ -14,7 +18,7 @@ const theClass = 'LayerGeometries';
  */
 
 export default class LayerGeometries {
-  layerFeatures: { [name: string]: Feature<Polygon>[] } = {};  // Each Layer passed to createGeometry() has multiple polygons
+  layerFeatures: { [name: string]: turfFeature<Polygon>[] } = {};  // Each Layer passed to createGeometry() has multiple polygons
 
   constructor(private log: Brolog) {
   }
@@ -36,7 +40,6 @@ export default class LayerGeometries {
   }
 
   async createGeometry(name, layerUrl) {
-    let features: any;
     let json: any;
     this.log.verbose(theClass, `CreateGeomety - name: ${name}`);
     try {
@@ -50,24 +53,25 @@ export default class LayerGeometries {
     }
 
     try {
-      const format = new GeoJSON();
-      features = format.readFeatures(json, {featureProjection: 'EPSG:3857'});
-      if (! features) {
+      const format = new OLGeoJson();
+      const geoJSONFeatures = format.readFeatures(json, {featureProjection: 'EPSG:3857'});
+      if (! geoJSONFeatures) {
         return;
       }
 
       this.layerFeatures[this.mapNames(name)] = [];
-      features.forEach(feature => {
+      geoJSONFeatures.forEach(feature => {
         this.log.verbose(theClass, `feature: ${feature.getGeometry().getType()}`);
+        const simpleGeometry = feature.getGeometry() as SimpleGeometry;
         switch (feature.getGeometry().getType().toLowerCase()) {
           case  'linestring':
-            this.convertLineString(this.layerFeatures[this.mapNames(name)], feature);
+            this.convertLineString(this.layerFeatures[this.mapNames(name)], simpleGeometry);
             break;
           case 'multilinestring':
-            this.convertMultiLineString(this.layerFeatures[this.mapNames(name)], feature);
+            this.convertMultiLineString(this.layerFeatures[this.mapNames(name)], simpleGeometry);
             break;
           case 'polygon':
-            this.convertPolygon(this.layerFeatures[this.mapNames(name)], feature);
+            this.convertPolygon(this.layerFeatures[this.mapNames(name)], simpleGeometry);
             break;
           case 'point':
             // ignore points
@@ -82,10 +86,10 @@ export default class LayerGeometries {
     }
   }
 
-  private convertLineString(dataDestination, feature: GeoJsonFeature) {
-    const data = feature.getGeometry().getCoordinates();
+  private convertLineString(dataDestination, simpleGeometry: SimpleGeometry) {
+    const coordinates = simpleGeometry.getCoordinates();
     // The difference between lineString and Polygon is that a Polygon is explicitly closed (ie. the first and last coords are same) ???
-    const turfLine = lineString(data);
+    const turfLine = lineString(coordinates);
     if (turfLine.geometry.coordinates.length >= 3) {
       const polygonObj = lineToPolygon(turfLine);
       dataDestination.push(polygonObj);
@@ -95,16 +99,16 @@ export default class LayerGeometries {
     }
   }
 
-  private convertMultiLineString(dataDestination, feature: GeoJsonFeature) {
-    const data = feature.getGeometry().getCoordinates();
-    const turfLine = multiLineString(data);
+  private convertMultiLineString(dataDestination, simpleGeometry: SimpleGeometry) {
+    const coordinates = simpleGeometry.getCoordinates();
+    const turfLine = multiLineString(coordinates);
     const polygonObj = lineToPolygon(turfLine);
     dataDestination.push(polygonObj);
   }
 
-  private convertPolygon(dataDestination, feature: GeoJsonFeature) {
-    const data = feature.getGeometry().getCoordinates();
-    const polygonObj = polygon(data);
+  private convertPolygon(dataDestination, simpleGeometry: SimpleGeometry) {
+    const coordinates = simpleGeometry.getCoordinates();
+    const polygonObj = polygon(coordinates);
     dataDestination.push(polygonObj);
   }
 

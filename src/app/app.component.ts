@@ -3,7 +3,7 @@ import {DOCUMENT} from '@angular/common';
 import Map from 'ol/Map';
 import OSM from 'ol/source/OSM';
 import TileLayer from 'ol/layer/Tile';
-import View from 'ol/View';
+import View, {AnimationOptions} from 'ol/View';
 import {fromLonLat} from 'ol/proj';
 import {HttpClient} from '@angular/common/http';
 import {PieChart} from './pie-chart';
@@ -19,6 +19,7 @@ import {Brolog} from 'brolog';
 import {timeout} from 'rxjs/operators';
 import {FeatureCollection, Point} from '@turf/helpers';
 import EOWDataPieChart from './eow-data-piechart';
+import {Coordinate} from 'ol/coordinate';
 
 const defaultCoord = [133.945313, -26.431228];
 const canberra = [149.130005, -35.280937];
@@ -72,7 +73,7 @@ export class AppComponent implements OnInit {
 
     this.setupEventHandlers();
     await this.layersGeometries.init();
-    const eowDataInWaterbodies: FeatureCollection<Point>[] = GeometryOps.calculateIntersections(this.eowDataGeometries.points,
+    const eowDataInWaterbodies: FeatureCollection<Point>[] = GeometryOps.calculateLayerIntersections(this.eowDataGeometries.points,
       this.layersGeometries, 'i5516 reservoirs');
     EOWDataPieChart.plot(eowDataInWaterbodies);
   }
@@ -164,7 +165,7 @@ export class AppComponent implements OnInit {
         return;
       }
 
-      const coordinate = element.getAttribute('data-coordinate').split(',');
+      const coordinate = element.getAttribute('data-coordinate').split(',').map(c => parseInt(c, 10)) as Coordinate;
       const id = element.getAttribute('data-key');
       const view = this.map.getView();
       view.cancelAnimations();
@@ -172,7 +173,7 @@ export class AppComponent implements OnInit {
         center: coordinate,
         zoom: 8,
         duration: 1300
-      });
+      } as AnimationOptions);
       const features = [this.measurementStore.getById(id)];
       this.popupObject.draw(features, coordinate);
     }, true);

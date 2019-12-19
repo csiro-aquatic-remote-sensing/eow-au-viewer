@@ -13,6 +13,7 @@ import {HttpClient} from '@angular/common/http';
 import {
   Brolog,
 } from 'brolog';
+import IconAnchorUnits from 'ol/style/IconAnchorUnits';
 
 const theClass = 'Layers';
 
@@ -39,8 +40,8 @@ export class Layers {
     const iconStyle = new Style({
       image: new Icon({
         anchor: [0.5, 46],
-        anchorXUnits: 'fraction',
-        anchorYUnits: 'pixels',
+        anchorXUnits: IconAnchorUnits.FRACTION,
+        anchorYUnits: IconAnchorUnits.PIXELS,
         opacity: 0.75,
         scale: 0.02,
         src: '../assets/icon.png'
@@ -64,7 +65,7 @@ export class Layers {
         source: new VectorSource({
           url,
           format: new GeoJSON(),
-          projection: 'EPSG:4326'
+          // projection: 'EPSG:4326'
         })
       }));
       newLayer.set('name', title);
@@ -119,7 +120,7 @@ export class Layers {
           LAYERS: 'wofs_filtered_summary',
           TILED: true
         },
-        extent: [-5687813.782846, 12530995.153909, -15894844.529378, 3585760.291316] // -13884991, -7455066, 2870341, 6338219]
+        // extent: [-5687813.782846, 12530995.153909, -15894844.529378, 3585760.291316] // -13884991, -7455066, 2870341, 6338219]
       })
     });
     this.wofsWMS.set('name', 'Water Observations from Space');  // 25m Filtered Summary (WOfS Filtered Statistics)');

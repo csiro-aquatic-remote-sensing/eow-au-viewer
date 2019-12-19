@@ -5,6 +5,7 @@ import {
   calculateStats,
 } from './utils';
 import colors from './colors.json';
+import OverlayPositioning from 'ol/OverlayPositioning';
 
 export class Popup {
   elementId = 'popup';
@@ -30,7 +31,7 @@ export class Popup {
         position: [0, 0],
         autoPan: true,
         autoPanMargin: 275,
-        positioning: 'center-left'
+        positioning: OverlayPositioning.CENTER_LEFT
       });
       map.addOverlay(this.popup);
       this.setupEventHandlers();

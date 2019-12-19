@@ -48,6 +48,7 @@
     "@types/jasminewd2": "~2.0.3",
     "@types/mocha": "^5.2.7",
     "@types/node": "~8.9.4",
+    "@types/ol": "^5.3.6",
     "chai": "^4.2.0",
     "codelyzer": "^5.0.0",
     "jasmine-core": "~3.4.0",

@@ -1,8 +1,9 @@
-import GeoJSON from 'ol/format/GeoJSON';
+import GeoJSON, {GeoJSONPoint} from 'ol/format/GeoJSON';
+import Geometry from 'ol/geom/Geometry';
 import {
   Feature,
   FeatureCollection,
-  featureCollection as turfFeatureCollection, Geometry,
+  featureCollection as turfFeatureCollection, Geometry as turfGeometry,
   GeometryCollection,
   point as turfPoint,
   Point
@@ -10,6 +11,7 @@ import {
 import {
   Brolog,
 } from 'brolog';
+import SimpleGeometry from 'ol/geom/SimpleGeometry';
 
 const theClass = 'EowDataGeometries';
 
@@ -35,7 +37,8 @@ export default class EowDataGeometries {
         const features: Feature<Point>[] = [];
         // Should return a promise here
         for (const feature of geoJSONFeatures) {
-          const featurePoint: Feature<Point> = turfPoint(feature.getGeometry().getCoordinates(), feature);
+          const simpleGeometry = feature.getGeometry() as SimpleGeometry;
+          const featurePoint: Feature<Point> = turfPoint(simpleGeometry.getCoordinates(), feature);
           features.push(featurePoint);
         }
         this.points = turfFeatureCollection(features);
@@ -48,20 +51,4 @@ export default class EowDataGeometries {
       resolve();
     });
   }
-
-//     fetch(WFS_URL).then((response) => {
-//       return response.json();
-//     }).then((json) => {
-//         const geoJSONFeatures = new GeoJSON().readFeatures(json, {featureProjection: 'EPSG:3857'});
-//         const features: Feature<Point>[] = [];
-//         for (const feature of geoJSONFeatures) {
-//           const featurePoint: Feature<Point> = turfPoint(feature.getGeometry().getCoordinates(), feature);
-//           features.push(featurePoint);
-//         }
-//         this.points = turfFeatureCollection(features);
-
-//         this.log.verbose(theClass, `EOWDataGeometries - ${JSON.stringify(this.points)}`);
-//       }
-//     ).catch(error => this.log.error(error));
-//   }  }
 }
