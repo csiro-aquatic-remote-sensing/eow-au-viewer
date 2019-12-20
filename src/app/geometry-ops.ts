@@ -75,9 +75,9 @@ export default class GeometryOps {
     // layerGeometry.forEach(layerPolygon => {
     for (const layerPolygon of layerGeometry) {
       const intersection: FeatureCollection<Point> = pointsWithinPolygon(eowDataGeometry, layerPolygon) as FeatureCollection<Point>;
-      this.log.silly(theClass, `intersection: ${JSON.stringify(intersection, null, 2)}`);
       eowWaterbodyIntersections.push(this.createEoWFormat(intersection));
     }
+    this.log.silly(theClass, `intersections: ${JSON.stringify(eowWaterbodyIntersections, null, 2)}`);
     return eowWaterbodyIntersections;
   }
 

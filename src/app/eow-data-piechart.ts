@@ -2,15 +2,21 @@ import {Feature, FeatureCollection, Point} from '@turf/helpers';
 import {featureEach, featureReduce} from '@turf/meta';
 import clustersKmeans from '@turf/clusters-kmeans';
 import Brolog from 'brolog';
+import GeometryOps from './geometry-ops';
 
 type Coords = [number, number];
 
 export default class EOWDataPieChart {
-  static plot0(eowDataInWaterbodies: FeatureCollection<Point>[]) {
+  /**
+   * Perform some action on the EOW Data in waterbodies.  By default it is to draw a Pie Graph at the centroid of the polygon that
+   * represents the water body.  The Pie chart is the FU values in that water body.
+   * @param eowDataInWaterbodies - Polygons of waterbodies that contain EOW Points data
+   */
+  static plot(eowDataInWaterbodies: FeatureCollection<Point>[]) {
     /*
-      1. Loop through array
+      1. Loop through array of Waterbody polygons
       2. If the FeatureCollection has property 'geometry'
-      3. Gather all the geometries and perform KMeansClustering with cluster size of 1 to find the middle point
+      3. Get the centroid of the polygon
       4. Draw something at that point
      */
     for (const eowDatum of eowDataInWaterbodies) {
@@ -51,9 +57,5 @@ export default class EOWDataPieChart {
         return median;
       }
     }
-  }
-
-  static plot(centroid: FeatureCollection<Point>) {
-    // TODO
   }
 }
