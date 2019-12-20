@@ -9,48 +9,91 @@ import {
 const theClass = 'GeometryOps';
 type Coords = [number, number];
 
+export interface Waterbody {
+  polygon: FeatureCollection<Point>;
+  name: string;
+}
+
+export interface EowWaterbodyIntersection {
+  waterBody: Waterbody;
+  eowData: any;  // TBD
+}
+
 export default class GeometryOps {
+  constructor(private log: Brolog) {
+  }
+
   /**
    * Calculate the intersection between the polygons from layerName and the EOW Data Points
-   * @param eowDataGeometry - EOW Data Points
-   * @param layerGeometries - all layers
-   * @param layerName - name of layer with vectors (polygons) to peform intersection with
-   * @return an array of Turf.js FeatureCollection<Point>s, where the FeatureCollection is a collection of Feature<Point>s where each
-   * Point is EOW Data and the collection is all the data that sits within the same waterbody (TBD - within the same polygon at least).
-   * The array is all the interesections for all the water bodies (ie. Polygons) in the layer.
-   * There may be no EOW Data within a water body, in which case the FeatureCollection<Point> data object will be:
-   * {
-   *    "type": "FeatureCollection",
-   *    "features": []
-   * }
-   *
-   * If there is EOW Data then the data object (each Feature<Point> within the FeatureCollection<Point>) will be something like:
-   * {
-   *       "type": "Feature",
-   *       "properties": {
-   *         <Eye On Water data>
-   *       },
-   *       "geometry": {
-   *         "type": "Point",
-   *         "coordinates": [
-   *           16602522.815381201,
-   *           -4204738.690739388
-   *         ]
-   * }
+   * @param eowDataGeometry - EOW Data Points object -
+   *        { type: "FeatureCollection",
+   *            features: [{
+   *              geometry: {
+   *                type: "Point",
+   *                coordinates: [x,y]
+   *                },
+   *              properties: {
+   *                  EOW Data properties
+   *                }
+   *            }
+   *            ...
+   *          ]
+   *        }
+   * @param layerGeometries - all layers - object
+   *        {
+   *          layerFeatures: [{
+   *            <layerName>: [
+   *              {
+   *                geometry: {
+   *                   coordinates: [
+   *                     [3+ points forming a polygon] # Yes an array with one item, an array of the points
+   *                   ]
+   *                }
+   *              }
+   *              ...
+   *            ]
+   *          }]
+   *        }
+   * @param layerName - name of layer with vectors (polygons) to peform intersection with.  It should be in layerGeometries
+   * @return an array of objects, where the array is all waterbodies (polygons) that contain EOWData and each array item is an object
+   *        containing:
+   *          waterBody: {
+   *            polygon: FeatureCollection<Point>s
+   *            name: Waterbody name (TODO)
+   *          },
+   *          eowData: as returned by Maris (defined elsewhere)
+   * If the waterbody has no EOWData that field will be null.
    */
-  static calculateIntersections(eowDataGeometry: FeatureCollection<Point>, layerGeometries: LayerGeometries, layerName: string):
-    FeatureCollection<Point>[] {
+  calculateLayerIntersections(eowDataGeometry: FeatureCollection<Point>, layerGeometries: LayerGeometries, layerName: string):
+    EowWaterbodyIntersection[] {
     const layerGeometry: Feature<Polygon>[] = layerGeometries.getLayer(layerName);
-    const featureCollections: FeatureCollection<Point>[] = [];
+    const eowWaterbodyIntersections: EowWaterbodyIntersection[] = [];
 
-    Brolog.verbose(theClass, `GeometryOps / calculateIntersection for ${layerName}`);
+    this.log.verbose(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
     // layerGeometry.forEach(layerPolygon => {
     for (const layerPolygon of layerGeometry) {
       const intersection: FeatureCollection<Point> = pointsWithinPolygon(eowDataGeometry, layerPolygon) as FeatureCollection<Point>;
-      Brolog.silly(theClass, `intersection: ${JSON.stringify(intersection, null, 2)}`);
-      featureCollections.push(intersection);
+      this.log.silly(theClass, `intersection: ${JSON.stringify(intersection, null, 2)}`);
+      eowWaterbodyIntersections.push(this.createEoWFormat(intersection));
     }
-    return featureCollections;
+    return eowWaterbodyIntersections;
+  }
+
+  /**
+   * Modify in to format as specified in calculateLayerIntersections().
+   *
+   * @param intersection - the data from the Turfjs pointsWithinPolygon()
+   */
+  private createEoWFormat(intersection: FeatureCollection<Point>): EowWaterbodyIntersection {
+    const eowWaterbodyIntersection: EowWaterbodyIntersection = {
+      waterBody: {
+        polygon: intersection,
+        name: 'TBD'
+      },
+      eowData: intersection.features[0].properties
+    };
+    intersection.features[0].properties = {'now in eowData field': true};
+    return eowWaterbodyIntersection;
   }
 
   /**
@@ -58,7 +101,7 @@ export default class GeometryOps {
    *
    * @param featurePoints that makes a polygon to get he centroid for
    */
-  static calculateCentroidTurfVer(featurePoints: FeatureCollection<Point>): Feature<Point> {
+  calculateCentroidTurfVer(featurePoints: FeatureCollection<Point>): Feature<Point> {
     return centroid(featurePoints);
   }
 
@@ -66,14 +109,14 @@ export default class GeometryOps {
    * https://en.wikipedia.org/wiki/Centroid#Of_a_polygon
    * @param featurePoints of points forming a polygon to return the centroid for
    */
-  static calculateCentroidFromFeatureCollection(featurePoints: FeatureCollection<Point>): Feature<Point> {
-    Brolog.verbose(`featurePoints: FeatureCollection<Point>: ${JSON.stringify(featurePoints)}`);
+  calculateCentroidFromFeatureCollection(featurePoints: FeatureCollection<Point>): Feature<Point> {
+    this.log.verbose(`featurePoints: FeatureCollection<Point>: ${JSON.stringify(featurePoints)}`);
     const points = featurePoints.features.map(f => f.geometry.coordinates);
-    return GeometryOps.calculateCentroidFromPoints(points);
+    return this.calculateCentroidFromPoints(points);
   }
 
-  static calculateCentroidFromPoints(points: number[][]) {
-    Brolog.verbose(`  points: ${JSON.stringify(points)}`);
+  calculateCentroidFromPoints(points: number[][]) {
+    this.log.verbose(`  points: ${JSON.stringify(points)}`);
     // let i = 0;
     let area = 0;
     let cx = 0;
@@ -95,12 +138,12 @@ export default class GeometryOps {
       area += currentArea;
       cx += (xI + xIp1) * currentArea;
       cy += (yI + yIp1) * currentArea;
-      Brolog.verbose(`iteration: ${i} - area: ${area}, cx: ${cx}, cy: ${cy}`);
+      this.log.verbose(`iteration: ${i} - area: ${area}, cx: ${cx}, cy: ${cy}`);
     }
     area *= 1 / 2;
     cx = Math.round(cx / (6 * area));
     cy = Math.round(cy / (6 * area));
-    Brolog.verbose(`finished - area: ${area}, cx: ${cx}, cy: ${cy}`);
+    this.log.verbose(`finished - area: ${area}, cx: ${cx}, cy: ${cy}`);
     return turfPoint([cx, cy]);
   }
 }
