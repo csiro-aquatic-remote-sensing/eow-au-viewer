@@ -20,12 +20,14 @@ let geometryOps;
 
 function instanceOfEowWaterbodyIntersection(object: any): object is EowWaterbodyIntersection {
   return 'waterBody' in object &&
+    object.waterBody !== null &&
     'polygon' in object.waterBody &&
     'name' in object.waterBody &&
     'eowData' in object;
 }
 
 describe('geometry-ops', () => {
+  const that = this;
   beforeEach(() => {
     log = new Brolog();
     log.level('silly');
@@ -225,10 +227,11 @@ describe('geometry-ops', () => {
       expect(featureCollection.features[0].geometry.coordinates[0]).to.equal(coordinates[0][0]);
       expect(featureCollection.features[0].geometry.coordinates[1]).to.equal(coordinates[0][1]);
       expect(featureCollection.features[0].properties).to.be.an('object');
-      expect(featureCollection.features[0].properties).to.have.property('now in eowData field');  // started as 'testEowData' but modified in code
+      const possibleValues = ['testEowData', 'now in eowData field']; // Starts as the first and the code may change to second
+      expect(possibleValues).to.include(Object.keys(featureCollection.features[0].properties)[0]);
     };
 
-    it('single triangle - test point inside', () => {
+    it('single square - test point inside', () => {
       const eowPoints = [[100, 100]];
       const eowDataPoints = turfFeatureCollection(eowPoints.map(c => turfPoint(c, {testEowData: true})));
       // const pointsToTest = turfPoint(eowPoints[0]);
@@ -236,11 +239,12 @@ describe('geometry-ops', () => {
       log.verbose(where, `layerData: ${JSON.stringify(layerData)}`);
       log.verbose(where, `eowDataPoints: ${JSON.stringify(eowDataPoints)}`);
 
-      const value = geometryOps.calculateLayerIntersections(eowDataPoints, layerData, 'square');
-      log.verbose(where, `value: ${JSON.stringify(value, null, 2)}`);
-
       // Test inputs are as expected
       testFeatureCollection(eowDataPoints, eowPoints);
+
+      // Run function under test
+      const value = geometryOps.calculateLayerIntersections(eowDataPoints, layerData, 'square');
+      log.verbose(where, `value: ${JSON.stringify(value, null, 2)}`);
 
       // Test outputs
       expect(value).to.be.an('array');
@@ -250,10 +254,49 @@ describe('geometry-ops', () => {
       testFeatureCollection(value[0].waterBody.polygon, eowPoints);
     });
 
-    it('single triangle - test point on vertice (in)', () => {
-    });
-    it('single triangle - test point outside', () => {
+    it('single square - test point on vertice (in)', () => {
+      const eowPoints = [[1000, 0]];
+      const eowDataPoints = turfFeatureCollection(eowPoints.map(c => turfPoint(c, {testEowData: true})));
+      // const pointsToTest = turfPoint(eowPoints[0]);
 
+      log.verbose(where, `layerData: ${JSON.stringify(layerData)}`);
+      log.verbose(where, `eowDataPoints: ${JSON.stringify(eowDataPoints)}`);
+
+      // Test inputs are as expected
+      testFeatureCollection(eowDataPoints, eowPoints);
+
+      // Run function under test
+      const value = geometryOps.calculateLayerIntersections(eowDataPoints, layerData, 'square');
+      log.verbose(where, `value: ${JSON.stringify(value, null, 2)}`);
+
+      // Test outputs
+      expect(value).to.be.an('array');
+      expect(value).lengthOf(1);
+      expect(instanceOfEowWaterbodyIntersection(value[0])).to.be.true;  // tslint:disable-line
+
+      testFeatureCollection(value[0].waterBody.polygon, eowPoints);
+    });
+
+    it('single square - test point outside', () => {
+      const eowPoints = [[10000, 10000]];
+      const eowDataPoints = turfFeatureCollection(eowPoints.map(c => turfPoint(c, {testEowData: true})));
+      // const pointsToTest = turfPoint(eowPoints[0]);
+
+      log.verbose(where, `layerData: ${JSON.stringify(layerData)}`);
+      log.verbose(where, `eowDataPoints: ${JSON.stringify(eowDataPoints)}`);
+
+      // Test inputs are as expected
+      testFeatureCollection(eowDataPoints, eowPoints);
+
+      // Run function under test
+      const value = geometryOps.calculateLayerIntersections(eowDataPoints, layerData, 'square');
+      log.verbose(where, `value: ${JSON.stringify(value, null, 2)}`);
+
+      // Test outputs
+      expect(value).to.be.an('array');
+      expect(value).lengthOf(1);
+      expect(value[0].waterBody).to.be.null; // tslint:disable-line
+      expect(value[0].eowData).to.be.null; // tslint:disable-line
     });
 
     // multiple shapes, multiple point tests

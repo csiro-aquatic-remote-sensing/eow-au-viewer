@@ -62,7 +62,9 @@ export default class GeometryOps {
    *            name: Waterbody name (TODO)
    *          },
    *          eowData: as returned by Maris (defined elsewhere)
-   * If the waterbody has no EOWData that field will be null.
+   * If the waterBody has no intersection with the EOWData it will return:
+   *          waterBody: null,
+   *          eowData: null
    */
   calculateLayerIntersections(eowDataGeometry: FeatureCollection<Point>, layerGeometries: LayerGeometries, layerName: string):
     EowWaterbodyIntersection[] {
@@ -85,6 +87,12 @@ export default class GeometryOps {
    * @param intersection - the data from the Turfjs pointsWithinPolygon()
    */
   private createEoWFormat(intersection: FeatureCollection<Point>): EowWaterbodyIntersection {
+    if (intersection.features.length === 0) {
+      return {
+        waterBody: null,
+        eowData: null
+      };
+    }
     const eowWaterbodyIntersection: EowWaterbodyIntersection = {
       waterBody: {
         polygon: intersection,
