@@ -13,10 +13,13 @@ import Brolog from 'brolog';
 import LayerGeometries from './layers-geometries';
 
 const expect = chai.expect;
+
 let log: Brolog;
+let geometryOps;
+let layerData;
+
 
 const where = 'geometry-ops.spec';
-let geometryOps;
 
 function instanceOfEowWaterbodyIntersection(object: any): object is EowWaterbodyIntersection {
   return 'waterBody' in object &&
@@ -27,11 +30,11 @@ function instanceOfEowWaterbodyIntersection(object: any): object is EowWaterbody
 }
 
 describe('geometry-ops', () => {
-  const that = this;
   beforeEach(() => {
     log = new Brolog();
     log.level('silly');
     geometryOps = new GeometryOps(log);
+    layerData = new LayerGeometries(log);
   });
   /**
    * Used http://eguruchela.com/math/Calculator/polygon-centroid-point to calculate centroid
@@ -201,102 +204,109 @@ describe('geometry-ops', () => {
   });
 
   describe('calculateLayerIntersections', () => {
-    const coordinatesSquare = [[0, 0], [2000, 0], [2000, 2000], [0, 2000], [0, 0]];
-    const pointsSquare = turfPolygon([coordinatesSquare]);
-    const layerData = new LayerGeometries(log);
+    describe('single polygon', () => {
+      beforeEach(() => {
+        const coordinatesSquare = [[0, 0], [2000, 0], [2000, 2000], [0, 2000], [0, 0]];
+        const pointsSquare = turfPolygon([coordinatesSquare]);
 
-    layerData.layerFeatures.square = [pointsSquare];
+        layerData.layerFeatures.square = [pointsSquare];
+      });
 
-    const testFeatureCollection = (featureCollection: FeatureCollection<Point>, coordinates: number[][]) => {
-      expect(featureCollection).to.be.an('object');
-      expect(featureCollection).to.have.property('type');
-      expect(featureCollection.type).to.equal('FeatureCollection');
-      expect(featureCollection).to.have.property('features');
-      expect(featureCollection.features).to.be.an('array');
-      expect(featureCollection.features).lengthOf(1);
-      expect(featureCollection.features[0]).to.be.an('object');
-      expect(featureCollection.features[0]).to.have.property('type');
-      expect(featureCollection.features[0]).to.have.property('geometry');
-      expect(featureCollection.features[0]).to.have.property('properties'); //
-      expect(featureCollection.features[0].type).to.equal('Feature');
-      expect(featureCollection.features[0].geometry).to.be.an('object');
-      expect(featureCollection.features[0].geometry).to.have.property('type');
-      expect(featureCollection.features[0].geometry).to.have.property('coordinates');
-      expect(featureCollection.features[0].geometry.type).to.equal('Point');
-      expect(featureCollection.features[0].geometry.coordinates).to.be.an('array');
-      expect(featureCollection.features[0].geometry.coordinates[0]).to.equal(coordinates[0][0]);
-      expect(featureCollection.features[0].geometry.coordinates[1]).to.equal(coordinates[0][1]);
-      expect(featureCollection.features[0].properties).to.be.an('object');
-      const possibleValues = ['testEowData', 'now in eowData field']; // Starts as the first and the code may change to second
-      expect(possibleValues).to.include(Object.keys(featureCollection.features[0].properties)[0]);
-    };
+      const testFeatureCollection = (featureCollection: FeatureCollection<Point>, coordinates: number[][]) => {
+        expect(featureCollection).to.be.an('object');
+        expect(featureCollection).to.have.property('type');
+        expect(featureCollection.type).to.equal('FeatureCollection');
+        expect(featureCollection).to.have.property('features');
+        expect(featureCollection.features).to.be.an('array');
+        expect(featureCollection.features).lengthOf(1);
+        expect(featureCollection.features[0]).to.be.an('object');
+        expect(featureCollection.features[0]).to.have.property('type');
+        expect(featureCollection.features[0]).to.have.property('geometry');
+        expect(featureCollection.features[0]).to.have.property('properties'); //
+        expect(featureCollection.features[0].type).to.equal('Feature');
+        expect(featureCollection.features[0].geometry).to.be.an('object');
+        expect(featureCollection.features[0].geometry).to.have.property('type');
+        expect(featureCollection.features[0].geometry).to.have.property('coordinates');
+        expect(featureCollection.features[0].geometry.type).to.equal('Point');
+        expect(featureCollection.features[0].geometry.coordinates).to.be.an('array');
+        expect(featureCollection.features[0].geometry.coordinates[0]).to.equal(coordinates[0][0]);
+        expect(featureCollection.features[0].geometry.coordinates[1]).to.equal(coordinates[0][1]);
+        expect(featureCollection.features[0].properties).to.be.an('object');
+        const possibleValues = ['testEowData', 'now in eowData field']; // Starts as the first and the code may change to second
+        expect(possibleValues).to.include(Object.keys(featureCollection.features[0].properties)[0]);
+      };
 
-    it('single square - test point inside', () => {
-      const eowPoints = [[100, 100]];
-      const eowDataPoints = turfFeatureCollection(eowPoints.map(c => turfPoint(c, {testEowData: true})));
-      // const pointsToTest = turfPoint(eowPoints[0]);
+      it('single square - test point inside', () => {
+        const eowPoints = [[100, 100]];
+        const eowDataPoints = turfFeatureCollection(eowPoints.map(c => turfPoint(c, {testEowData: true})));
+        // const pointsToTest = turfPoint(eowPoints[0]);
 
-      log.verbose(where, `layerData: ${JSON.stringify(layerData)}`);
-      log.verbose(where, `eowDataPoints: ${JSON.stringify(eowDataPoints)}`);
+        log.verbose(where, `layerData: ${JSON.stringify(layerData)}`);
+        log.verbose(where, `eowDataPoints: ${JSON.stringify(eowDataPoints)}`);
 
-      // Test inputs are as expected
-      testFeatureCollection(eowDataPoints, eowPoints);
+        // Test inputs are as expected
+        testFeatureCollection(eowDataPoints, eowPoints);
 
-      // Run function under test
-      const value = geometryOps.calculateLayerIntersections(eowDataPoints, layerData, 'square');
-      log.verbose(where, `value: ${JSON.stringify(value, null, 2)}`);
+        // Run function under test
+        const value = geometryOps.calculateLayerIntersections(eowDataPoints, layerData, 'square');
+        log.verbose(where, `value: ${JSON.stringify(value, null, 2)}`);
 
-      // Test outputs
-      expect(value).to.be.an('array');
-      expect(value).lengthOf(1);
-      expect(instanceOfEowWaterbodyIntersection(value[0])).to.be.true;  // tslint:disable-line
+        // Test outputs
+        expect(value).to.be.an('array');
+        expect(value).lengthOf(1);
+        expect(instanceOfEowWaterbodyIntersection(value[0])).to.be.true;  // tslint:disable-line
 
-      testFeatureCollection(value[0].waterBody.polygon, eowPoints);
+        testFeatureCollection(value[0].waterBody.polygon, eowPoints);
+      });
+
+      it('single square - test point on vertice (in)', () => {
+        const eowPoints = [[1000, 0]];
+        const eowDataPoints = turfFeatureCollection(eowPoints.map(c => turfPoint(c, {testEowData: true})));
+        // const pointsToTest = turfPoint(eowPoints[0]);
+
+        log.verbose(where, `layerData: ${JSON.stringify(layerData)}`);
+        log.verbose(where, `eowDataPoints: ${JSON.stringify(eowDataPoints)}`);
+
+        // Test inputs are as expected
+        testFeatureCollection(eowDataPoints, eowPoints);
+
+        // Run function under test
+        const value = geometryOps.calculateLayerIntersections(eowDataPoints, layerData, 'square');
+        log.verbose(where, `value: ${JSON.stringify(value, null, 2)}`);
+
+        // Test outputs
+        expect(value).to.be.an('array');
+        expect(value).lengthOf(1);
+        expect(instanceOfEowWaterbodyIntersection(value[0])).to.be.true;  // tslint:disable-line
+
+        testFeatureCollection(value[0].waterBody.polygon, eowPoints);
+      });
+
+      it('single square - test point outside', () => {
+        const eowPoints = [[10000, 10000]];
+        const eowDataPoints = turfFeatureCollection(eowPoints.map(c => turfPoint(c, {testEowData: true})));
+        // const pointsToTest = turfPoint(eowPoints[0]);
+
+        log.verbose(where, `layerData: ${JSON.stringify(layerData)}`);
+        log.verbose(where, `eowDataPoints: ${JSON.stringify(eowDataPoints)}`);
+
+        // Test inputs are as expected
+        testFeatureCollection(eowDataPoints, eowPoints);
+
+        // Run function under test
+        const value = geometryOps.calculateLayerIntersections(eowDataPoints, layerData, 'square');
+        log.verbose(where, `value: ${JSON.stringify(value, null, 2)}`);
+
+        // Test outputs
+        expect(value).to.be.an('array');
+        expect(value).lengthOf(1);
+        expect(value[0].waterBody).to.be.null; // tslint:disable-line
+        expect(value[0].eowData).to.be.null; // tslint:disable-line
+      });
     });
 
-    it('single square - test point on vertice (in)', () => {
-      const eowPoints = [[1000, 0]];
-      const eowDataPoints = turfFeatureCollection(eowPoints.map(c => turfPoint(c, {testEowData: true})));
-      // const pointsToTest = turfPoint(eowPoints[0]);
+    describe('multiple polygon', () => {
 
-      log.verbose(where, `layerData: ${JSON.stringify(layerData)}`);
-      log.verbose(where, `eowDataPoints: ${JSON.stringify(eowDataPoints)}`);
-
-      // Test inputs are as expected
-      testFeatureCollection(eowDataPoints, eowPoints);
-
-      // Run function under test
-      const value = geometryOps.calculateLayerIntersections(eowDataPoints, layerData, 'square');
-      log.verbose(where, `value: ${JSON.stringify(value, null, 2)}`);
-
-      // Test outputs
-      expect(value).to.be.an('array');
-      expect(value).lengthOf(1);
-      expect(instanceOfEowWaterbodyIntersection(value[0])).to.be.true;  // tslint:disable-line
-
-      testFeatureCollection(value[0].waterBody.polygon, eowPoints);
-    });
-
-    it('single square - test point outside', () => {
-      const eowPoints = [[10000, 10000]];
-      const eowDataPoints = turfFeatureCollection(eowPoints.map(c => turfPoint(c, {testEowData: true})));
-      // const pointsToTest = turfPoint(eowPoints[0]);
-
-      log.verbose(where, `layerData: ${JSON.stringify(layerData)}`);
-      log.verbose(where, `eowDataPoints: ${JSON.stringify(eowDataPoints)}`);
-
-      // Test inputs are as expected
-      testFeatureCollection(eowDataPoints, eowPoints);
-
-      // Run function under test
-      const value = geometryOps.calculateLayerIntersections(eowDataPoints, layerData, 'square');
-      log.verbose(where, `value: ${JSON.stringify(value, null, 2)}`);
-
-      // Test outputs
-      expect(value).to.be.an('array');
-      expect(value).lengthOf(1);
-      expect(value[0].waterBody).to.be.null; // tslint:disable-line
-      expect(value[0].eowData).to.be.null; // tslint:disable-line
     });
 
     // multiple shapes, multiple point tests
