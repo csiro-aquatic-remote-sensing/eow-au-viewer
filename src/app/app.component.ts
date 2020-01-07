@@ -14,7 +14,7 @@ import {UserStore} from './user-store';
 import {EowDataLayer} from './eow-data-layer';
 import EowDataGeometries from './eow-data-geometries';
 import LayerGeometries from './layers-geometries';
-import GeometryOps from './geometry-ops';
+import GeometryOps, {EowWaterbodyIntersection} from './geometry-ops';
 import {Brolog} from 'brolog';
 import {timeout} from 'rxjs/operators';
 import {FeatureCollection, Point} from '@turf/helpers';
@@ -46,6 +46,8 @@ export class AppComponent implements OnInit {
   htmlDocument: Document;
   eowDataGeometries: EowDataGeometries;
   layersGeometries: LayerGeometries;
+  geometryOps: GeometryOps;
+  eowDataPieChart: EOWDataPieChart;
 
   constructor(@Inject(DOCUMENT) private document: Document, private http: HttpClient, private log: Brolog) {
     this.htmlDocument = document;
@@ -58,6 +60,8 @@ export class AppComponent implements OnInit {
     this.measurementStore = new MeasurementStore();
     this.eowDataGeometries = new EowDataGeometries(log);
     this.layersGeometries = new LayerGeometries(log);
+    this.geometryOps = new GeometryOps(log);
+    this.eowDataPieChart = new EOWDataPieChart(this.geometryOps, log);
   }
 
   async ngOnInit() {
@@ -73,9 +77,9 @@ export class AppComponent implements OnInit {
 
     this.setupEventHandlers();
     await this.layersGeometries.init();
-    const eowDataInWaterbodies: FeatureCollection<Point>[] = GeometryOps.calculateLayerIntersections(this.eowDataGeometries.points,
+    const eowDataInWaterbodies: EowWaterbodyIntersection[] = this.geometryOps.calculateLayerIntersections(this.eowDataGeometries.points,
       this.layersGeometries, 'i5516 reservoirs');
-    EOWDataPieChart.plot(eowDataInWaterbodies);
+    this.eowDataPieChart.plot(eowDataInWaterbodies);
   }
 
   private debug_compareUsersNMeasurements() {

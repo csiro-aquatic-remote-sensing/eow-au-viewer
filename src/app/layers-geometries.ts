@@ -1,4 +1,4 @@
-import {Feature as turfFeature, lineString, LineString, multiLineString, Polygon, polygon} from '@turf/helpers';
+import {Feature as turfFeature, lineString, LineString, multiLineString, Polygon, polygon, multiPolygon} from '@turf/helpers';
 import lineToPolygon from '@turf/line-to-polygon';
 import GeoJSONFeature from 'ol/format/Feature';
 import OLGeoJson from 'ol/format/GeoJSON';
@@ -73,6 +73,9 @@ export default class LayerGeometries {
           case 'polygon':
             this.convertPolygon(this.layerFeatures[this.mapNames(name)], simpleGeometry);
             break;
+          case 'multipolygon':
+            this.convertMultiPolygon(this.layerFeatures[this.mapNames(name)], simpleGeometry);
+            break;
           case 'point':
             // ignore points
             break;
@@ -101,7 +104,10 @@ export default class LayerGeometries {
 
   private convertMultiLineString(dataDestination, simpleGeometry: SimpleGeometry) {
     const coordinates = simpleGeometry.getCoordinates();
-    const turfLine = multiLineString(coordinates);
+    const turfLine = multiLineString(coordinates.filter(c => c.length > 2));
+    turfLine.geometry.coordinates.forEach(c => {
+      this.log.verbose(theClass, `convertMultilineString - size of arrays: ${c.length} -> ${JSON.stringify(c)}`);
+    });
     const polygonObj = lineToPolygon(turfLine);
     dataDestination.push(polygonObj);
   }
@@ -110,6 +116,12 @@ export default class LayerGeometries {
     const coordinates = simpleGeometry.getCoordinates();
     const polygonObj = polygon(coordinates);
     dataDestination.push(polygonObj);
+  }
+
+  private convertMultiPolygon(dataDestination, simpleGeometry: SimpleGeometry) {
+    const coordinates = simpleGeometry.getCoordinates();
+    const multiPolygon1 = multiPolygon(coordinates);
+    dataDestination.push(multiPolygon1);
   }
 
   private mapNames(name: string): string {

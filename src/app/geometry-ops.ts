@@ -118,13 +118,13 @@ export default class GeometryOps {
    * @param featurePoints of points forming a polygon to return the centroid for
    */
   calculateCentroidFromFeatureCollection(featurePoints: FeatureCollection<Point>): Feature<Point> {
-    this.log.verbose(`featurePoints: FeatureCollection<Point>: ${JSON.stringify(featurePoints)}`);
+    this.log.silly(`calculateCentroidFromFeatureCollection - featurePoints: FeatureCollection<Point>: ${JSON.stringify(featurePoints)}`);
     const points = featurePoints.features.map(f => f.geometry.coordinates);
     return this.calculateCentroidFromPoints(points);
   }
 
   calculateCentroidFromPoints(points: number[][]) {
-    this.log.verbose(`  points: ${JSON.stringify(points)}`);
+    this.log.verbose('calculateCentroidFromPoints', `  points: ${JSON.stringify(points)}`);
     // let i = 0;
     let area = 0;
     let cx = 0;
@@ -146,12 +146,12 @@ export default class GeometryOps {
       area += currentArea;
       cx += (xI + xIp1) * currentArea;
       cy += (yI + yIp1) * currentArea;
-      this.log.verbose(`iteration: ${i} - area: ${area}, cx: ${cx}, cy: ${cy}`);
+      this.log.silly('calculateCentroidFromPoints', `iteration: ${i} - area: ${area}, cx: ${cx}, cy: ${cy}`);
     }
     area *= 1 / 2;
     cx = Math.round(cx / (6 * area));
     cy = Math.round(cy / (6 * area));
-    this.log.verbose(`finished - area: ${area}, cx: ${cx}, cy: ${cy}`);
+    this.log.verbose('calculateCentroidFromPoints', `finished - area: ${area}, (centroid) cx: ${cx}, cy: ${cy}`);
     return turfPoint([cx, cy]);
   }
 }
