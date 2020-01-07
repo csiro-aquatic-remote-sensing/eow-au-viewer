@@ -210,7 +210,7 @@ describe('geometry-ops', () => {
       expect(featureCollection.type).to.equal('FeatureCollection');
       expect(featureCollection).to.have.property('features');
       expect(featureCollection.features).to.be.an('array');
-      expect(featureCollection.features).lengthOf(1);
+      expect(featureCollection.features).lengthOf(coordinates.length);
       expect(featureCollection.features[0]).to.be.an('object');
       expect(featureCollection.features[0]).to.have.property('type');
       expect(featureCollection.features[0]).to.have.property('geometry');
@@ -278,8 +278,8 @@ describe('geometry-ops', () => {
       const eowDataPoints: FeatureCollection<Point> = turfFeatureCollection(eowPoints.map(c => turfPoint(c, {testEowData: true})));
       // const pointsToTest = turfPoint(eowPoints[0]);
 
-      log.verbose(where, `layerData: ${JSON.stringify(layerData)}`);
-      log.verbose(where, `eowDataPoints: ${JSON.stringify(eowDataPoints)}`);
+      log.verbose(where, `layerData: ${JSON.stringify(layerData, null, 2)}`);
+      log.verbose(where, `eowDataPoints: ${JSON.stringify(eowDataPoints, null, 2)}`);
 
       // Test inputs are as expected
       testFeatureCollection(eowDataPoints, eowPoints, layerData);
@@ -491,7 +491,68 @@ describe('geometry-ops', () => {
         }
       });
     });
-    // repeat for multiple point tests
-    // repeat for multiple layers
+
+    describe('one layer, multiple polygons (squares), overlapping, multiple points', () => {
+      beforeEach(() => {
+        // overlapping squares
+        const coords = [];
+        coords.push([[1000, 3000], [3000, 3000], [3000, 5000], [1000, 5000], [1000, 3000]]);
+        coords.push([[2000, 4000], [4000, 4000], [4000, 6000], [2000, 6000], [2000, 4000]]);
+        coords.push([[1500, 4500], [2500, 4500], [2500, 5500], [1500, 5500], [1500, 4500]]);
+        const pointsPolygons = buildEOWDataFeatures(coords);
+        layerName = 'multiPolygonSquareOverlapMultiPoints';
+        layerData.layerFeatures[layerName] = [...pointsPolygons];
+      });
+
+      it('test point inside - 1st only', () => {
+        const eowPoints = [[1750, 3500], [1775, 3525]];
+        testIsInside(layerData, layerName, eowPoints, 0);
+        testIsOutside(layerData, layerName, eowPoints, 1);
+        testIsOutside(layerData, layerName, eowPoints, 2);
+      });
+
+      it('test point inside - 2nd only', () => {
+        const eowPoints = [[3500, 5250], [3525, 5275]];
+        testIsInside(layerData, layerName, eowPoints, 1);
+        testIsOutside(layerData, layerName, eowPoints, 0);
+        testIsOutside(layerData, layerName, eowPoints, 2);
+      });
+
+      it('test point inside - 3rd only', () => {
+        const eowPoints = [[1750, 5250], [1775, 5275]];
+        testIsInside(layerData, layerName, eowPoints, 2);
+        testIsOutside(layerData, layerName, eowPoints, 1);
+        testIsOutside(layerData, layerName, eowPoints, 0);
+      });
+
+      it('test point inside - 1st and 2nd only', () => {
+        const eowPoints = [[2250, 4250], [2275, 4275]];
+        testIsInside(layerData, layerName, eowPoints, 0);
+        testIsInside(layerData, layerName, eowPoints, 1);
+        testIsOutside(layerData, layerName, eowPoints, 2);
+      });
+
+      it('test point inside - 1st and 3rd only', () => {
+        const eowPoints = [[1750, 4750], [1775, 4775]];
+        testIsInside(layerData, layerName, eowPoints, 0);
+        testIsOutside(layerData, layerName, eowPoints, 1);
+        testIsInside(layerData, layerName, eowPoints, 2);
+      });
+
+      it('test point inside - 2nd and 3rd only', () => {
+        const eowPoints = [[2250, 5250], [2275, 5275]];
+        testIsOutside(layerData, layerName, eowPoints, 0);
+        testIsInside(layerData, layerName, eowPoints, 1);
+        testIsInside(layerData, layerName, eowPoints, 2);
+      });
+
+      it('test point inside - all 3', () => {
+        const eowPoints = [[2250, 4750], [2275, 4775]];
+        for (let i = 0; i <= 2; i++) {
+          testIsInside(layerData, layerName, eowPoints, i);
+        }
+      });
+    });
+      // repeat for multiple layers
   });
 });
