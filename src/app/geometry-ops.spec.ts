@@ -236,6 +236,103 @@ describe('geometry-ops', () => {
       return polygons;
     };
 
+    // Test that the given eowPoints are inside the polygon at index of polygons constructed from coords[]
+    // Inside will be with some non-null value(s)
+    // [
+    //   {
+    //     "waterBody": {
+    //       "polygon": {
+    //         "type": "FeatureCollection",
+    //         "features": [
+    //           {
+    //             "type": "Feature",
+    //             "properties": {
+    //               "now in eowData field": true
+    //             },
+    //             "geometry": {
+    //               "type": "Point",
+    //               "coordinates": [
+    //                 100,
+    //                 100
+    //               ]
+    //             }
+    //           }
+    //         ]
+    //       },
+    //       "name": "TBD"
+    //     },
+    //     "eowData": {
+    //       "testEowData": true
+    //     }
+    //   },
+    //   {
+    //     "waterBody": null,
+    //     "eowData": null
+    //   },
+    //   {
+    //     "waterBody": null,
+    //     "eowData": null
+    //   }
+    // ]
+    const testIsInside = (theLayerName, eowPoints, index) => {
+      const eowDataPoints: FeatureCollection<Point> = turfFeatureCollection(eowPoints.map(c => turfPoint(c, {testEowData: true})));
+      // const pointsToTest = turfPoint(eowPoints[0]);
+
+      log.verbose(where, `layerData: ${JSON.stringify(layerData)}`);
+      log.verbose(where, `eowDataPoints: ${JSON.stringify(eowDataPoints)}`);
+
+      // Test inputs are as expected
+      testFeatureCollection(eowDataPoints, eowPoints, layerData);
+
+      // Run function under test
+      const value = geometryOps.calculateLayerIntersections(eowDataPoints, layerData, theLayerName);
+      log.verbose(where, `value: ${JSON.stringify(value, null, 2)}`);
+
+      // Test outputs
+      expect(value).to.be.an('array');
+      expect(value).lengthOf(layerData.layerFeatures[layerName].length);
+      expect(instanceOfEowWaterbodyIntersection(value[index])).to.be.true;  // tslint:disable-line
+
+      testFeatureCollection(value[index].waterBody.polygon, eowPoints, layerData);
+    };
+
+    // Test that the given eowPoints are outside the polygon at index of polygons constructed from coords[]
+    // Outside will be with null values:
+    // [
+    //   {
+    //     "waterBody": null,
+    //     "eowData": null
+    //   },
+    //   {
+    //     "waterBody": null,
+    //     "eowData": null
+    //   },
+    //   {
+    //     "waterBody": null,
+    //     "eowData": null
+    //   }
+    // ]
+    const testIsOutside = (theLayerName, eowPoints, index) => {
+      const eowDataPoints: FeatureCollection<Point> = turfFeatureCollection(eowPoints.map(c => turfPoint(c, {testEowData: true})));
+      // const pointsToTest = turfPoint(eowPoints[0]);
+
+      log.verbose(where, `layerData: ${JSON.stringify(layerData)}`);
+      log.verbose(where, `eowDataPoints: ${JSON.stringify(eowDataPoints)}`);
+
+      // Test inputs are as expected
+      testFeatureCollection(eowDataPoints, eowPoints, layerData);
+
+      // Run function under test
+      const value = geometryOps.calculateLayerIntersections(eowDataPoints, layerData, theLayerName);
+      log.verbose(where, `value: ${JSON.stringify(value, null, 2)}`);
+
+      // Test outputs
+      expect(value).to.be.an('array');
+      expect(value).lengthOf(layerData.layerFeatures[layerName].length);
+      expect(value[index].waterBody).to.be.null; // tslint:disable-line
+      expect(value[index].eowData).to.be.null; // tslint:disable-line
+    };
+
     beforeEach(() => {
       layerData = new LayerGeometries(log);
     });
@@ -244,76 +341,23 @@ describe('geometry-ops', () => {
       beforeEach(() => {
         const coordinatesSquare = [[0, 0], [2000, 0], [2000, 2000], [0, 2000], [0, 0]];
         const pointsSquare = turfPolygon([coordinatesSquare]);
-
-        layerData.layerFeatures.square = [pointsSquare];
+        layerName = 'square';
+        layerData.layerFeatures[layerName] = [pointsSquare];
       });
 
       it('single square - test point inside', () => {
         const eowPoints = [[100, 100]];
-        const eowDataPoints = turfFeatureCollection(eowPoints.map(c => turfPoint(c, {testEowData: true})));
-        // const pointsToTest = turfPoint(eowPoints[0]);
-
-        log.verbose(where, `layerData: ${JSON.stringify(layerData)}`);
-        log.verbose(where, `eowDataPoints: ${JSON.stringify(eowDataPoints)}`);
-
-        // Test inputs are as expected
-        testFeatureCollection(eowDataPoints, eowPoints, layerData);
-
-        // Run function under test
-        const value = geometryOps.calculateLayerIntersections(eowDataPoints, layerData, 'square');
-        log.verbose(where, `value: ${JSON.stringify(value, null, 2)}`);
-
-        // Test outputs
-        expect(value).to.be.an('array');
-        expect(value).lengthOf(Object.keys(layerData.layerFeatures).length);
-        expect(instanceOfEowWaterbodyIntersection(value[0])).to.be.true;  // tslint:disable-line
-
-        testFeatureCollection(value[0].waterBody.polygon, eowPoints, layerData);
+        testIsInside(layerName, eowPoints, 0);
       });
 
       it('single square - test point on vertice (in)', () => {
         const eowPoints = [[1000, 0]];
-        const eowDataPoints = turfFeatureCollection(eowPoints.map(c => turfPoint(c, {testEowData: true})));
-        // const pointsToTest = turfPoint(eowPoints[0]);
-
-        log.verbose(where, `layerData: ${JSON.stringify(layerData)}`);
-        log.verbose(where, `eowDataPoints: ${JSON.stringify(eowDataPoints)}`);
-
-        // Test inputs are as expected
-        testFeatureCollection(eowDataPoints, eowPoints, layerData);
-
-        // Run function under test
-        const value = geometryOps.calculateLayerIntersections(eowDataPoints, layerData, 'square');
-        log.verbose(where, `value: ${JSON.stringify(value, null, 2)}`);
-
-        // Test outputs
-        expect(value).to.be.an('array');
-        expect(value).lengthOf(Object.keys(layerData.layerFeatures).length);
-        expect(instanceOfEowWaterbodyIntersection(value[0])).to.be.true;  // tslint:disable-line
-
-        testFeatureCollection(value[0].waterBody.polygon, eowPoints, layerData);
+        testIsInside(layerName, eowPoints, 0);
       });
 
       it('single square - test point outside', () => {
         const eowPoints = [[10000, 10000]];
-        const eowDataPoints = turfFeatureCollection(eowPoints.map(c => turfPoint(c, {testEowData: true})));
-        // const pointsToTest = turfPoint(eowPoints[0]);
-
-        log.verbose(where, `layerData: ${JSON.stringify(layerData)}`);
-        log.verbose(where, `eowDataPoints: ${JSON.stringify(eowDataPoints)}`);
-
-        // Test inputs are as expected
-        testFeatureCollection(eowDataPoints, eowPoints, layerData);
-
-        // Run function under test
-        const value = geometryOps.calculateLayerIntersections(eowDataPoints, layerData, 'square');
-        log.verbose(where, `value: ${JSON.stringify(value, null, 2)}`);
-
-        // Test outputs
-        expect(value).to.be.an('array');
-        expect(value).lengthOf(Object.keys(layerData.layerFeatures).length);
-        expect(value[0].waterBody).to.be.null; // tslint:disable-line
-        expect(value[0].eowData).to.be.null; // tslint:disable-line
+        testIsOutside(layerName, eowPoints, 0);
       });
     });
 
@@ -329,72 +373,53 @@ describe('geometry-ops', () => {
         layerData.layerFeatures[layerName] = [...pointsPolygons];
       });
 
-      it('test point inside', () => {
+      it('test point inside 1', () => {
         const eowPoints = [[100, 100]];
-        const eowDataPoints = turfFeatureCollection(eowPoints.map(c => turfPoint(c, {testEowData: true})));
-        // const pointsToTest = turfPoint(eowPoints[0]);
-
-        log.verbose(where, `layerData: ${JSON.stringify(layerData)}`);
-        log.verbose(where, `eowDataPoints: ${JSON.stringify(eowDataPoints)}`);
-
-        // Test inputs are as expected
-        testFeatureCollection(eowDataPoints, eowPoints, layerData);
-
-        // Run function under test
-        const value = geometryOps.calculateLayerIntersections(eowDataPoints, layerData, layerName);
-        log.verbose(where, `value: ${JSON.stringify(value, null, 2)}`);
-
-        // Test outputs
-        expect(value).to.be.an('array');
-        expect(value).lengthOf(layerData.layerFeatures[layerName].length);
-        expect(instanceOfEowWaterbodyIntersection(value[0])).to.be.true;  // tslint:disable-line
-
-        testFeatureCollection(value[0].waterBody.polygon, eowPoints, layerData);
+        testIsInside(layerName, eowPoints, 0);
+        testIsOutside(layerName, eowPoints, 1);
+        testIsOutside(layerName, eowPoints, 2);
       });
 
-      it('test point on vertice (in)', () => {
+      it('test point inside 2', () => {
+        const eowPoints = [[3500, 100]];
+        testIsInside(layerName, eowPoints, 1);
+        testIsOutside(layerName, eowPoints, 0);
+        testIsOutside(layerName, eowPoints, 2);
+      });
+
+      it('test point inside 3', () => {
+        const eowPoints = [[6500, 100]];
+        testIsInside(layerName, eowPoints, 2);
+        testIsOutside(layerName, eowPoints, 1);
+        testIsOutside(layerName, eowPoints, 0);
+      });
+
+      it('test point on vertice (in) 1', () => {
         const eowPoints = [[1000, 0]];
-        const eowDataPoints = turfFeatureCollection(eowPoints.map(c => turfPoint(c, {testEowData: true})));
-        // const pointsToTest = turfPoint(eowPoints[0]);
-
-        log.verbose(where, `layerData: ${JSON.stringify(layerData)}`);
-        log.verbose(where, `eowDataPoints: ${JSON.stringify(eowDataPoints)}`);
-
-        // Test inputs are as expected
-        testFeatureCollection(eowDataPoints, eowPoints, layerData);
-
-        // Run function under test
-        const value = geometryOps.calculateLayerIntersections(eowDataPoints, layerData, layerName);
-        log.verbose(where, `value: ${JSON.stringify(value, null, 2)}`);
-
-        // Test outputs
-        expect(value).to.be.an('array');
-        expect(value).lengthOf(layerData.layerFeatures[layerName].length);
-        expect(instanceOfEowWaterbodyIntersection(value[0])).to.be.true;  // tslint:disable-line
-
-        testFeatureCollection(value[0].waterBody.polygon, eowPoints, layerData);
+        testIsInside(layerName, eowPoints, 0);
+        testIsOutside(layerName, eowPoints, 1);
+        testIsOutside(layerName, eowPoints, 2);
       });
 
-      it('test point outside', () => {
+      it('test point on vertice (in) 2', () => {
+        const eowPoints = [[4000, 0]];
+        testIsInside(layerName, eowPoints, 1);
+        testIsOutside(layerName, eowPoints, 0);
+        testIsOutside(layerName, eowPoints, 2);
+      });
+
+      it('test point on vertice (in) 3', () => {
+        const eowPoints = [[7000, 0]];
+        testIsInside(layerName, eowPoints, 2);
+        testIsOutside(layerName, eowPoints, 1);
+        testIsOutside(layerName, eowPoints, 0);
+      });
+
+      it('test point outside 1 to 3', () => {
         const eowPoints = [[10000, 10000]];
-        const eowDataPoints = turfFeatureCollection(eowPoints.map(c => turfPoint(c, {testEowData: true})));
-        // const pointsToTest = turfPoint(eowPoints[0]);
-
-        log.verbose(where, `layerData: ${JSON.stringify(layerData)}`);
-        log.verbose(where, `eowDataPoints: ${JSON.stringify(eowDataPoints)}`);
-
-        // Test inputs are as expected
-        testFeatureCollection(eowDataPoints, eowPoints, layerData);
-
-        // Run function under test
-        const value = geometryOps.calculateLayerIntersections(eowDataPoints, layerData, layerName);
-        log.verbose(where, `value: ${JSON.stringify(value, null, 2)}`);
-
-        // Test outputs
-        expect(value).to.be.an('array');
-        expect(value).lengthOf(layerData.layerFeatures[layerName].length);
-        expect(value[0].waterBody).to.be.null; // tslint:disable-line
-        expect(value[0].eowData).to.be.null; // tslint:disable-line
+        for (let i = 0; i <= 2; i++) {
+          testIsOutside(layerName, eowPoints, i);
+        }
       });
     });
     // one layer, multiple polygons (squares), overlapping
