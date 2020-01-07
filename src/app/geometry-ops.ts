@@ -123,7 +123,7 @@ export default class GeometryOps {
     return this.calculateCentroidFromPoints(points);
   }
 
-  calculateCentroidFromPoints(points: number[][]) {
+  calculateCentroidFromPoints(points: number[][]): Feature<Point> {
     this.log.verbose('calculateCentroidFromPoints', `  points: ${JSON.stringify(points)}`);
     // let i = 0;
     let area = 0;

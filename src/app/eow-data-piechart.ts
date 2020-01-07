@@ -3,16 +3,34 @@ import {featureEach, featureReduce} from '@turf/meta';
 import clustersKmeans from '@turf/clusters-kmeans';
 import Brolog from 'brolog';
 import GeometryOps, {EowWaterbodyIntersection} from './geometry-ops';
+import Map from 'ol/Map';
+import Overlay from 'ol/Overlay';
+import OverlayPositioning from 'ol/OverlayPositioning';
+import SimpleGeometry from 'ol/geom/SimpleGeometry';
+
+const theClass = `EOWDataPieChart`;
+const htmlElementId = 'waterbody';
 
 type Coords = [number, number];
 
 export default class EOWDataPieChart {
   log: Brolog;
   geometryOps: GeometryOps;
+  pieChartMap: any;
+  map: Map;
+  htmlDocument: Document;
 
   constructor(geometryOps: GeometryOps, log: Brolog) {
     this.geometryOps = geometryOps;
     this.log = log;
+  }
+
+  init(map: Map, htmlDocument) {
+    this.map = map;
+    this.htmlDocument = htmlDocument;
+  }
+
+  private setupEventHandlers() {
   }
 
   /**
@@ -44,11 +62,29 @@ export default class EOWDataPieChart {
           }
         });
         if (points.length > 1) {
-          this.log.verbose('EOWDataPieChart.plot', `EOWDatum points: ${JSON.stringify(points)}`);
+          this.log.verbose(theClass + '.plot', `EOWDatum points: ${JSON.stringify(points)}`);
           const median = this.geometryOps.calculateCentroidFromPoints(points);
-          this.log.verbose('EOWDataPieChart.plot', `Median: ${JSON.stringify(median)}`);
+          this.log.verbose(theClass + '.plot', `Median: ${JSON.stringify(median)}`);
+          this.draw(median.geometry.coordinates);
         }
       }
+    }
+  }
+
+  draw(points: number[]) {
+    this.log.info(theClass, `Draw pieChart at ${JSON.stringify(points)}`);
+    if (! this.pieChartMap) {
+      this.pieChartMap = new Overlay({
+        element: this.htmlDocument.getElementById(htmlElementId),
+        position: points,
+        autoPan: true,
+        autoPanMargin: 275,
+        positioning: OverlayPositioning.CENTER_LEFT
+      });
+      this.map.addOverlay(this.pieChartMap);
+      const img = this.htmlDocument.createElement('img');
+      img.src = 'https://www.gravatar.com/avatar/0dbc9574f3382f14a5f4c38a0aec4286?s=60';
+      this.htmlDocument.getElementById(htmlElementId).appendChild(img);
     }
   }
 }

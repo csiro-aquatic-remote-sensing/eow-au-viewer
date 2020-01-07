@@ -106,7 +106,7 @@ export default class LayerGeometries {
     const coordinates = simpleGeometry.getCoordinates();
     const turfLine = multiLineString(coordinates.filter(c => c.length > 2));
     turfLine.geometry.coordinates.forEach(c => {
-      this.log.verbose(theClass, `convertMultilineString - size of arrays: ${c.length} -> ${JSON.stringify(c)}`);
+      this.log.silly(theClass, `convertMultilineString - size of arrays: ${c.length} -> ${JSON.stringify(c)}`);
     });
     const polygonObj = lineToPolygon(turfLine);
     dataDestination.push(polygonObj);
