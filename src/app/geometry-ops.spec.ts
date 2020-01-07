@@ -274,7 +274,7 @@ describe('geometry-ops', () => {
     //     "eowData": null
     //   }
     // ]
-    const testIsInside = (theLayerName, eowPoints, index) => {
+    const testIsInside = (theLayerData, theLayerName, eowPoints, index) => {
       const eowDataPoints: FeatureCollection<Point> = turfFeatureCollection(eowPoints.map(c => turfPoint(c, {testEowData: true})));
       // const pointsToTest = turfPoint(eowPoints[0]);
 
@@ -285,7 +285,7 @@ describe('geometry-ops', () => {
       testFeatureCollection(eowDataPoints, eowPoints, layerData);
 
       // Run function under test
-      const value = geometryOps.calculateLayerIntersections(eowDataPoints, layerData, theLayerName);
+      const value = geometryOps.calculateLayerIntersections(eowDataPoints, theLayerData, theLayerName);
       log.verbose(where, `value: ${JSON.stringify(value, null, 2)}`);
 
       // Test outputs
@@ -312,7 +312,7 @@ describe('geometry-ops', () => {
     //     "eowData": null
     //   }
     // ]
-    const testIsOutside = (theLayerName, eowPoints, index) => {
+    const testIsOutside = (theLayerData, theLayerName, eowPoints, index) => {
       const eowDataPoints: FeatureCollection<Point> = turfFeatureCollection(eowPoints.map(c => turfPoint(c, {testEowData: true})));
       // const pointsToTest = turfPoint(eowPoints[0]);
 
@@ -323,7 +323,7 @@ describe('geometry-ops', () => {
       testFeatureCollection(eowDataPoints, eowPoints, layerData);
 
       // Run function under test
-      const value = geometryOps.calculateLayerIntersections(eowDataPoints, layerData, theLayerName);
+      const value = geometryOps.calculateLayerIntersections(eowDataPoints, theLayerData, theLayerName);
       log.verbose(where, `value: ${JSON.stringify(value, null, 2)}`);
 
       // Test outputs
@@ -347,17 +347,17 @@ describe('geometry-ops', () => {
 
       it('single square - test point inside', () => {
         const eowPoints = [[100, 100]];
-        testIsInside(layerName, eowPoints, 0);
+        testIsInside(layerData, layerName, eowPoints, 0);
       });
 
       it('single square - test point on vertice (in)', () => {
         const eowPoints = [[1000, 0]];
-        testIsInside(layerName, eowPoints, 0);
+        testIsInside(layerData, layerName, eowPoints, 0);
       });
 
       it('single square - test point outside', () => {
         const eowPoints = [[10000, 10000]];
-        testIsOutside(layerName, eowPoints, 0);
+        testIsOutside(layerData, layerName, eowPoints, 0);
       });
     });
 
@@ -375,54 +375,122 @@ describe('geometry-ops', () => {
 
       it('test point inside 1', () => {
         const eowPoints = [[100, 100]];
-        testIsInside(layerName, eowPoints, 0);
-        testIsOutside(layerName, eowPoints, 1);
-        testIsOutside(layerName, eowPoints, 2);
+        testIsInside(layerData, layerName, eowPoints, 0);
+        testIsOutside(layerData, layerName, eowPoints, 1);
+        testIsOutside(layerData, layerName, eowPoints, 2);
       });
 
       it('test point inside 2', () => {
         const eowPoints = [[3500, 100]];
-        testIsInside(layerName, eowPoints, 1);
-        testIsOutside(layerName, eowPoints, 0);
-        testIsOutside(layerName, eowPoints, 2);
+        testIsInside(layerData, layerName, eowPoints, 1);
+        testIsOutside(layerData, layerName, eowPoints, 0);
+        testIsOutside(layerData, layerName, eowPoints, 2);
       });
 
       it('test point inside 3', () => {
         const eowPoints = [[6500, 100]];
-        testIsInside(layerName, eowPoints, 2);
-        testIsOutside(layerName, eowPoints, 1);
-        testIsOutside(layerName, eowPoints, 0);
+        testIsInside(layerData, layerName, eowPoints, 2);
+        testIsOutside(layerData, layerName, eowPoints, 1);
+        testIsOutside(layerData, layerName, eowPoints, 0);
       });
 
       it('test point on vertice (in) 1', () => {
         const eowPoints = [[1000, 0]];
-        testIsInside(layerName, eowPoints, 0);
-        testIsOutside(layerName, eowPoints, 1);
-        testIsOutside(layerName, eowPoints, 2);
+        testIsInside(layerData, layerName, eowPoints, 0);
+        testIsOutside(layerData, layerName, eowPoints, 1);
+        testIsOutside(layerData, layerName, eowPoints, 2);
       });
 
       it('test point on vertice (in) 2', () => {
         const eowPoints = [[4000, 0]];
-        testIsInside(layerName, eowPoints, 1);
-        testIsOutside(layerName, eowPoints, 0);
-        testIsOutside(layerName, eowPoints, 2);
+        testIsInside(layerData, layerName, eowPoints, 1);
+        testIsOutside(layerData, layerName, eowPoints, 0);
+        testIsOutside(layerData, layerName, eowPoints, 2);
       });
 
       it('test point on vertice (in) 3', () => {
         const eowPoints = [[7000, 0]];
-        testIsInside(layerName, eowPoints, 2);
-        testIsOutside(layerName, eowPoints, 1);
-        testIsOutside(layerName, eowPoints, 0);
+        testIsInside(layerData, layerName, eowPoints, 2);
+        testIsOutside(layerData, layerName, eowPoints, 1);
+        testIsOutside(layerData, layerName, eowPoints, 0);
       });
 
       it('test point outside 1 to 3', () => {
         const eowPoints = [[10000, 10000]];
         for (let i = 0; i <= 2; i++) {
-          testIsOutside(layerName, eowPoints, i);
+          testIsOutside(layerData, layerName, eowPoints, i);
         }
       });
     });
-    // one layer, multiple polygons (squares), overlapping
+
+    describe('one layer, multiple polygons (squares), overlapping', () => {
+      beforeEach(() => {
+        // overlapping squares
+        const coords = [];
+        coords.push([[1000, 3000], [3000, 3000], [3000, 5000], [1000, 5000], [1000, 3000]]);
+        coords.push([[2000, 4000], [4000, 4000], [4000, 6000], [2000, 6000], [2000, 4000]]);
+        coords.push([[1500, 4500], [2500, 4500], [2500, 5500], [1500, 5500], [1500, 4500]]);
+        const pointsPolygons = buildEOWDataFeatures(coords);
+        layerName = 'multiPolygonSquareOverlap';
+        layerData.layerFeatures[layerName] = [...pointsPolygons];
+      });
+
+      it('test point inside - 1st only', () => {
+        const eowPoints = [[1750, 3500]];
+        testIsInside(layerData, layerName, eowPoints, 0);
+        testIsOutside(layerData, layerName, eowPoints, 1);
+        testIsOutside(layerData, layerName, eowPoints, 2);
+      });
+
+      it('test point inside - 2nd only', () => {
+        const eowPoints = [[3500, 5250]];
+        testIsInside(layerData, layerName, eowPoints, 1);
+        testIsOutside(layerData, layerName, eowPoints, 0);
+        testIsOutside(layerData, layerName, eowPoints, 2);
+      });
+
+      it('test point inside - 3rd only', () => {
+        const eowPoints = [[1750, 5250]];
+        testIsInside(layerData, layerName, eowPoints, 2);
+        testIsOutside(layerData, layerName, eowPoints, 1);
+        testIsOutside(layerData, layerName, eowPoints, 0);
+      });
+
+      it('test point inside - 1st and 2nd only', () => {
+        const eowPoints = [[2250, 4250]];
+        testIsInside(layerData, layerName, eowPoints, 0);
+        testIsInside(layerData, layerName, eowPoints, 1);
+        testIsOutside(layerData, layerName, eowPoints, 2);
+      });
+
+      it('test point inside - 1st and 3rd only', () => {
+        const eowPoints = [[1750, 4750]];
+        testIsInside(layerData, layerName, eowPoints, 0);
+        testIsOutside(layerData, layerName, eowPoints, 1);
+        testIsInside(layerData, layerName, eowPoints, 2);
+      });
+
+      it('test point inside - 2nd and 3rd only', () => {
+        const eowPoints = [[2250, 5250]];
+        testIsOutside(layerData, layerName, eowPoints, 0);
+        testIsInside(layerData, layerName, eowPoints, 1);
+        testIsInside(layerData, layerName, eowPoints, 2);
+      });
+
+      it('test point inside - all 3', () => {
+        const eowPoints = [[2250, 4750]];
+        for (let i = 0; i <= 2; i++) {
+          testIsInside(layerData, layerName, eowPoints, i);
+        }
+      });
+
+      it('test point outside all', () => {
+        const eowPoints = [[10000, 10000]];
+        for (let i = 0; i <= 2; i++) {
+          testIsOutside(layerData, layerName, eowPoints, i);
+        }
+      });
+    });
     // repeat for multiple point tests
     // repeat for multiple layers
   });
