@@ -58,20 +58,21 @@ export class Layers {
     }
 
     const createLayer = (title, url, options: Options = {}) => {
-      this.http.get(url).toPromise().then(d => this.log.info(theClass, `url exists: ${url}`))
-        .catch(e => this.log.warn(theClass, `URL DOES NOT EXIST: ${url}`));
-      const newLayer = new VectorLayer(Object.assign(options, {
-        title,
-        source: new VectorSource({
-          url,
-          format: new GeoJSON(),
-          // projection: 'EPSG:4326'
-        })
-      }));
-      newLayer.set('name', title);
-      map.addLayer(newLayer);
-      newLayer.setVisible(options.hasOwnProperty('visible') ? options.visible : true);
-      return newLayer;
+      this.http.get(url).toPromise().then(d => {
+        this.log.info(theClass, `url exists: ${url}`);
+        const newLayer = new VectorLayer(Object.assign(options, {
+          title,
+          source: new VectorSource({
+            url,
+            format: new GeoJSON(),
+            // projection: 'EPSG:4326'
+          })
+        }));
+        newLayer.set('name', title);
+        map.addLayer(newLayer);
+        newLayer.setVisible(options.hasOwnProperty('visible') ? options.visible : true);
+        return newLayer;
+      }).catch(e => this.log.warn(theClass, `URL DOES NOT EXIST: ${url}`));
     };
 
     this.shapesLayerShape = createLayer('Waterbodies shape', '../assets/waterbodies/Australia/aus25wgd_l.geojson');

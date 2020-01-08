@@ -24,6 +24,7 @@ export default class LayerGeometries {
   }
 
   async init() {
+    // TODO this is a reuse of the layer data - combine in to one use
     await this.createGeometry('Waterbodies shape', '../assets/waterbodies/Australia/aus25wgd_l.geojson');
     await this.createGeometry('Waterbodies fill', '../assets/waterbodies/Australia/aus25wgd_r.geojson');
     await this.createGeometry('Waterbodies name', '../assets/waterbodies/Australia/aus25wgd_p.geojson');

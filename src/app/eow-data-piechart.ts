@@ -56,6 +56,7 @@ export default class EOWDataPieChart {
 
       const points: Coords[] = [];
       if (eowWaterbodyIntersection.waterBody) {
+        this.log.verbose(theClass + '.plot', `eowWaterbodyIntersection.waterBody: ${JSON.stringify(eowWaterbodyIntersection.waterBody.polygon, null, 2)}`);
         featureEach(eowWaterbodyIntersection.waterBody.polygon, (feature: Feature<Point>) => {
           if (feature.hasOwnProperty('geometry')) {
             points.push(feature.geometry.coordinates as Coords);
@@ -72,19 +73,40 @@ export default class EOWDataPieChart {
   }
 
   draw(points: number[]) {
-    this.log.info(theClass, `Draw pieChart at ${JSON.stringify(points)}`);
-    if (! this.pieChartMap) {
-      this.pieChartMap = new Overlay({
-        element: this.htmlDocument.getElementById(htmlElementId),
-        position: points,
-        autoPan: true,
-        autoPanMargin: 275,
-        positioning: OverlayPositioning.CENTER_LEFT
-      });
-      this.map.addOverlay(this.pieChartMap);
-      const img = this.htmlDocument.createElement('img');
-      img.src = 'https://www.gravatar.com/avatar/0dbc9574f3382f14a5f4c38a0aec4286?s=60';
-      this.htmlDocument.getElementById(htmlElementId).appendChild(img);
+    if (points[0] !== null && points[1] !== null) {
+      this.log.info(theClass, `Draw pieChart at ${JSON.stringify(points)}`);
+      if (!this.pieChartMap) {
+        this.pieChartMap = new Overlay({
+          element: this.htmlDocument.getElementById(htmlElementId),
+          position: points,
+          autoPan: true,
+          autoPanMargin: 275,
+          positioning: OverlayPositioning.CENTER_LEFT
+        });
+        this.map.addOverlay(this.pieChartMap);
+        const img = this.htmlDocument.createElement('img');
+        img.src = 'https://www.gravatar.com/avatar/0dbc9574f3382f14a5f4c38a0aec4286?s=60';
+        this.htmlDocument.getElementById(htmlElementId).appendChild(img);
+      } else {
+        // this.pieChartMap.setPosition(points);
+      }
     }
+    // if (! this.pieChartMap) {
+    // this.pieChartMap = new Overlay({
+    // const container = this.htmlDocument.createElement('div');
+    // container.id = '' + Math.random() * 1000;
+    // const pieChartMap = new Overlay({
+    //   element: this.htmlDocument.getElementById(htmlElementId),
+    //   position: points,
+    //   autoPan: true,
+    //   autoPanMargin: 275,
+    //   positioning: OverlayPositioning.CENTER_LEFT
+    // });
+    // this.map.addOverlay(pieChartMap);
+    // const img = this.htmlDocument.createElement('img');
+    // img.src = 'https://www.gravatar.com/avatar/0dbc9574f3382f14a5f4c38a0aec4286?s=60';
+    // img.width = 20;
+    // container.appendChild(img);
+    // this.htmlDocument.getElementById(htmlElementId).appendChild(container);
   }
 }

@@ -79,7 +79,9 @@ export class AppComponent implements OnInit {
     await this.layersGeometries.init();
     const eowDataInWaterbodies: EowWaterbodyIntersection[] = this.geometryOps.calculateLayerIntersections(this.eowDataGeometries.points,
       this.layersGeometries, 'i5516 reservoirs');
-    this.eowDataPieChart.plot(eowDataInWaterbodies);
+    // this.eowDataPieChart.plot(eowDataInWaterbodies);
+    const eowWaterbodyPoints: EowWaterbodyIntersection[] = this.geometryOps.convertLayerToDataForamt(this.layersGeometries, 'i5516 reservoirs');
+    this.eowDataPieChart.plot(eowWaterbodyPoints);
   }
 
   private debug_compareUsersNMeasurements() {

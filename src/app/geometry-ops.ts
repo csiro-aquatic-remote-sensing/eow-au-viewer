@@ -1,5 +1,5 @@
 import LayerGeometries from './layers-geometries';
-import {Feature, FeatureCollection, Point, Polygon, point as turfPoint} from '@turf/helpers';
+import {Feature, FeatureCollection, Point, Polygon, point as turfPoint, featureCollection} from '@turf/helpers';
 import centroid from '@turf/centroid';
 import pointsWithinPolygon from '@turf/points-within-polygon';
 import {
@@ -79,6 +79,22 @@ export default class GeometryOps {
     }
     this.log.silly(theClass, `intersections: ${JSON.stringify(eowWaterbodyIntersections, null, 2)}`);
     return eowWaterbodyIntersections;
+  }
+
+  // Mainly for debug purposes so I can see something happening!  I don't think the EOW Data is 'in' the polygons.
+  convertLayerToDataForamt(layerGeometries: LayerGeometries, layerName: string):
+    EowWaterbodyIntersection[] {
+    const layerGeometry: Feature<Polygon>[] = layerGeometries.getLayer(layerName);
+    const eowWaterbodyPoints: EowWaterbodyIntersection[] = [];
+
+    this.log.verbose(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
+    for (const layerPolygon of layerGeometry) {
+      const thePoints: Feature<Point>[] = layerPolygon.geometry.coordinates[0].map(c => turfPoint(c));
+      const theFeatureCollection = featureCollection(thePoints);
+      eowWaterbodyPoints.push(this.createEoWFormat(theFeatureCollection));
+    }
+    this.log.silly(theClass, `convertLayerToDataForamt: ${JSON.stringify(eowWaterbodyPoints, null, 2)}`);
+    return eowWaterbodyPoints;
   }
 
   /**
