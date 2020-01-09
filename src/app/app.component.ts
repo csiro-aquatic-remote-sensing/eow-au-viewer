@@ -16,6 +16,7 @@ import EowDataGeometries from './eow-data-geometries';
 import LayerGeometries from './layers-geometries';
 import GeometryOps from './geometry-ops';
 import {Brolog} from 'brolog';
+import {timeout} from 'rxjs/operators';
 
 const defaultCoord = [133.945313, -26.431228];
 const canberra = [149.130005, -35.280937];
@@ -36,7 +37,7 @@ export class AppComponent implements OnInit {
   userStore: UserStore;
   eowData: EowDataLayer;
   dataLayer: any;
-  allDataSource: any;
+  // allDataSource: any;
   pieChart: any;
   layers: Layers;
   htmlDocument: Document;
@@ -59,15 +60,42 @@ export class AppComponent implements OnInit {
   async ngOnInit() {
     this.initMap();
     this.popupObject.init(this.map);
-    this.measurementStore.init(this.map, this.dataLayer, this.allDataSource);
-    await this.eowData.init(this.map, this.htmlDocument, this.userStore, this.measurementStore);
+    await this.eowData.init(this.map, this.htmlDocument);
+    this.measurementStore.init(this.map, this.eowData.dataLayer, this.eowData.allDataSource);
     await this.eowDataGeometries.init();
     this.layers.addLayers(this.map);
-    this.userStore.init();
+    await this.userStore.init(this.eowData.dataLayer);
+
+    this.eowData.allDataSource.on('change', this.debug_compareUsersNMeasurements.bind(this));
 
     this.setupEventHandlers();
     await this.layersGeometries.init();
     GeometryOps.calculateIntersections(this.eowDataGeometries.points, this.layersGeometries, 'i5516 reservoirs');
+  }
+
+  private debug_compareUsersNMeasurements() {
+    // Delay so other allDataSource.on('change' that loads the data gets a chance to fire
+    window.setTimeout(() => {
+      console.log('debug_compareUsersNMeasurements:');
+      Object.keys(this.userStore.userById).forEach(uid => {
+        const user = this.userStore.userById[uid];
+        console.log(`  user - Id: ${user.id}, nickName: ${user.nickname}, photo_count: ${user.photo_count}`);
+        const m = this.measurementStore.getByOwner(user.id);
+        if (m && m.length > 0) {
+          const images = m.map(m2 => m2.get('image'));
+          console.log(`    number of images: ${images.length} -> \n${JSON.stringify(images, null, 2)}`);
+        }
+      });
+      // Now print Measurements info
+      console.log(`measurementsByOwner: ${
+        JSON.stringify(this.measurementStore.measurementSummary(true, this.userStore), null, 2)}`);
+      console.log(`measurementsById: ${
+        JSON.stringify(this.measurementStore.measurementSummary(false, this.userStore), null, 2)}`);
+      console.log(`Number of measurements per user: ${
+        JSON.stringify(this.measurementStore.numberMeasurmentsPerUser(this.userStore), null, 2)}`);
+    }, 1000);
+
+
   }
 
   private initMap() {
@@ -117,7 +145,7 @@ export class AppComponent implements OnInit {
     document.querySelector('.user-list').addEventListener('click', (event) => {
       const element = (event.target as HTMLElement).closest('.item');
       const userId = element.getAttribute('data-user');
-
+      console.log(`clicked on user-id: ${userId}`);
       if (this.measurementStore.showMeasurements(userId)) {
         this.userStore.clearSelectedUser();
         element.classList.add('selectedUser', 'box-shadow');
@@ -151,7 +179,7 @@ export class AppComponent implements OnInit {
   }
 
   private clearFilter() {
-    this.dataLayer.setSource(this.allDataSource);
+    this.dataLayer.setSource(this.eowData.allDataSource);
     this.userStore.clearSelectedUser();
     this.measurementStore.clearFilter();
     this.map.getView().fit(this.dataLayer.getSource().getExtent(), {duration: 1300});

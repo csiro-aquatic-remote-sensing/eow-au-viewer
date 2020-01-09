@@ -1,16 +1,23 @@
 import orderBy from 'lodash/orderBy';
 import keyBy from 'lodash/keyBy';
+import debounce from 'lodash/debounce';
+import {
+  printStats,
+  calculateStats,
+} from './utils';
 
 export class UserStore {
   htmlDocument: Document;
   users: [];
   userById: {};
+  dataLayer: any;
 
   constructor(htmlDocument: Document) {
     this.htmlDocument = htmlDocument;
   }
 
-  init() {
+  async init(dataLayer: any): Promise<void> {
+    this.dataLayer = dataLayer;
     const USER_SERVICE = 'https://www.eyeonwater.org/api/users';
 
     async function loadUsers() {
@@ -25,14 +32,28 @@ export class UserStore {
     }
 
 // Load users
-    loadUsers().then((users) => {
-      this.users = users;
-      this.userById = keyBy(this.users, 'id');
-      this.renderUsers(this.users);
+    return new Promise((resolve) => {
+      this.setupEventHandlers();
+      loadUsers().then((users) => {
+        this.users = users;
+        this.userById = keyBy(this.users, 'id');
+        this.renderUsers(this.users);
+        console.log(`Users Loaded - ids: ${JSON.stringify(Object.keys(this.userById))}`);
+        resolve();
+      });
     });
   }
+
+  setupEventHandlers() {
+    this.dataLayer.on('change', debounce(({target}) => {
+      // Populate datalayer
+      const element = this.htmlDocument.querySelector('.sub-header-stats') as HTMLElement;
+      element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), this);
+    }, 200));
+  }
+
   getUserById(userId) {
-    return this.userById[userId] || [];
+    return this.userById[userId] || {};
   }
 
   clearSelectedUser() {
@@ -42,8 +63,12 @@ export class UserStore {
   }
 
   renderUsers(users, n = 10) {
-    const userList = orderBy(users, ['photo_count', 'points'], ['desc', 'desc']).slice(0, n).map(user => {
-      return `
+    // Atleast temporarily filter so only users with photos show
+    const userList = orderBy(users, ['photo_count', 'points'], ['desc', 'desc']).slice(0, n)
+      .filter(user => this.getUserById(user.id).photos.length > 0) // user => user.photo_count && user.photo_count > 0)
+      .map(user => {
+        console.log(`renderUsers - add user ${user.id}, ${user.nickname}`);
+        return `
             <li class="item" data-user="${user.id}">
               <div>
                 <img  class="icon-thumb" src="https://eyeonwater.org/grfx/${user.icon}">
@@ -54,8 +79,19 @@ export class UserStore {
                 <div class="item-points">${user.points} points (level ${user.level})</div>
               </div>
             </li>`;
-    });
+      });
 
-    this.htmlDocument.querySelector('.user-list ul').innerHTML = userList.join('\n');
+    if (userList.length > 0) {
+      const results = userList.join('\n')
+        + `<br/>There are ${users.length - userList.length} other users that have no photos to display.`;
+      this.htmlDocument.querySelector('.user-list ul').innerHTML = results;
+    } else {
+      this.htmlDocument.querySelector('.user-list ul').innerHTML =
+        `There are no users with photos<br/>(There are ${users.length} in total).`;
+    }
+  }
+
+  userExists(userId) {
+    return Object.keys(this.getUserById(userId)).length > 0;
   }
 }
