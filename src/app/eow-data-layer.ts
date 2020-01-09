@@ -24,17 +24,13 @@ const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia?se
 export class EowDataLayer {
   map: Map;
   htmlDocument: Document;
-  userStore: UserStore;
-  measurementStore: MeasurementStore;
   allDataSource: any;
   dataLayer: any;
   styleCache = {};
 
-  init(map: Map, htmlDocument: Document, userStore: UserStore, measurementStore: MeasurementStore) {
+  init(map: Map, htmlDocument: Document) {
     this.map = map;
     this.htmlDocument = htmlDocument;
-    this.userStore = userStore;
-    this.measurementStore = measurementStore;
     this.allDataSource = new VectorSource({
       format: new GeoJSON(),
       url: WFS_URL
@@ -70,16 +66,17 @@ export class EowDataLayer {
     this.dataLayer.set('name', 'EOW Data');
 
     this.map.addLayer(this.dataLayer);
+    this.setupEventHandlers();
   }
 
   setupEventHandlers() {
-    this.dataLayer.on('change', debounce(({target}) => {
-      // Populate datalayer
-      const element = this.htmlDocument.querySelector('.sub-header-stats') as HTMLElement;
-      element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), this.userStore);
-    }, 200));
+    // this.dataLayer.on('change', debounce(({target}) => {
+    //   // Populate datalayer
+    //   const element = this.htmlDocument.querySelector('.sub-header-stats') as HTMLElement;
+    //   element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), this.userStore);
+    // }, 200));
 
 
-    this.allDataSource.on('change', this.measurementStore.initialLoadMeasurements.bind(this.measurementStore));
+    // this.allDataSource.on('change', this.measurementStore.initialLoadMeasurements.bind(this.measurementStore));
   }
 }
