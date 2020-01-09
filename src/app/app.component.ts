@@ -53,7 +53,7 @@ export class AppComponent implements OnInit {
     this.htmlDocument = document;
     this.pieChart = new PieChart(log);
 
-    this.userStore = new UserStore(document);
+    this.userStore = new UserStore(document, this.log);
     this.popupObject = new Popup(document, this.pieChart, this.userStore);
     this.eowData = new EowDataLayer();
     this.layers = new Layers(document, http, log);
@@ -67,8 +67,9 @@ export class AppComponent implements OnInit {
   async ngOnInit() {
     this.initMap();
     this.popupObject.init(this.map);
-    await this.eowData.init(this.map, this.htmlDocument);
-    this.measurementStore.init(this.map, this.eowData.dataLayer, this.eowData.allDataSource);
+    this.eowData.init(this.map, this.htmlDocument);
+    this.eowDataPieChart.init(this.map, this.htmlDocument);
+    this.measurementStore.init(this.map, this.eowData.dataLayer, this.eowData.allDataSource, this.log);
     await this.eowDataGeometries.init();
     this.layers.addLayers(this.map);
     await this.userStore.init(this.eowData.dataLayer);
@@ -85,6 +86,7 @@ export class AppComponent implements OnInit {
   }
 
   private debug_compareUsersNMeasurements() {
+    return; // don't want it currently
     // Delay so other allDataSource.on('change' that loads the data gets a chance to fire
     window.setTimeout(() => {
       console.log('debug_compareUsersNMeasurements:');

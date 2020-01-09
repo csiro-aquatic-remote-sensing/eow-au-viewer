@@ -73,8 +73,8 @@ export default class EOWDataPieChart {
   }
 
   draw(points: number[]) {
-    if (points[0] !== null && points[1] !== null) {
-      this.log.info(theClass, `Draw pieChart at ${JSON.stringify(points)}`);
+    if (points[0] !== null && points[1] !== null && !isNaN(points[0]) && !isNaN(points[1])) {
+      this.log.info(theClass, `Draw pieChart at ${points[0]}, ${points[1]})}`);
       if (!this.pieChartMap) {
         this.pieChartMap = new Overlay({
           element: this.htmlDocument.getElementById(htmlElementId),
@@ -88,7 +88,9 @@ export default class EOWDataPieChart {
         img.src = 'https://www.gravatar.com/avatar/0dbc9574f3382f14a5f4c38a0aec4286?s=60';
         this.htmlDocument.getElementById(htmlElementId).appendChild(img);
       } else {
-        // this.pieChartMap.setPosition(points);
+        setTimeout(() => {
+          this.pieChartMap.setPosition(points);
+        }, 200);
       }
     }
     // if (! this.pieChartMap) {

@@ -43,7 +43,7 @@ export default class EowDataGeometries {
         }
         this.points = turfFeatureCollection(features);
 
-        this.log.verbose(theClass, `EOWDataGeometries - ${JSON.stringify(this.points)}`);
+        this.log.silly(theClass, `EOWDataGeometries - ${JSON.stringify(this.points)}`);
       } catch (error) {
         this.log.error(error);
         reject(error);

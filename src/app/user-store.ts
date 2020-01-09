@@ -5,6 +5,7 @@ import {
   printStats,
   calculateStats,
 } from './utils';
+import Brolog from 'brolog';
 
 export class UserStore {
   htmlDocument: Document;
@@ -12,7 +13,7 @@ export class UserStore {
   userById: {};
   dataLayer: any;
 
-  constructor(htmlDocument: Document) {
+  constructor(htmlDocument: Document, private log: Brolog) {
     this.htmlDocument = htmlDocument;
   }
 
@@ -33,12 +34,12 @@ export class UserStore {
 
 // Load users
     return new Promise((resolve) => {
-      this.setupEventHandlers();
       loadUsers().then((users) => {
         this.users = users;
         this.userById = keyBy(this.users, 'id');
         this.renderUsers(this.users);
-        console.log(`Users Loaded - ids: ${JSON.stringify(Object.keys(this.userById))}`);
+        this.log.info(`Users Loaded - ids: ${JSON.stringify(Object.keys(this.userById))}`);
+        this.setupEventHandlers();
         resolve();
       });
     });
