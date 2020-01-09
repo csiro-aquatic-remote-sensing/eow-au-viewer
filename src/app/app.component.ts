@@ -70,9 +70,9 @@ export class AppComponent implements OnInit {
     this.eowData.init(this.map, this.htmlDocument);
     this.eowDataPieChart.init(this.map, this.htmlDocument);
     this.measurementStore.init(this.map, this.eowData.dataLayer, this.eowData.allDataSource, this.log);
+    await this.userStore.init(this.eowData.dataLayer);
     await this.eowDataGeometries.init();
     this.layers.addLayers(this.map);
-    await this.userStore.init(this.eowData.dataLayer);
 
     this.eowData.allDataSource.on('change', this.debug_compareUsersNMeasurements.bind(this));
 
