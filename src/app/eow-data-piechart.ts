@@ -72,12 +72,14 @@ export default class EOWDataPieChart {
     }
   }
 
-  draw(points: number[]) {
-    // Add a new overlay each time this is called
-    if (points[0] !== null && points[1] !== null && !isNaN(points[0]) && !isNaN(points[1])) {
-      this.log.info(theClass, `Draw pieChart at ${points[0]}, ${points[1]})}`);
-      // if (!this.pieChartMap) {
-      //   this.pieChartMap = new Overlay({
+  /**
+   * Draw an overlay with pie chart at the point given for the data point representing FU values.
+   *
+   * @param point where to draw
+   */
+  draw(point: number[]) {
+    if (point[0] && point[1] && !isNaN(point[0]) && !isNaN(point[1])) {
+      this.log.info(theClass, `Draw pieChart at ${point[0]}, ${point[1]})}`);
       const el = this.htmlDocument.createElement('div');
       const img = this.htmlDocument.createElement('img');
       el.setAttribute('id', '' + Math.random() * 1000);
@@ -86,33 +88,12 @@ export default class EOWDataPieChart {
       this.htmlDocument.getElementById(htmlElementId).appendChild(el);
       const pieChartMap = new Overlay({
         element: el,
-        position: points,
+        position: point,
         autoPan: true,
         autoPanMargin: 275,
-        positioning: OverlayPositioning.CENTER_LEFT
+        positioning: OverlayPositioning.TOP_LEFT
       });
       this.map.addOverlay(pieChartMap);
-
-      // pieChartMap.setPosition(points);
     }
   }
-
-  // if (! this.pieChartMap) {
-  // this.pieChartMap = new Overlay({
-  // const container = this.htmlDocument.createElement('div');
-  // container.id = '' + Math.random() * 1000;
-  // const pieChartMap = new Overlay({
-  //   element: this.htmlDocument.getElementById(htmlElementId),
-  //   position: points,
-  //   autoPan: true,
-  //   autoPanMargin: 275,
-  //   positioning: OverlayPositioning.CENTER_LEFT
-  // });
-  // this.map.addOverlay(pieChartMap);
-  // const img = this.htmlDocument.createElement('img');
-  // img.src = 'https://www.gravatar.com/avatar/0dbc9574f3382f14a5f4c38a0aec4286?s=60';
-  // img.width = 20;
-  // container.appendChild(img);
-  // this.htmlDocument.getElementById(htmlElementId).appendChild(container);
-
 }
