@@ -6,19 +6,19 @@ import {
   calculateStats,
 } from './utils';
 import Brolog from 'brolog';
+import {BehaviorSubject} from 'rxjs';
 
 export class UserStore {
-  htmlDocument: Document;
+  // htmlDocument: Document;
   users: [];
   userById: {};
-  dataLayer: any;
+  dataLayerObs: BehaviorSubject<any>;
 
-  constructor(htmlDocument: Document, private log: Brolog) {
-    this.htmlDocument = htmlDocument;
+  constructor(private htmlDocument: Document, private log: Brolog) {
   }
 
-  async init(dataLayer: any): Promise<void> {
-    this.dataLayer = dataLayer;
+  async init(dataLayerObs: BehaviorSubject<any>): Promise<void> {
+    this.dataLayerObs = dataLayerObs;
     const USER_SERVICE = 'https://www.eyeonwater.org/api/users';
 
     async function loadUsers() {
@@ -46,11 +46,13 @@ export class UserStore {
   }
 
   setupEventHandlers() {
-    this.dataLayer.on('change', debounce(({target}) => {
-      // Populate datalayer
-      const element = this.htmlDocument.querySelector('.sub-header-stats') as HTMLElement;
-      element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), this);
-    }, 200));
+    this.dataLayerObs.asObservable().subscribe(dataLayer => {
+      dataLayer.on('change', debounce(({target}) => {
+        // Populate datalayer
+        const element = this.htmlDocument.querySelector('.sub-header-stats') as HTMLElement;
+        element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), this);
+      }, 200));
+    });
   }
 
   getUserById(userId) {

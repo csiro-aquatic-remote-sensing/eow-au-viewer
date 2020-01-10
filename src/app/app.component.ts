@@ -39,7 +39,7 @@ export class AppComponent implements OnInit {
   measurementStore: MeasurementStore;
   userStore: UserStore;
   eowData: EowDataLayer;
-  dataLayer: any;
+  // dataLayer: any;
   // allDataSource: any;
   pieChart: any;
   layers: Layers;
@@ -67,14 +67,19 @@ export class AppComponent implements OnInit {
   async ngOnInit() {
     this.initMap();
     this.popupObject.init(this.map);
-    this.eowData.init(this.map, this.htmlDocument);
+    this.eowData.init(this.map); //  , this.htmlDocument);
     this.eowDataPieChart.init(this.map, this.htmlDocument);
-    this.measurementStore.init(this.map, this.eowData.dataLayer, this.eowData.allDataSource, this.log);
-    await this.userStore.init(this.eowData.dataLayer);
+    this.measurementStore.init(this.map, this.eowData.dataLayerObs, this.eowData.allDataSourceObs, this.log);
+    await this.userStore.init(this.eowData.dataLayerObs);
     await this.eowDataGeometries.init();
-    this.layers.addLayers(this.map);
 
-    this.eowData.allDataSource.on('change', this.debug_compareUsersNMeasurements.bind(this));
+    this.eowData.allDataSourceObs.asObservable().subscribe(allDataSource => {
+      allDataSource.on('change', this.debug_compareUsersNMeasurements.bind(this));
+    });
+    this.eowData.dataLayerObs.asObservable().subscribe(dataLayer => {
+      this.map.addLayer(dataLayer);
+    });
+
 
     this.setupEventHandlers();
     await this.layersGeometries.init();
@@ -83,10 +88,11 @@ export class AppComponent implements OnInit {
     // this.eowDataPieChart.plot(eowDataInWaterbodies);
     const eowWaterbodyPoints: EowWaterbodyIntersection[] = this.geometryOps.convertLayerToDataForamt(this.layersGeometries, 'i5516 reservoirs');
     this.eowDataPieChart.plot(eowWaterbodyPoints);
+    this.layers.addLayers(this.map);
   }
 
   private debug_compareUsersNMeasurements() {
-    return; // don't want it currently
+    // return; // don't want it currently
     // Delay so other allDataSource.on('change' that loads the data gets a chance to fire
     window.setTimeout(() => {
       console.log('debug_compareUsersNMeasurements:');
@@ -192,10 +198,14 @@ export class AppComponent implements OnInit {
   }
 
   private clearFilter() {
-    this.dataLayer.setSource(this.eowData.allDataSource);
     this.userStore.clearSelectedUser();
     this.measurementStore.clearFilter();
-    this.map.getView().fit(this.dataLayer.getSource().getExtent(), {duration: 1300});
+    this.eowData.dataLayerObs.asObservable().subscribe(dataLayer => {
+      this.map.getView().fit(dataLayer.getSource().getExtent(), {duration: 1300});
+      this.eowData.allDataSourceObs.asObservable().subscribe(allDataSource => {
+        dataLayer.setSource(allDataSource);
+      });
+    });
     this.toggleFilterButton(false);
   }
 

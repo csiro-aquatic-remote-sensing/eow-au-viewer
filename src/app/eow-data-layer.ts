@@ -17,24 +17,29 @@ import {
 import colors from './colors.json';
 import {UserStore} from './user-store';
 import {MeasurementStore} from './measurement-store';
+import {BehaviorSubject} from 'rxjs';
 
 const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia?service=WFS'
   + '&version=1.0.0&request=GetFeature&typeName=eow_australia&maxFeatures=5000&outputFormat=application%2Fjson';
 
 export class EowDataLayer {
   map: Map;
-  htmlDocument: Document;
-  allDataSource: any;
-  dataLayer: any;
+  // htmlDocument: Document;
+  private allDataSource: any;
+  private dataLayer: any;
+  allDataSourceObs: BehaviorSubject<any>;  // Observers that outside subscribers can use to know when data ready
+  dataLayerObs: BehaviorSubject<any>;
   styleCache = {};
 
-  init(map: Map, htmlDocument: Document) {
+  init(map: Map) { // , htmlDocument: Document) {
+  // constructor() {
     this.map = map;
-    this.htmlDocument = htmlDocument;
+    // this.htmlDocument = htmlDocument;
     this.allDataSource = new VectorSource({
       format: new GeoJSON(),
       url: WFS_URL
     });
+    this.allDataSourceObs = new BehaviorSubject<any>(this.allDataSource);
 
     const basicStyle = (feature, resolution) => {
       const fuValue = feature.get('fu_value');
@@ -64,8 +69,9 @@ export class EowDataLayer {
       style: basicStyle
     });
     this.dataLayer.set('name', 'EOW Data');
+    this.dataLayerObs = new BehaviorSubject<any>(this.dataLayer);
 
-    this.map.addLayer(this.dataLayer);
+    // this.map.addLayer(this.dataLayer);
     this.setupEventHandlers();
   }
 

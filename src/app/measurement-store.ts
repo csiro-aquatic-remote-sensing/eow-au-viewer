@@ -8,6 +8,7 @@ import keyBy from 'lodash/keyBy';
 import groupBy from 'lodash/groupBy';
 import {UserStore} from './user-store';
 import Brolog from 'brolog';
+import {BehaviorSubject} from 'rxjs';
 
 export class MeasurementStore {
   measurements: [];
@@ -15,13 +16,13 @@ export class MeasurementStore {
   measurementsByOwner: {};
   map: Map;
   dataLayer: any;
-  allDataSource: any;
+  allDataSourceObs: BehaviorSubject<any>;
   log: Brolog;
 
-  init(map: Map, dataLayer: any, allDataSource: any, log: Brolog) {
+  init(map: Map, dataLayer: any, allDataSourceObs: BehaviorSubject<any>, log: Brolog) {
     this.map = map;
     this.dataLayer = dataLayer;
-    this.allDataSource = allDataSource;
+    this.allDataSourceObs = allDataSourceObs;
     this.log = log;
     this.setupEventHandling();
   }
@@ -35,7 +36,9 @@ export class MeasurementStore {
   }
 
   setupEventHandling() {
-    this.allDataSource.on('change', this.initialLoadMeasurements.bind(this));
+    this.allDataSourceObs.asObservable().subscribe(allDataSource => {
+      allDataSource.on('change', this.initialLoadMeasurements.bind(this));
+    });
   }
 
   clearFilter() {
@@ -57,19 +60,21 @@ export class MeasurementStore {
   }
 
   initialLoadMeasurements(event) {
-    const source = event.target;
-    if (!source.loading) {
-      const features = this.allDataSource.getFeatures();
-      // Store the measurements in easy to access data structure
-      this.measurements = features;
-      this.measurementsById = keyBy(features, f => f.get('n_code'));
-      this.measurementsByOwner = groupBy(features, f => f.get('user_n_code'));
+    this.allDataSourceObs.asObservable().subscribe(allDataSource => {
+      const source = event.target;
+      if (!source.loading) {
+        const features = allDataSource.getFeatures();
+        // Store the measurements in easy to access data structure
+        this.measurements = features;
+        this.measurementsById = keyBy(features, f => f.get('n_code'));
+        this.measurementsByOwner = groupBy(features, f => f.get('user_n_code'));
 
-      this.recentMeasurements(this.measurements);
-      this.allDataSource.un('change', this.initialLoadMeasurements);
-      // console.log(`loadMeasurements (by Id): ${JSON.stringify(Object.keys(this.measurementsById))}`);
-      // console.log(`loadMeasurements (by Owner): ${JSON.stringify(Object.keys(this.measurementsByOwner))}`);
-    }
+        this.recentMeasurements(this.measurements);
+        allDataSource.un('change', this.initialLoadMeasurements);
+        // console.log(`loadMeasurements (by Id): ${JSON.stringify(Object.keys(this.measurementsById))}`);
+        // console.log(`loadMeasurements (by Owner): ${JSON.stringify(Object.keys(this.measurementsByOwner))}`);
+      }
+    });
   }
 
   showMeasurements(userId = null) {
