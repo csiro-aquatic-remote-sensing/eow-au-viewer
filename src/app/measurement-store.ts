@@ -30,7 +30,7 @@ export class MeasurementStore {
 
   async init(map: Map, eowData: EowDataLayer) {
     this.map = map;
-    this.allDataSourceObs = eowData.dataLayerObs;
+    this.allDataSourceObs = eowData.allDataSourceObs;
     this.dataLayerObs = eowData.dataLayerObs;
     this.setupEventHandling();
 
@@ -38,9 +38,6 @@ export class MeasurementStore {
   }
 
   getByOwner(userId) {
-    // while (! this.measurementsByOwner) {
-    //   setTimeout(() => console.log('waiting'), 5);
-    // }
     return this.measurementsByOwner.hasOwnProperty(userId) && this.measurementsByOwner[userId] || [];
   }
 
@@ -74,7 +71,6 @@ export class MeasurementStore {
 
   initialLoadMeasurements(event) {
     if (!event.target.loading) {
-      setTimeout(() => {
         this.allDataSourceObs.asObservable().subscribe(allDataSource => {
           // const source = event.target;
           const features = allDataSource.getFeatures();
@@ -89,7 +85,6 @@ export class MeasurementStore {
           // console.log(`loadMeasurements (by Owner): ${JSON.stringify(Object.keys(this.measurementsByOwner))}`);
           // }
         });
-      }, 1000);
     }
   }
 

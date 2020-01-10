@@ -100,10 +100,9 @@ export class AppComponent implements OnInit {
   }
 
   private debug_compareUsersNMeasurements() {
-    // return; // don't want it currently
+    return; // don't want it currently
     // Delay so other allDataSource.on('change' that loads the data gets a chance to fire
     this.eowData.allDataSourceObs.asObservable().subscribe(allDataSource => {
-      window.setTimeout(() => {
         console.log('debug_compareUsersNMeasurements:');
         Object.keys(this.userStore.userById).forEach(uid => {
           const user = this.userStore.userById[uid];
@@ -121,7 +120,6 @@ export class AppComponent implements OnInit {
           JSON.stringify(this.measurementStore.measurementSummary(false, this.userStore), null, 2)}`);
         console.log(`Number of measurements per user: ${
           JSON.stringify(this.measurementStore.numberMeasurmentsPerUser(this.userStore), null, 2)}`);
-      }, 1000);
     });
   }
 
