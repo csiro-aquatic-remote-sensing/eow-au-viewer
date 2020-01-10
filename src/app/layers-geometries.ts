@@ -98,7 +98,7 @@ export default class LayerGeometries {
       const polygonObj = lineToPolygon(turfLine);
       dataDestination.push(polygonObj);
     } else {
-      this.log.warn(theClass, `Turfline has < 3 coords: ${turfLine.geometry.coordinates.length} - `
+      this.log.verbose(theClass, `Turfline has < 3 coords: ${turfLine.geometry.coordinates.length} - `
         + `${JSON.stringify(turfLine.geometry.coordinates)}`);
     }
   }

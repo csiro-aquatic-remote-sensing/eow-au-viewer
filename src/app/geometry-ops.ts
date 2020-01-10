@@ -81,7 +81,7 @@ export default class GeometryOps {
     return eowWaterbodyIntersections;
   }
 
-  // Mainly for debug purposes so I can see something happening!  I don't think the EOW Data is 'in' the polygons.
+  // Mainly for debug purposes so I can see something happening!  I don't think the EOW Data is intersecting the polygons and want to know more.
   convertLayerToDataForamt(layerGeometries: LayerGeometries, layerName: string):
     EowWaterbodyIntersection[] {
     const layerGeometry: Feature<Polygon>[] = layerGeometries.getLayer(layerName);

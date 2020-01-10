@@ -12,6 +12,7 @@ import {
   Brolog,
 } from 'brolog';
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
+import {BehaviorSubject} from 'rxjs';
 
 const theClass = 'EowDataGeometries';
 
@@ -24,13 +25,15 @@ const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia?se
   + '&version=1.0.0&request=GetFeature&typeName=eow_australia&maxFeatures=5000&outputFormat=application%2Fjson';
 
 export default class EowDataGeometries {
-  points: FeatureCollection<Point>;
+  private points: FeatureCollection<Point>;
+  pointsObs: BehaviorSubject<any>;
 
-  constructor(private log: Brolog) {
+  constructor(private log: Brolog) {  /** @type {any} */
   }
-
+  //
   async init() {
-    return new Promise(async (resolve, reject) => {
+    // return new Promise(async (resolve, reject) => {
+
       try {
         const response = await fetch(WFS_URL);
         const geoJSONFeatures = new GeoJSON().readFeatures(await response.json(), {featureProjection: 'EPSG:3857'});
@@ -42,13 +45,18 @@ export default class EowDataGeometries {
           features.push(featurePoint);
         }
         this.points = turfFeatureCollection(features);
+        this.pointsObs = new BehaviorSubject<any>(this.points);
 
         this.log.silly(theClass, `EOWDataGeometries - ${JSON.stringify(this.points)}`);
       } catch (error) {
         this.log.error(error);
-        reject(error);
+        // reject(error);
+        this.pointsObs = new BehaviorSubject<any>(null);
       }
-      resolve();
-    });
+      return this; // when done
+    // })();
+
+    // resolve();
+    // });
   }
 }

@@ -43,35 +43,37 @@ export class AppComponent implements OnInit {
   // allDataSource: any;
   pieChart: any;
   layers: Layers;
-  htmlDocument: Document;
+  // htmlDocument: Document;
   eowDataGeometries: EowDataGeometries;
   layersGeometries: LayerGeometries;
   geometryOps: GeometryOps;
   eowDataPieChart: EOWDataPieChart;
 
-  constructor(@Inject(DOCUMENT) private document: Document, private http: HttpClient, private log: Brolog) {
-    this.htmlDocument = document;
+  constructor(@Inject(DOCUMENT) private htmlDocument: Document, private http: HttpClient, private log: Brolog) {
+    // this.htmlDocument = document;
     this.pieChart = new PieChart(log);
-
-    this.userStore = new UserStore(document, this.log);
-    this.popupObject = new Popup(document, this.pieChart, this.userStore);
-    this.eowData = new EowDataLayer();
-    this.layers = new Layers(document, http, log);
-    this.measurementStore = new MeasurementStore();
-    this.eowDataGeometries = new EowDataGeometries(log);
-    this.layersGeometries = new LayerGeometries(log);
-    this.geometryOps = new GeometryOps(log);
-    this.eowDataPieChart = new EOWDataPieChart(this.geometryOps, log);
   }
 
   async ngOnInit() {
     this.initMap();
+
+    this.userStore = new UserStore(document, this.log);
+    this.popupObject = new Popup(document, this.pieChart, this.userStore);
+    this.eowData = new EowDataLayer().init(this.map);
+    this.layers = new Layers(document, this.http, this.log);
+    this.measurementStore = await new MeasurementStore(this.log).init(this.map, this.eowData);
+    // this.eowData.init(this.map);
+    this.eowDataGeometries = await new EowDataGeometries(this.log).init();
+    this.layersGeometries = new LayerGeometries(this.log);
+    this.geometryOps = new GeometryOps(this.log);
+    this.eowDataPieChart = new EOWDataPieChart(this.geometryOps, this.log);
+
     this.popupObject.init(this.map);
-    this.eowData.init(this.map); //  , this.htmlDocument);
+    // this.eowData.init(this.map); //  , this.htmlDocument);
     this.eowDataPieChart.init(this.map, this.htmlDocument);
-    this.measurementStore.init(this.map, this.eowData.dataLayerObs, this.eowData.allDataSourceObs, this.log);
+    // this.measurementStore.init(this.map, this.eowData.dataLayerObs, this.eowData.allDataSourceObs, this.log);
     await this.userStore.init(this.eowData.dataLayerObs);
-    await this.eowDataGeometries.init();
+    // await this.eowDataGeometries.init();
 
     this.eowData.allDataSourceObs.asObservable().subscribe(allDataSource => {
       allDataSource.on('change', this.debug_compareUsersNMeasurements.bind(this));
@@ -83,38 +85,44 @@ export class AppComponent implements OnInit {
 
     this.setupEventHandlers();
     await this.layersGeometries.init();
-    const eowDataInWaterbodies: EowWaterbodyIntersection[] = this.geometryOps.calculateLayerIntersections(this.eowDataGeometries.points,
-      this.layersGeometries, 'i5516 reservoirs');
+
+    // Turn off for the moment whilst debug to show something in all waterbodies
+    // let eowDataInWaterbodies: EowWaterbodyIntersection[];
+    // this.eowDataGeometries.pointsObs.asObservable().subscribe((points) => {
+    //   eowDataInWaterbodies = this.geometryOps.calculateLayerIntersections(points, this.layersGeometries, 'i5516 reservoirs');
+    // });
     // this.eowDataPieChart.plot(eowDataInWaterbodies);
     const eowWaterbodyPoints: EowWaterbodyIntersection[] = this.geometryOps.convertLayerToDataForamt(this.layersGeometries, 'i5516 reservoirs');
     this.eowDataPieChart.plot(eowWaterbodyPoints);
+    // EO DEBUG
+
     this.layers.addLayers(this.map);
   }
 
   private debug_compareUsersNMeasurements() {
     // return; // don't want it currently
     // Delay so other allDataSource.on('change' that loads the data gets a chance to fire
-    window.setTimeout(() => {
-      console.log('debug_compareUsersNMeasurements:');
-      Object.keys(this.userStore.userById).forEach(uid => {
-        const user = this.userStore.userById[uid];
-        console.log(`  user - Id: ${user.id}, nickName: ${user.nickname}, photo_count: ${user.photo_count}`);
-        const m = this.measurementStore.getByOwner(user.id);
-        if (m && m.length > 0) {
-          const images = m.map(m2 => m2.get('image'));
-          console.log(`    number of images: ${images.length} -> \n${JSON.stringify(images, null, 2)}`);
-        }
-      });
-      // Now print Measurements info
-      console.log(`measurementsByOwner: ${
-        JSON.stringify(this.measurementStore.measurementSummary(true, this.userStore), null, 2)}`);
-      console.log(`measurementsById: ${
-        JSON.stringify(this.measurementStore.measurementSummary(false, this.userStore), null, 2)}`);
-      console.log(`Number of measurements per user: ${
-        JSON.stringify(this.measurementStore.numberMeasurmentsPerUser(this.userStore), null, 2)}`);
-    }, 1000);
-
-
+    this.eowData.allDataSourceObs.asObservable().subscribe(allDataSource => {
+      window.setTimeout(() => {
+        console.log('debug_compareUsersNMeasurements:');
+        Object.keys(this.userStore.userById).forEach(uid => {
+          const user = this.userStore.userById[uid];
+          console.log(`  user - Id: ${user.id}, nickName: ${user.nickname}, photo_count: ${user.photo_count}`);
+          const m = this.measurementStore.getByOwner(user.id);
+          if (m && m.length > 0) {
+            const images = m.map(m2 => m2.get('image'));
+            console.log(`    number of images: ${images.length} -> \n${JSON.stringify(images, null, 2)}`);
+          }
+        });
+        // Now print Measurements info
+        console.log(`measurementsByOwner: ${
+          JSON.stringify(this.measurementStore.measurementSummary(true, this.userStore), null, 2)}`);
+        console.log(`measurementsById: ${
+          JSON.stringify(this.measurementStore.measurementSummary(false, this.userStore), null, 2)}`);
+        console.log(`Number of measurements per user: ${
+          JSON.stringify(this.measurementStore.numberMeasurmentsPerUser(this.userStore), null, 2)}`);
+      }, 1000);
+    });
   }
 
   private initMap() {
@@ -156,7 +164,7 @@ export class AppComponent implements OnInit {
 
   private setupEventHandlers() {
     // Pull tabs of Most Active Users and Recent Measurements
-    this.document.querySelectorAll('.pull-tab').forEach(i => i.addEventListener('click', (event: Event) => {
+    this.htmlDocument.querySelectorAll('.pull-tab').forEach(i => i.addEventListener('click', (event: Event) => {
       const element = (event.target as HTMLElement).closest('.panel');
       element.classList.toggle('pulled');
     }));
@@ -192,7 +200,7 @@ export class AppComponent implements OnInit {
       this.popupObject.draw(features, coordinate);
     }, true);
 
-    this.document.getElementById('clearFilterButton').addEventListener('click', (event) => {
+    this.htmlDocument.getElementById('clearFilterButton').addEventListener('click', (event) => {
       this.clearFilter();
     });
   }
@@ -210,7 +218,7 @@ export class AppComponent implements OnInit {
   }
 
   private toggleFilterButton(state = false) {
-    const element = this.document.getElementById('clearFilterButton');
+    const element = this.htmlDocument.getElementById('clearFilterButton');
     element.classList.toggle('hidden', !state);
   }
 }

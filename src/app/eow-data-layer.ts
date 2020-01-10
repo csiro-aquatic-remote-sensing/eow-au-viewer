@@ -25,10 +25,10 @@ const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia?se
 export class EowDataLayer {
   map: Map;
   // htmlDocument: Document;
-  private allDataSource: any;
-  private dataLayer: any;
-  allDataSourceObs: BehaviorSubject<any>;  // Observers that outside subscribers can use to know when data ready
-  dataLayerObs: BehaviorSubject<any>;
+  private allDataSource: VectorSource;
+  private dataLayer: VectorLayer;
+  allDataSourceObs: BehaviorSubject<VectorSource>;  // Observers that outside subscribers can use to know when data ready
+  dataLayerObs: BehaviorSubject<VectorLayer>;
   styleCache = {};
 
   init(map: Map) { // , htmlDocument: Document) {
@@ -73,6 +73,8 @@ export class EowDataLayer {
 
     // this.map.addLayer(this.dataLayer);
     this.setupEventHandlers();
+
+    return this;
   }
 
   setupEventHandlers() {

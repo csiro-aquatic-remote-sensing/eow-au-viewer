@@ -9,25 +9,38 @@ import groupBy from 'lodash/groupBy';
 import {UserStore} from './user-store';
 import Brolog from 'brolog';
 import {BehaviorSubject} from 'rxjs';
+import {EowDataLayer} from './eow-data-layer';
 
 export class MeasurementStore {
   measurements: [];
   measurementsById: {};
   measurementsByOwner: {};
   map: Map;
-  dataLayer: any;
+  dataLayerObs: BehaviorSubject<any>;
   allDataSourceObs: BehaviorSubject<any>;
-  log: Brolog;
 
-  init(map: Map, dataLayer: any, allDataSourceObs: BehaviorSubject<any>, log: Brolog) {
+  /**
+   * Construct in an async method eg. async ngOnInit() like this.
+   * const measurmentStore = await new MeasurementStore(log).init(...);
+   *
+   * @param log global
+   */
+  constructor(private log: Brolog) {
+  }
+
+  async init(map: Map, eowData: EowDataLayer) {
     this.map = map;
-    this.dataLayer = dataLayer;
-    this.allDataSourceObs = allDataSourceObs;
-    this.log = log;
+    this.allDataSourceObs = eowData.dataLayerObs;
+    this.dataLayerObs = eowData.dataLayerObs;
     this.setupEventHandling();
+
+    return this;
   }
 
   getByOwner(userId) {
+    // while (! this.measurementsByOwner) {
+    //   setTimeout(() => console.log('waiting'), 5);
+    // }
     return this.measurementsByOwner.hasOwnProperty(userId) && this.measurementsByOwner[userId] || [];
   }
 
@@ -60,21 +73,24 @@ export class MeasurementStore {
   }
 
   initialLoadMeasurements(event) {
-    this.allDataSourceObs.asObservable().subscribe(allDataSource => {
-      const source = event.target;
-      if (!source.loading) {
-        const features = allDataSource.getFeatures();
-        // Store the measurements in easy to access data structure
-        this.measurements = features;
-        this.measurementsById = keyBy(features, f => f.get('n_code'));
-        this.measurementsByOwner = groupBy(features, f => f.get('user_n_code'));
+    if (!event.target.loading) {
+      setTimeout(() => {
+        this.allDataSourceObs.asObservable().subscribe(allDataSource => {
+          // const source = event.target;
+          const features = allDataSource.getFeatures();
+          // Store the measurements in easy to access data structure
+          this.measurements = features;
+          this.measurementsById = keyBy(features, f => f.get('n_code'));
+          this.measurementsByOwner = groupBy(features, f => f.get('user_n_code'));
 
-        this.recentMeasurements(this.measurements);
-        allDataSource.un('change', this.initialLoadMeasurements);
-        // console.log(`loadMeasurements (by Id): ${JSON.stringify(Object.keys(this.measurementsById))}`);
-        // console.log(`loadMeasurements (by Owner): ${JSON.stringify(Object.keys(this.measurementsByOwner))}`);
-      }
-    });
+          this.recentMeasurements(this.measurements);
+          allDataSource.un('change', this.initialLoadMeasurements);
+          // console.log(`loadMeasurements (by Id): ${JSON.stringify(Object.keys(this.measurementsById))}`);
+          // console.log(`loadMeasurements (by Owner): ${JSON.stringify(Object.keys(this.measurementsByOwner))}`);
+          // }
+        });
+      }, 1000);
+    }
   }
 
   showMeasurements(userId = null) {
@@ -90,7 +106,9 @@ export class MeasurementStore {
       nearest: false,
       duration: 1300
     });
-    this.dataLayer.setSource(newSource);
+    this.dataLayerObs.asObservable().subscribe(dataLayer => {
+      dataLayer.setSource(newSource);
+    });
     this.recentMeasurements(selection);
     return true;
   }
