@@ -7,6 +7,7 @@ import {
 } from './utils';
 import Brolog from 'brolog';
 import {BehaviorSubject} from 'rxjs';
+import {MeasurementStore} from './measurement-store';
 
 export class UserStore {
   // htmlDocument: Document;
@@ -17,7 +18,7 @@ export class UserStore {
   constructor(private htmlDocument: Document, private log: Brolog) {
   }
 
-  async init(dataLayerObs: BehaviorSubject<any>): Promise<void> {
+  async init(dataLayerObs: BehaviorSubject<any>, measurementStore: MeasurementStore): Promise<void> {
     this.dataLayerObs = dataLayerObs;
     const USER_SERVICE = 'https://www.eyeonwater.org/api/users';
 
@@ -39,13 +40,13 @@ export class UserStore {
         this.userById = keyBy(this.users, 'id');
         this.renderUsers(this.users);
         this.log.info(`Users Loaded - ids: ${JSON.stringify(Object.keys(this.userById))}`);
-        this.setupEventHandlers();
+        this.setupEventHandlers(measurementStore);
         resolve();
       });
     });
   }
 
-  setupEventHandlers() {
+  setupEventHandlers(measurementStore: MeasurementStore) {
     this.dataLayerObs.asObservable().subscribe(dataLayer => {
       dataLayer.on('change', debounce(({target}) => {
         // Populate datalayer
@@ -53,6 +54,18 @@ export class UserStore {
         element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), this);
       }, 200));
     });
+
+    // User List
+    document.querySelector('.user-list').addEventListener('click', (event) => {
+      const element = (event.target as HTMLElement).closest('.item');
+      const userId = element.getAttribute('data-user');
+      console.log(`clicked on user-id: ${userId}`);
+      if (measurementStore.showMeasurements(userId)) {
+        this.clearSelectedUser();
+        element.classList.add('selectedUser', 'box-shadow');
+        this.toggleFilterButton(true);
+      }
+    }, true);
   }
 
   getUserById(userId) {
@@ -96,5 +109,10 @@ export class UserStore {
 
   userExists(userId) {
     return Object.keys(this.getUserById(userId)).length > 0;
+  }
+
+  private toggleFilterButton(state = false) {
+    const element = this.htmlDocument.getElementById('clearFilterButton');
+    element.classList.toggle('hidden', !state);
   }
 }

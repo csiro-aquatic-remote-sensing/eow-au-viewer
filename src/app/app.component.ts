@@ -65,7 +65,7 @@ export class AppComponent implements OnInit {
 
     this.popupObject.init(this.eowMap);
     this.eowDataPieChart.init(this.eowMap, this.htmlDocument);
-    await this.userStore.init(this.eowData.dataLayerObs);
+    await this.userStore.init(this.eowData.dataLayerObs, this.measurementStore);
 
     // DEBUG
     this.eowData.allDataSourceObs.asObservable().subscribe(allDataSource => {
@@ -117,17 +117,6 @@ export class AppComponent implements OnInit {
       const element = (event.target as HTMLElement).closest('.panel');
       element.classList.toggle('pulled');
     }));
-    // User List
-    document.querySelector('.user-list').addEventListener('click', (event) => {
-      const element = (event.target as HTMLElement).closest('.item');
-      const userId = element.getAttribute('data-user');
-      console.log(`clicked on user-id: ${userId}`);
-      if (this.measurementStore.showMeasurements(userId)) {
-        this.userStore.clearSelectedUser();
-        element.classList.add('selectedUser', 'box-shadow');
-        this.toggleFilterButton(true);
-      }
-    }, true);
 
     // Measurement List
     document.querySelector('.measurement-list').addEventListener('click', (event) => {
