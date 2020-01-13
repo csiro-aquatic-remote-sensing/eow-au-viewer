@@ -7,6 +7,7 @@ import Map from 'ol/Map';
 import Overlay from 'ol/Overlay';
 import OverlayPositioning from 'ol/OverlayPositioning';
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
+import {EOWMap} from './eow-map';
 
 const theClass = `EOWDataPieChart`;
 const htmlElementId = 'waterbody';
@@ -17,7 +18,7 @@ export default class EOWDataPieChart {
   log: Brolog;
   geometryOps: GeometryOps;
   pieChartMap: any;
-  map: Map;
+  eowMap: EOWMap;
   htmlDocument: Document;
 
   constructor(geometryOps: GeometryOps, log: Brolog) {
@@ -25,8 +26,8 @@ export default class EOWDataPieChart {
     this.log = log;
   }
 
-  init(map: Map, htmlDocument) {
-    this.map = map;
+  init(eowMap: EOWMap, htmlDocument) {
+    this.eowMap = eowMap;
     this.htmlDocument = htmlDocument;
   }
 
@@ -45,31 +46,33 @@ export default class EOWDataPieChart {
       3. Get the centroid of the polygon
       4. Draw something at that point
      */
-    for (const eowWaterbodyIntersection of eowDataInWaterbodies) {
-      // These eowWaterbodyIntersection are between the EOW Data Points and the polygons in the chosen layer (selected outside of here with
-      //  the result being passed in as EowWaterbodyIntersection[].
-      // Each Object is:
-      //  waterBody: <the polygon that represents the waterbody>
-      //  eowData: <the EOW Data points within that waterbody>
-      //
-      // If there is no EOWData within the waterbody, both fields will be null
+    this.eowMap.mapObs.asObservable().subscribe(map => {
+      for (const eowWaterbodyIntersection of eowDataInWaterbodies) {
+        // These eowWaterbodyIntersection are between the EOW Data Points and the polygons in the chosen layer (selected outside of here with
+        //  the result being passed in as EowWaterbodyIntersection[].
+        // Each Object is:
+        //  waterBody: <the polygon that represents the waterbody>
+        //  eowData: <the EOW Data points within that waterbody>
+        //
+        // If there is no EOWData within the waterbody, both fields will be null
 
-      const points: Coords[] = [];
-      if (eowWaterbodyIntersection.waterBody) {
-        this.log.verbose(theClass + '.plot', `eowWaterbodyIntersection.waterBody: ${JSON.stringify(eowWaterbodyIntersection.waterBody.polygon, null, 2)}`);
-        featureEach(eowWaterbodyIntersection.waterBody.polygon, (feature: Feature<Point>) => {
-          if (feature.hasOwnProperty('geometry')) {
-            points.push(feature.geometry.coordinates as Coords);
+        const points: Coords[] = [];
+        if (eowWaterbodyIntersection.waterBody) {
+          this.log.verbose(theClass + '.plot', `eowWaterbodyIntersection.waterBody: ${JSON.stringify(eowWaterbodyIntersection.waterBody.polygon, null, 2)}`);
+          featureEach(eowWaterbodyIntersection.waterBody.polygon, (feature: Feature<Point>) => {
+            if (feature.hasOwnProperty('geometry')) {
+              points.push(feature.geometry.coordinates as Coords);
+            }
+          });
+          if (points.length > 1) {
+            this.log.verbose(theClass + '.plot', `EOWDatum points: ${JSON.stringify(points)}`);
+            const median = this.geometryOps.calculateCentroidFromPoints(points);
+            this.log.verbose(theClass + '.plot', `Median: ${JSON.stringify(median)}`);
+            this.draw(median.geometry.coordinates, map);
           }
-        });
-        if (points.length > 1) {
-          this.log.verbose(theClass + '.plot', `EOWDatum points: ${JSON.stringify(points)}`);
-          const median = this.geometryOps.calculateCentroidFromPoints(points);
-          this.log.verbose(theClass + '.plot', `Median: ${JSON.stringify(median)}`);
-          this.draw(median.geometry.coordinates);
         }
       }
-    }
+    });
   }
 
   /**
@@ -77,7 +80,7 @@ export default class EOWDataPieChart {
    *
    * @param point where to draw
    */
-  draw(point: number[]) {
+  draw(point: number[], map: Map) {
     if (point[0] && point[1] && !isNaN(point[0]) && !isNaN(point[1])) {
       this.log.info(theClass, `Draw pieChart at ${point[0]}, ${point[1]})}`);
       const el = this.htmlDocument.createElement('div');
@@ -93,7 +96,7 @@ export default class EOWDataPieChart {
         autoPanMargin: 275,
         positioning: OverlayPositioning.TOP_LEFT
       });
-      this.map.addOverlay(pieChartMap);
+      map.addOverlay(pieChartMap);
     }
   }
 }

@@ -6,6 +6,7 @@ import {
 } from './utils';
 import colors from './colors.json';
 import OverlayPositioning from 'ol/OverlayPositioning';
+import {EOWMap} from './eow-map';
 
 export class Popup {
   elementId = 'popup';
@@ -24,17 +25,19 @@ export class Popup {
    * Create the map overlay.
    * @param elementId to draw into
    */
-  init(map: Map) {
-    if (! this.popup) {
-      this.popup = new Overlay({
-        element: this.htmlDocument.getElementById(this.elementId),
-        position: [0, 0],
-        autoPan: true,
-        autoPanMargin: 275,
-        positioning: OverlayPositioning.CENTER_LEFT
+  init(eowMap: EOWMap) {
+    if (!this.popup) {
+      eowMap.mapObs.asObservable().subscribe(map => {
+        this.popup = new Overlay({
+          element: this.htmlDocument.getElementById(this.elementId),
+          position: [0, 0],
+          autoPan: true,
+          autoPanMargin: 275,
+          positioning: OverlayPositioning.CENTER_LEFT
+        });
+        map.addOverlay(this.popup);
+        this.setupEventHandlers();
       });
-      map.addOverlay(this.popup);
-      this.setupEventHandlers();
     }
   }
 
@@ -53,7 +56,7 @@ export class Popup {
   }
 
   getOverlay(): Overlay {
-    if (! this.popup) {
+    if (!this.popup) {
       throw new Error('Popup / getOverlay - popup is null - it has not been initialised.');
     }
 

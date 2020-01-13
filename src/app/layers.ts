@@ -14,11 +14,20 @@ import {
   Brolog,
 } from 'brolog';
 import IconAnchorUnits from 'ol/style/IconAnchorUnits';
+import {EOWMap} from './eow-map';
 
 const theClass = 'Layers';
 
 export class Layers {
   constructor(private htmlDocument: Document, private http: HttpClient, private log: Brolog) {
+  }
+
+  init(eowMap: EOWMap) {
+    eowMap.mapObs.asObservable().subscribe(async map => {
+      await this.addLayers(map);
+    });
+
+    return this;
   }
 
   async addLayers(map: Map) {

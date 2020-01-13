@@ -20,10 +20,7 @@ import {timeout} from 'rxjs/operators';
 import {FeatureCollection, Point} from '@turf/helpers';
 import EOWDataPieChart from './eow-data-piechart';
 import {Coordinate} from 'ol/coordinate';
-
-const defaultCoord = [133.945313, -26.431228];
-const canberra = [149.130005, -35.280937];
-const theZoom = 12;
+import {EOWMap} from './eow-map';
 
 const theClass = 'AppComponent';
 
@@ -34,8 +31,8 @@ const theClass = 'AppComponent';
 })
 export class AppComponent implements OnInit {
   title = 'Eye On Water';
-  map: Map;
-  popupObject: any;
+  eowMap: EOWMap;
+  popupObject: Popup;
   measurementStore: MeasurementStore;
   userStore: UserStore;
   eowData: EowDataLayer;
@@ -55,33 +52,25 @@ export class AppComponent implements OnInit {
   }
 
   async ngOnInit() {
-    this.initMap();
-
     this.userStore = new UserStore(document, this.log);
     this.popupObject = new Popup(document, this.pieChart, this.userStore);
-    this.eowData = new EowDataLayer().init(this.map);
-    this.layers = new Layers(document, this.http, this.log);
-    this.measurementStore = await new MeasurementStore(this.log).init(this.map, this.eowData);
-    // this.eowData.init(this.map);
+    this.eowMap = new EOWMap(this.log).init(this.popupObject);
+    this.eowData = new EowDataLayer().init(this.eowMap);
+    this.layers = new Layers(document, this.http, this.log).init(this.eowMap);
+    this.measurementStore = await new MeasurementStore(this.log).init(this.eowMap, this.eowData);
     this.eowDataGeometries = await new EowDataGeometries(this.log).init();
     this.layersGeometries = new LayerGeometries(this.log);
     this.geometryOps = new GeometryOps(this.log);
     this.eowDataPieChart = new EOWDataPieChart(this.geometryOps, this.log);
 
-    this.popupObject.init(this.map);
-    // this.eowData.init(this.map); //  , this.htmlDocument);
-    this.eowDataPieChart.init(this.map, this.htmlDocument);
-    // this.measurementStore.init(this.map, this.eowData.dataLayerObs, this.eowData.allDataSourceObs, this.log);
+    this.popupObject.init(this.eowMap);
+    this.eowDataPieChart.init(this.eowMap, this.htmlDocument);
     await this.userStore.init(this.eowData.dataLayerObs);
-    // await this.eowDataGeometries.init();
 
+    // DEBUG
     this.eowData.allDataSourceObs.asObservable().subscribe(allDataSource => {
       allDataSource.on('change', this.debug_compareUsersNMeasurements.bind(this));
     });
-    this.eowData.dataLayerObs.asObservable().subscribe(dataLayer => {
-      this.map.addLayer(dataLayer);
-    });
-
 
     this.setupEventHandlers();
     await this.layersGeometries.init();
@@ -96,67 +85,29 @@ export class AppComponent implements OnInit {
     this.eowDataPieChart.plot(eowWaterbodyPoints);
     // EO DEBUG
 
-    this.layers.addLayers(this.map);
   }
 
   private debug_compareUsersNMeasurements() {
     return; // don't want it currently
     // Delay so other allDataSource.on('change' that loads the data gets a chance to fire
     this.eowData.allDataSourceObs.asObservable().subscribe(allDataSource => {
-        console.log('debug_compareUsersNMeasurements:');
-        Object.keys(this.userStore.userById).forEach(uid => {
-          const user = this.userStore.userById[uid];
-          console.log(`  user - Id: ${user.id}, nickName: ${user.nickname}, photo_count: ${user.photo_count}`);
-          const m = this.measurementStore.getByOwner(user.id);
-          if (m && m.length > 0) {
-            const images = m.map(m2 => m2.get('image'));
-            console.log(`    number of images: ${images.length} -> \n${JSON.stringify(images, null, 2)}`);
-          }
-        });
-        // Now print Measurements info
-        console.log(`measurementsByOwner: ${
-          JSON.stringify(this.measurementStore.measurementSummary(true, this.userStore), null, 2)}`);
-        console.log(`measurementsById: ${
-          JSON.stringify(this.measurementStore.measurementSummary(false, this.userStore), null, 2)}`);
-        console.log(`Number of measurements per user: ${
-          JSON.stringify(this.measurementStore.numberMeasurmentsPerUser(this.userStore), null, 2)}`);
-    });
-  }
-
-  private initMap() {
-    const mainMap = new TileLayer({
-      source: new OSM()
-    });
-    mainMap.set('name', 'Main map');
-
-    this.map = new Map({
-      target: 'map',
-      layers: [
-        mainMap,
-      ],
-      view: new View({
-        center: fromLonLat(canberra),
-        zoom: theZoom
-      }),
-      controls: [],
-    });
-
-    this.map.on('click', (evt) => {
-      const {
-        pixel,
-        coordinate
-      } = evt;
-
-      const features = [];
-
-      this.map.forEachFeatureAtPixel(pixel, (feature) => {
-        features.push(feature);
+      console.log('debug_compareUsersNMeasurements:');
+      Object.keys(this.userStore.userById).forEach(uid => {
+        const user = this.userStore.userById[uid];
+        console.log(`  user - Id: ${user.id}, nickName: ${user.nickname}, photo_count: ${user.photo_count}`);
+        const m = this.measurementStore.getByOwner(user.id);
+        if (m && m.length > 0) {
+          const images = m.map(m2 => m2.get('image'));
+          console.log(`    number of images: ${images.length} -> \n${JSON.stringify(images, null, 2)}`);
+        }
       });
-
-      if (features.length) {
-        this.log.verbose(theClass, `Clicked on map at: ${JSON.stringify(coordinate)}`);
-        this.popupObject.draw(features, coordinate);
-      }
+      // Now print Measurements info
+      console.log(`measurementsByOwner: ${
+        JSON.stringify(this.measurementStore.measurementSummary(true, this.userStore), null, 2)}`);
+      console.log(`measurementsById: ${
+        JSON.stringify(this.measurementStore.measurementSummary(false, this.userStore), null, 2)}`);
+      console.log(`Number of measurements per user: ${
+        JSON.stringify(this.measurementStore.numberMeasurmentsPerUser(this.userStore), null, 2)}`);
     });
   }
 
@@ -187,16 +138,19 @@ export class AppComponent implements OnInit {
 
       const coordinate = element.getAttribute('data-coordinate').split(',').map(c => parseInt(c, 10)) as Coordinate;
       const id = element.getAttribute('data-key');
-      const view = this.map.getView();
-      view.cancelAnimations();
-      view.animate({
-        center: coordinate,
-        zoom: 8,
-        duration: 1300
-      } as AnimationOptions);
-      const features = [this.measurementStore.getById(id)];
-      this.popupObject.draw(features, coordinate);
+      this.eowMap.mapObs.asObservable().subscribe(map => {
+        const view = map.getView();
+        view.cancelAnimations();
+        view.animate({
+          center: coordinate,
+          zoom: 8,
+          duration: 1300
+        } as AnimationOptions);
+        const features = [this.measurementStore.getById(id)];
+        this.popupObject.draw(features, coordinate);
+      });
     }, true);
+
 
     this.htmlDocument.getElementById('clearFilterButton').addEventListener('click', (event) => {
       this.clearFilter();
@@ -207,7 +161,9 @@ export class AppComponent implements OnInit {
     this.userStore.clearSelectedUser();
     this.measurementStore.clearFilter();
     this.eowData.dataLayerObs.asObservable().subscribe(dataLayer => {
-      this.map.getView().fit(dataLayer.getSource().getExtent(), {duration: 1300});
+      this.eowMap.mapObs.asObservable().subscribe(map => {
+        map.getView().fit(dataLayer.getSource().getExtent(), {duration: 1300});
+      });
       this.eowData.allDataSourceObs.asObservable().subscribe(allDataSource => {
         dataLayer.setSource(allDataSource);
       });

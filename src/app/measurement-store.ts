@@ -10,26 +10,21 @@ import {UserStore} from './user-store';
 import Brolog from 'brolog';
 import {BehaviorSubject} from 'rxjs';
 import {EowDataLayer} from './eow-data-layer';
+import {EOWMap} from './eow-map';
 
 export class MeasurementStore {
   measurements: [];
   measurementsById: {};
   measurementsByOwner: {};
-  map: Map;
+  eowMap: EOWMap;
   dataLayerObs: BehaviorSubject<any>;
   allDataSourceObs: BehaviorSubject<any>;
 
-  /**
-   * Construct in an async method eg. async ngOnInit() like this.
-   * const measurmentStore = await new MeasurementStore(log).init(...);
-   *
-   * @param log global
-   */
   constructor(private log: Brolog) {
   }
 
-  async init(map: Map, eowData: EowDataLayer) {
-    this.map = map;
+  init(eowMap: EOWMap, eowData: EowDataLayer) {
+    this.eowMap = eowMap;
     this.allDataSourceObs = eowData.allDataSourceObs;
     this.dataLayerObs = eowData.dataLayerObs;
     this.setupEventHandling();
@@ -71,20 +66,20 @@ export class MeasurementStore {
 
   initialLoadMeasurements(event) {
     if (!event.target.loading) {
-        this.allDataSourceObs.asObservable().subscribe(allDataSource => {
-          // const source = event.target;
-          const features = allDataSource.getFeatures();
-          // Store the measurements in easy to access data structure
-          this.measurements = features;
-          this.measurementsById = keyBy(features, f => f.get('n_code'));
-          this.measurementsByOwner = groupBy(features, f => f.get('user_n_code'));
+      this.allDataSourceObs.asObservable().subscribe(allDataSource => {
+        // const source = event.target;
+        const features = allDataSource.getFeatures();
+        // Store the measurements in easy to access data structure
+        this.measurements = features;
+        this.measurementsById = keyBy(features, f => f.get('n_code'));
+        this.measurementsByOwner = groupBy(features, f => f.get('user_n_code'));
 
-          this.recentMeasurements(this.measurements);
-          allDataSource.un('change', this.initialLoadMeasurements);
-          // console.log(`loadMeasurements (by Id): ${JSON.stringify(Object.keys(this.measurementsById))}`);
-          // console.log(`loadMeasurements (by Owner): ${JSON.stringify(Object.keys(this.measurementsByOwner))}`);
-          // }
-        });
+        this.recentMeasurements(this.measurements);
+        allDataSource.un('change', this.initialLoadMeasurements);
+        // console.log(`loadMeasurements (by Id): ${JSON.stringify(Object.keys(this.measurementsById))}`);
+        // console.log(`loadMeasurements (by Owner): ${JSON.stringify(Object.keys(this.measurementsByOwner))}`);
+        // }
+      });
     }
   }
 
@@ -95,17 +90,19 @@ export class MeasurementStore {
     }
     const newSource = new VectorSource();
     newSource.addFeatures(selection);
-    this.map.getView().fit(newSource.getExtent(), {
-      size: this.map.getSize(),
-      padding: [100, 100, 100, 100],
-      nearest: false,
-      duration: 1300
+    this.eowMap.mapObs.asObservable().subscribe(map => {
+      map.getView().fit(newSource.getExtent(), {
+        size: map.getSize(),
+        padding: [100, 100, 100, 100],
+        nearest: false,
+        duration: 1300
+      });
+      this.dataLayerObs.asObservable().subscribe(dataLayer => {
+        dataLayer.setSource(newSource);
+      });
+      this.recentMeasurements(selection);
+      return true;
     });
-    this.dataLayerObs.asObservable().subscribe(dataLayer => {
-      dataLayer.setSource(newSource);
-    });
-    this.recentMeasurements(selection);
-    return true;
   }
 
   /**
