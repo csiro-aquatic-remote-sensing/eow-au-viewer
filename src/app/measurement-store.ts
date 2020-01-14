@@ -77,7 +77,6 @@ export class MeasurementStore {
     this.recentMeasurements(this.measurements);
   }
 
-
   private recentMeasurements(measurements, n = 20) {
     const userList = orderBy(measurements, [(f) => (new Date(f.get('date_photo'))).getTime()], ['desc']).slice(0, n).map((measurement) => {
       const prettyDate = DateTime.fromISO(measurement.get('date_photo')).toLocaleString(DateTime.DATE_FULL);

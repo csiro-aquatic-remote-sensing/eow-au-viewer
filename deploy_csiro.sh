@@ -2,6 +2,7 @@
 
 USER=smi9b6
 SITE_SERVER=research.csiro.au
+SERVERDIR=/srv/www/research.csiro.au/html/static/eyeonwater
 # Run this with 'npm run deploy:csiro' or directly
 # Requires that the user running this has setup ssh keys on research.csiro.au
 # See https://www.ssh.com/ssh/copy-id
@@ -22,7 +23,10 @@ do
   npm run build
 done
 
+echo tar files in to dist.tgz
 tar --directory=dist/ng-eow -czvf dist.tgz ./
+
+echo Copy dist.tgz to the server: ${USER}@${SITE_SERVER}:/tmp
 scp dist.tgz ${USER}@${SITE_SERVER}:/tmp
 
 # Currently there is a 'leaflet' directory someone else owns and so I can't delete.  Which causes failure in the chain.
@@ -30,4 +34,5 @@ RM='find . -maxdepth 1 -path ./leaflet -prune -o -name '*' -exec rm -r {} \;'
 # Replace with the following when some sysadmin removes that leaflet dir
 #RM='rm -rf *'
 
-ssh ${USER}@${SITE_SERVER} 'cd /srv/www/research.csiro.au/html/static/eyeonwater && eval "$RM" && cp /tmp/dist.tgz . && tar xzvf dist.tgz'
+echo Setup the web files in to $SERVERDIR
+ssh ${USER}@${SITE_SERVER} 'cd $SERVERDIR && eval "$RM" && cp /tmp/dist.tgz . && tar xzvf dist.tgz'

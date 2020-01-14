@@ -25,17 +25,17 @@ export default class LayerGeometries {
 
   async init() {
     // TODO this is a reuse of the layer data - combine in to one use
-    await this.createGeometry('Waterbodies shape', '../assets/waterbodies/Australia/aus25wgd_l.geojson');
-    await this.createGeometry('Waterbodies fill', '../assets/waterbodies/Australia/aus25wgd_r.geojson');
-    await this.createGeometry('Waterbodies name', '../assets/waterbodies/Australia/aus25wgd_p.geojson');
+    await this.createGeometry('Waterbodies shape', 'assets/waterbodies/Australia/aus25wgd_l.geojson');
+    await this.createGeometry('Waterbodies fill', 'assets/waterbodies/Australia/aus25wgd_r.geojson');
+    await this.createGeometry('Waterbodies name', 'assets/waterbodies/Australia/aus25wgd_p.geojson');
 
     // new data but that only covers ACT + ~ 100kms square
-    await this.createGeometry('i5516 flats', '../assets/waterbodies/Canberra/i5516_flats.geojson');
-    await this.createGeometry('i5516 pondages', '../assets/waterbodies/Canberra/i5516_pondageareas.geojson');
-    await this.createGeometry('i5516 waterCourseLines', '../assets/waterbodies/Canberra/i5516_watercourselines.geojson');
-    await this.createGeometry('i5516 waterCourseAreas', '../assets/waterbodies/Canberra/i5516_watercourseareas.geojson');
-    await this.createGeometry('i5516 lakes', '../assets/waterbodies/Canberra/i5516_waterholes.geojson');
-    await this.createGeometry('i5516 reservoirs', '../assets/waterbodies/Canberra/i5516_reservoirs.geojson');
+    await this.createGeometry('i5516 flats', 'assets/waterbodies/Canberra/i5516_flats.geojson');
+    await this.createGeometry('i5516 pondages', 'assets/waterbodies/Canberra/i5516_pondageareas.geojson');
+    await this.createGeometry('i5516 waterCourseLines', 'assets/waterbodies/Canberra/i5516_watercourselines.geojson');
+    await this.createGeometry('i5516 waterCourseAreas', 'assets/waterbodies/Canberra/i5516_watercourseareas.geojson');
+    await this.createGeometry('i5516 lakes', 'assets/waterbodies/Canberra/i5516_waterholes.geojson');
+    await this.createGeometry('i5516 reservoirs', 'assets/waterbodies/Canberra/i5516_reservoirs.geojson');
 
     this.log.verbose(theClass, `Layer geometries: ${Object.keys(this.layerFeatures)}`);
   }
