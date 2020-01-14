@@ -82,17 +82,17 @@ export class Layers {
     };
 
     const layerPromises = [];
-    layerPromises.push(createLayer('Waterbodies shape', '../assets/waterbodies/Australia/aus25wgd_l.geojson'));
-    layerPromises.push(createLayer('Waterbodies fill', '../assets/waterbodies/Australia/aus25wgd_r.geojson', {style: fillStyle}));
-    layerPromises.push(createLayer('Waterbodies name', '../assets/waterbodies/Australia/aus25wgd_p.geojson', {style: iconStyle, minZoom: 8}));
+    layerPromises.push(createLayer('Waterbodies shape', 'assets/waterbodies/Australia/aus25wgd_l.geojson'));
+    layerPromises.push(createLayer('Waterbodies fill', 'assets/waterbodies/Australia/aus25wgd_r.geojson', {style: fillStyle}));
+    layerPromises.push(createLayer('Waterbodies name', 'assets/waterbodies/Australia/aus25wgd_p.geojson', {style: iconStyle, minZoom: 8}));
 
     // new data but that only covers ACT + ~ 100kms square
-    layerPromises.push(createLayer('i5516 flats', '../assets/waterbodies/Canberra/i5516_flats.geojson'));
-    layerPromises.push(createLayer('i5516 pondages', '../assets/waterbodies/Canberra/i5516_pondageareas.geojson'));
-    layerPromises.push(createLayer('i5516 waterCourseLines', '../assets/waterbodies/Canberra/i5516_watercourselines.geojson', {visible: false}));
-    layerPromises.push(createLayer('i5516 waterCourseAreas', '../assets/waterbodies/Canberra/i5516_watercourseareas.geojson'));
-    layerPromises.push(createLayer('i5516 lakes', '../assets/waterbodies/Canberra/i5516_waterholes.geojson'));
-    layerPromises.push(createLayer('i5516 reservoirs', '../assets/waterbodies/Canberra/i5516_reservoirs.geojson'));
+    layerPromises.push(createLayer('i5516 flats', 'assets/waterbodies/Canberra/i5516_flats.geojson'));
+    layerPromises.push(createLayer('i5516 pondages', 'assets/waterbodies/Canberra/i5516_pondageareas.geojson'));
+    layerPromises.push(createLayer('i5516 waterCourseLines', 'assets/waterbodies/Canberra/i5516_watercourselines.geojson', {visible: false}));
+    layerPromises.push(createLayer('i5516 waterCourseAreas', 'assets/waterbodies/Canberra/i5516_watercourseareas.geojson'));
+    layerPromises.push(createLayer('i5516 lakes', 'assets/waterbodies/Canberra/i5516_waterholes.geojson'));
+    layerPromises.push(createLayer('i5516 reservoirs', 'assets/waterbodies/Canberra/i5516_reservoirs.geojson'));
 
     return Promise.all(layerPromises);
 
