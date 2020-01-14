@@ -12,6 +12,33 @@ import {BehaviorSubject} from 'rxjs';
 import {EowDataLayer} from './eow-data-layer';
 import {EOWMap} from './eow-map';
 
+/**
+ * Event handling utility function.  This is not a method as i have to pass userStore and for some reason when using bind I could
+ * not pass the extra argument.
+ *
+ * @param userStore to lookup if any selected user since we don't want to run this again in this case
+ * @param event that triggered this
+ */
+function initialLoadMeasurements(userStore, event) {
+  if (!event.target.loading && userStore.selectedUserId === '') {
+    this.allDataSourceObs.asObservable().subscribe(allDataSource => {
+      // const source = event.target;
+      const features = allDataSource.getFeatures();
+      // Store the measurements in easy to access data structure
+      this.measurements = features;
+      this.measurementsById = keyBy(features, f => f.get('n_code'));
+      this.measurementsByOwner = groupBy(features, f => f.get('user_n_code'));
+
+      this.recentMeasurements(this.measurements);
+      allDataSource.un('change', initialLoadMeasurements.bind(this, userStore));
+      allDataSource.removeEventListener('change', initialLoadMeasurements);
+      // console.log(`loadMeasurements (by Id): ${JSON.stringify(Object.keys(this.measurementsById))}`);
+      // console.log(`loadMeasurements (by Owner): ${JSON.stringify(Object.keys(this.measurementsByOwner))}`);
+      // }
+    });
+  }
+}
+
 export class MeasurementStore {
   measurements: [];
   measurementsById: {};
@@ -23,11 +50,11 @@ export class MeasurementStore {
   constructor(private log: Brolog) {
   }
 
-  init(eowMap: EOWMap, eowData: EowDataLayer) {
+  init(eowMap: EOWMap, eowData: EowDataLayer, userStore: UserStore) {
     this.eowMap = eowMap;
     this.allDataSourceObs = eowData.allDataSourceObs;
     this.dataLayerObs = eowData.dataLayerObs;
-    this.setupEventHandling();
+    this.setupEventHandling(userStore);
 
     return this;
   }
@@ -40,9 +67,9 @@ export class MeasurementStore {
     return this.measurementsById[id] || [];
   }
 
-  setupEventHandling() {
+  setupEventHandling(userStore: UserStore) {
     this.allDataSourceObs.asObservable().subscribe(allDataSource => {
-      allDataSource.on('change', this.initialLoadMeasurements.bind(this));
+      allDataSource.on('change', initialLoadMeasurements.bind(this, userStore));
     });
   }
 
@@ -64,25 +91,6 @@ export class MeasurementStore {
     document.querySelector('.measurement-list ul').innerHTML = userList.join('\n');
   }
 
-  initialLoadMeasurements(event) {
-    if (!event.target.loading) {
-      this.allDataSourceObs.asObservable().subscribe(allDataSource => {
-        // const source = event.target;
-        const features = allDataSource.getFeatures();
-        // Store the measurements in easy to access data structure
-        this.measurements = features;
-        this.measurementsById = keyBy(features, f => f.get('n_code'));
-        this.measurementsByOwner = groupBy(features, f => f.get('user_n_code'));
-
-        this.recentMeasurements(this.measurements);
-        allDataSource.un('change', this.initialLoadMeasurements);
-        // console.log(`loadMeasurements (by Id): ${JSON.stringify(Object.keys(this.measurementsById))}`);
-        // console.log(`loadMeasurements (by Owner): ${JSON.stringify(Object.keys(this.measurementsByOwner))}`);
-        // }
-      });
-    }
-  }
-
   showMeasurements(userId = null) {
     const selection = this.getByOwner(userId);
     if (!selection.length) {
@@ -101,8 +109,8 @@ export class MeasurementStore {
         dataLayer.setSource(newSource);
       });
       this.recentMeasurements(selection);
-      return true;
     });
+    return true;
   }
 
   /**

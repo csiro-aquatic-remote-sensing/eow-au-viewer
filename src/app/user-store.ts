@@ -14,11 +14,12 @@ export class UserStore {
   users: [];
   userById: {};
   dataLayerObs: BehaviorSubject<any>;
+  selectedUserId = '';
 
   constructor(private htmlDocument: Document, private log: Brolog) {
   }
 
-  async init(dataLayerObs: BehaviorSubject<any>, measurementStore: MeasurementStore): Promise<void> {
+  async init(dataLayerObs: BehaviorSubject<any>, measurementStore: MeasurementStore): Promise<UserStore> {
     this.dataLayerObs = dataLayerObs;
     const USER_SERVICE = 'https://www.eyeonwater.org/api/users';
 
@@ -44,6 +45,8 @@ export class UserStore {
         resolve();
       });
     });
+
+    return this;
   }
 
   setupEventHandlers(measurementStore: MeasurementStore) {
@@ -58,10 +61,11 @@ export class UserStore {
     // User List
     document.querySelector('.user-list').addEventListener('click', (event) => {
       const element = (event.target as HTMLElement).closest('.item');
-      const userId = element.getAttribute('data-user');
-      console.log(`clicked on user-id: ${userId}`);
-      if (measurementStore.showMeasurements(userId)) {
+      const selectedUserId = element.getAttribute('data-user');
+      console.log(`clicked on user-id: ${this.selectedUserId}`);
+      if (measurementStore.showMeasurements(selectedUserId)) {
         this.clearSelectedUser();
+        this.selectedUserId = selectedUserId;
         element.classList.add('selectedUser', 'box-shadow');
         this.toggleFilterButton(true);
       }
@@ -73,6 +77,7 @@ export class UserStore {
   }
 
   clearSelectedUser() {
+    this.selectedUserId = '';
     this.htmlDocument.querySelectorAll('.user-list .item').forEach(item => {
       item.classList.remove('selectedUser', 'box-shadow');
     });

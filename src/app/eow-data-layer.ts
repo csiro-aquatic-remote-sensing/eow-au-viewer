@@ -33,11 +33,10 @@ export class EowDataLayer {
       format: new GeoJSON(),
       url: WFS_URL
     });
-    this.allDataSourceObs = new BehaviorSubject<any>(allDataSource);
-    this.dataLayerObs = new BehaviorSubject<any>(null);
+    this.allDataSourceObs = new BehaviorSubject<VectorSource>(allDataSource);
+    this.dataLayerObs = new BehaviorSubject<VectorLayer>(null);
 
     eowMap.mapObs.asObservable().subscribe(map => {
-
       const basicStyle = (feature, resolution) => {
         const fuValue = feature.get('fu_value');
         const styleKey = `${fuValue}_${resolution}`;
@@ -68,7 +67,7 @@ export class EowDataLayer {
       dataLayer.set('name', 'EOW Data');
       this.dataLayerObs.next(dataLayer);
       this.dataLayerObs.asObservable().subscribe(oDataLayer => {
-          map.addLayer(oDataLayer);
+        map.addLayer(oDataLayer);
       });
     });
 

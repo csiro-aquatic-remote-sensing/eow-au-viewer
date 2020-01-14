@@ -52,12 +52,12 @@ export class AppComponent implements OnInit {
   }
 
   async ngOnInit() {
-    this.userStore = new UserStore(document, this.log);
-    this.popupObject = new Popup(document, this.pieChart, this.userStore);
+    this.userStore = new UserStore(this.htmlDocument, this.log);
+    this.popupObject = new Popup(this.htmlDocument, this.pieChart, this.userStore);
     this.eowMap = new EOWMap(this.log).init(this.popupObject);
     this.eowData = new EowDataLayer().init(this.eowMap);
-    this.layers = new Layers(document, this.http, this.log).init(this.eowMap);
-    this.measurementStore = await new MeasurementStore(this.log).init(this.eowMap, this.eowData);
+    this.layers = new Layers(this.htmlDocument, this.http, this.log).init(this.eowMap);
+    this.measurementStore = await new MeasurementStore(this.log);
     this.eowDataGeometries = await new EowDataGeometries(this.log).init();
     this.layersGeometries = new LayerGeometries(this.log);
     this.geometryOps = new GeometryOps(this.log);
@@ -65,6 +65,7 @@ export class AppComponent implements OnInit {
 
     this.popupObject.init(this.eowMap);
     this.eowDataPieChart.init(this.eowMap, this.htmlDocument);
+    this.measurementStore.init(this.eowMap, this.eowData, this.userStore);
     await this.userStore.init(this.eowData.dataLayerObs, this.measurementStore);
 
     // DEBUG
