@@ -47,7 +47,7 @@ export class EowDataLayer {
         feature.set('visible', true);
         const styleOptions = {
           image: new CircleStyle({
-            radius: map.getView().getZoom() * Math.log2(5),
+            radius: map.getView().getZoom() * Math.log2(2),
             stroke: new Stroke({
               color: 'white'
             }),

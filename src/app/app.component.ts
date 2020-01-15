@@ -76,16 +76,28 @@ export class AppComponent implements OnInit {
     this.setupEventHandlers();
     await this.layersGeometries.init();
 
-    // Turn off for the moment whilst debug to show something in all waterbodies
-    // let eowDataInWaterbodies: EowWaterbodyIntersection[];
-    // this.eowDataGeometries.pointsObs.asObservable().subscribe((points) => {
-    //   eowDataInWaterbodies = this.geometryOps.calculateLayerIntersections(points, this.layersGeometries, 'i5516 reservoirs');
-    // });
-    // this.eowDataPieChart.plot(eowDataInWaterbodies);
-    const eowWaterbodyPoints: EowWaterbodyIntersection[] = this.geometryOps.convertLayerToDataForamt(this.layersGeometries, 'i5516 reservoirs');
-    this.eowDataPieChart.plot(eowWaterbodyPoints);
-    // EO DEBUG
+    // Call one or the other - the 2nd is debug
+    this.calculateIntersectionsPlot();
+    // this.calculateWaterBodiesCentroidsPlot();  // DEBUG
+  }
 
+  /**
+   * Calculate intersections between EOW Data points and waterbodies and plot information about the data points
+   */
+  private calculateIntersectionsPlot() {
+    let eowWaterBodyIntersections: EowWaterbodyIntersection[] = undefined; // tslint:disable-line
+    this.eowDataGeometries.pointsObs.asObservable().subscribe(async (points) => {
+      eowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, this.layersGeometries, 'i5516 reservoirs');
+      this.eowDataPieChart.plot(eowWaterBodyIntersections);
+    });
+  }
+
+  /**
+   * DEBUG - find centroids for ALL water bodies and plot something - eg. my avatar
+   */
+  private async calculateWaterBodiesCentroidsPlot() {
+    const eowWaterbodyPoints: EowWaterbodyIntersection[] = await this.geometryOps.convertLayerToDataForamt(this.layersGeometries, 'i5516 reservoirs');
+    this.eowDataPieChart.plot(eowWaterbodyPoints);
   }
 
   private debug_compareUsersNMeasurements() {

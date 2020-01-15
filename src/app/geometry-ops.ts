@@ -66,35 +66,39 @@ export default class GeometryOps {
    *          waterBody: null,
    *          eowData: null
    */
-  calculateLayerIntersections(eowDataGeometry: FeatureCollection<Point>, layerGeometries: LayerGeometries, layerName: string):
-    EowWaterbodyIntersection[] {
-    const layerGeometry: Feature<Polygon>[] = layerGeometries.getLayer(layerName);
-    const eowWaterbodyIntersections: EowWaterbodyIntersection[] = [];
+  async calculateLayerIntersections(eowDataGeometry: FeatureCollection<Point>, layerGeometries: LayerGeometries, layerName: string):
+    Promise<EowWaterbodyIntersection[]> {
+    return new Promise<EowWaterbodyIntersection[]>(resolve => {
+      const layerGeometry: Feature<Polygon>[] = layerGeometries.getLayer(layerName);
+      const eowWaterbodyIntersections: EowWaterbodyIntersection[] = [];
 
-    this.log.verbose(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
-    // layerGeometry.forEach(layerPolygon => {
-    for (const layerPolygon of layerGeometry) {
-      const intersection: FeatureCollection<Point> = pointsWithinPolygon(eowDataGeometry, layerPolygon) as FeatureCollection<Point>;
-      eowWaterbodyIntersections.push(this.createEoWFormat(intersection));
-    }
-    this.log.silly(theClass, `intersections: ${JSON.stringify(eowWaterbodyIntersections, null, 2)}`);
-    return eowWaterbodyIntersections;
+      this.log.verbose(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
+      // layerGeometry.forEach(layerPolygon => {
+      for (const layerPolygon of layerGeometry) {
+        const intersection: FeatureCollection<Point> = pointsWithinPolygon(eowDataGeometry, layerPolygon) as FeatureCollection<Point>;
+        eowWaterbodyIntersections.push(this.createEoWFormat(intersection));
+      }
+      this.log.silly(theClass, `intersections: ${JSON.stringify(eowWaterbodyIntersections, null, 2)}`);
+      resolve(eowWaterbodyIntersections);
+    });
   }
 
   // Mainly for debug purposes so I can see something happening!  I don't think the EOW Data is intersecting the polygons and want to know more.
-  convertLayerToDataForamt(layerGeometries: LayerGeometries, layerName: string):
-    EowWaterbodyIntersection[] {
-    const layerGeometry: Feature<Polygon>[] = layerGeometries.getLayer(layerName);
-    const eowWaterbodyPoints: EowWaterbodyIntersection[] = [];
+  async convertLayerToDataForamt(layerGeometries: LayerGeometries, layerName: string):
+    Promise<EowWaterbodyIntersection[]> {
+    return new Promise<EowWaterbodyIntersection[]>(resolve => {
+      const layerGeometry: Feature<Polygon>[] = layerGeometries.getLayer(layerName);
+      const eowWaterbodyPoints: EowWaterbodyIntersection[] = [];
 
-    this.log.verbose(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
-    for (const layerPolygon of layerGeometry) {
-      const thePoints: Feature<Point>[] = layerPolygon.geometry.coordinates[0].map(c => turfPoint(c));
-      const theFeatureCollection = featureCollection(thePoints);
-      eowWaterbodyPoints.push(this.createEoWFormat(theFeatureCollection));
-    }
-    this.log.silly(theClass, `convertLayerToDataForamt: ${JSON.stringify(eowWaterbodyPoints, null, 2)}`);
-    return eowWaterbodyPoints;
+      this.log.verbose(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
+      for (const layerPolygon of layerGeometry) {
+        const thePoints: Feature<Point>[] = layerPolygon.geometry.coordinates[0].map(c => turfPoint(c));
+        const theFeatureCollection = featureCollection(thePoints);
+        eowWaterbodyPoints.push(this.createEoWFormat(theFeatureCollection));
+      }
+      this.log.silly(theClass, `convertLayerToDataForamt: ${JSON.stringify(eowWaterbodyPoints, null, 2)}`);
+      resolve(eowWaterbodyPoints);
+    });
   }
 
   /**
