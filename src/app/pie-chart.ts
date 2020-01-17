@@ -84,7 +84,13 @@ export class PieChart {
     });
   }
 
-  drawD3(features) {
+  /**
+   * Draw pie chart of features (FU Values) at elementId
+   *
+   * @param features
+   * @param elementId
+   */
+  drawD3(features, elementId) {
     const width = 80;
     const pieWidth = 0.9
     const dataset = this.prepareData(features);
@@ -127,7 +133,7 @@ export class PieChart {
 
     // 3. Draw canvas
 
-    const wrapper = d3.select('#' + this.elementId)
+    const wrapper = d3.select('#' + elementId)
       .append('svg')
       .attr('width', dimensions.width)
       .attr('height', dimensions.height);

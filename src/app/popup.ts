@@ -82,7 +82,7 @@ export class Popup {
       this.popup.setPosition(coordinate); // [28468637.79432749, 5368841.526355445]);  //
       this.popup.setVisible(true);
       // this.pieChart.drawHighchart(features);
-      this.pieChart.drawD3(features);
+      this.pieChart.drawD3(features, 'pieChart');
     } else {
       this.popup.setVisible(false);
     }
