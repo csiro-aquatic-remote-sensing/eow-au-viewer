@@ -89,6 +89,10 @@ export class AppComponent implements OnInit {
     this.eowDataGeometries.pointsObs.asObservable().subscribe(async (points) => {
       eowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, this.layersGeometries, 'i5516 reservoirs');
       this.eowDataPieChart.plot(eowWaterBodyIntersections);
+
+      eowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, this.layersGeometries, 'Waterbodies shape');
+      this.eowDataPieChart.plot(eowWaterBodyIntersections);
+
     });
   }
 

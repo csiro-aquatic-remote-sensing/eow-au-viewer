@@ -93,7 +93,7 @@ export default class EOWDataPieChart {
       const el = this.htmlDocument.createElement('div');
       const img = this.htmlDocument.createElement('img');
       el.setAttribute('id', '' + Math.random() * 1000);
-      img.src = 'https://www.gravatar.com/avatar/0dbc9574f3382f14a5f4c38a0aec4286?s=80';
+      img.src = 'https://www.gravatar.com/avatar/0dbc9574f3382f14a5f4c38a0aec4286?s=20';
       el.appendChild(img);
       this.htmlDocument.getElementById(htmlElementId).appendChild(el);
       const pieChartMap = new Overlay({
