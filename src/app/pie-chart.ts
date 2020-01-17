@@ -144,9 +144,9 @@ export class PieChart {
     const arcs = arcGenerator(combinedDatasetByIcon);
 
     const interpolateWithSteps = numberOfSteps => new Array(numberOfSteps).fill(null).map((d, i) => i / (numberOfSteps - 1));
-    const colorScale = d3.scaleOrdinal()
-      .domain(arcs.sort((a, b) => a.y - b.y).map(d => d.data.count))
-      .range(interpolateWithSteps(combinedDatasetByIcon.length).map(d3.interpolateLab('#ffffff', '#000000')));  // "#f3a683", "#3dc1d3")))
+    // const colorScale = d3.scaleOrdinal()
+    //   .domain(arcs.sort((a, b) => a.data.y - b.data.y).map(d => d.index))
+    //   .range(interpolateWithSteps(combinedDatasetByIcon.length).map(d3.interpolateLab('#ffffff', '#000000')));  // "#f3a683", "#3dc1d3")))
 
     const radius = dimensions.boundedWidth / 2;
     const arc = d3.arc()
@@ -161,7 +161,7 @@ export class PieChart {
     centeredGroup.selectAll('path')
       .data(arcs)
       .enter().append('path')
-      .attr('fill', d => colorScale(d.data.y))  // d.data.key == "other" ? "#dadadd" : colorScale(d.data.key))
+      .attr('fill', d => '' + theFUColours[d.data.name])  // d.data.key == "other" ? "#dadadd" : colorScale(d.data.key))
       .attr('d', arc)
       .append('title')
       .text('bono');  // d => d.data.name);
