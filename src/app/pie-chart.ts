@@ -217,7 +217,9 @@ export class PieChart {
   prepareData(features): any {
     const aggregateFUValues = (fuValuesInFeatures) => {
       const eowDataReducer = (acc, currentValue) => {
-        acc[currentValue.values_.fu_value] = acc.hasOwnProperty(currentValue.values_.fu_value) ? ++acc[currentValue.values_.fu_value] : 1;
+        if (currentValue.values_ && currentValue.values_.fu_value) {
+          acc[currentValue.values_.fu_value] = acc.hasOwnProperty(currentValue.values_.fu_value) ? ++acc[currentValue.values_.fu_value] : 1;
+        }
         return acc;
       };
       return features.reduce(eowDataReducer, {});
@@ -234,14 +236,15 @@ export class PieChart {
         obj[item] = item;
         return obj;
       }, {});
-    const addMissingFUValues = (existingFUs, missingFUs) => {
-      Object.keys(colors).forEach((key, index) => {
-        if (!missingFUs.hasOwnProperty(index)) {
-          existingFUs[index] = 0;
-        }
-      });
-      return existingFUs;
-    };
+    // Actually want this for Highcharts (if use)
+    // const addMissingFUValues = (existingFUs, missingFUs) => {
+    //   Object.keys(colors).forEach((key, index) => {
+    //     if (!missingFUs.hasOwnProperty(index)) {
+    //       existingFUs[index] = 0;
+    //     }
+    //   });
+    //   return existingFUs;
+    // };
 
     const eowDataFUValues = aggregateFUValues(features);
     const arrayFUValues = setMissingFUsToZero(eowDataFUValues);
