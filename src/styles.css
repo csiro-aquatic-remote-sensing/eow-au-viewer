@@ -298,3 +298,11 @@ li.item {
 .highcharts-background {
   padding: 0;
 }
+
+.label {
+  font-size: 0.9em;
+  text-anchor: middle;
+  font-weight: 800;
+  fill: #3c6382;
+  mix-blend-mode: luminosity;
+}

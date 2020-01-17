@@ -81,8 +81,8 @@ export class Popup {
       element.classList.add('active');
       this.popup.setPosition(coordinate); // [28468637.79432749, 5368841.526355445]);  //
       this.popup.setVisible(true);
-      this.pieChart.drawHighchart(features);
-      // this.pieChart.drawD3(features);
+      // this.pieChart.drawHighchart(features);
+      this.pieChart.drawD3(features);
     } else {
       this.popup.setVisible(false);
     }

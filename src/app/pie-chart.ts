@@ -4,6 +4,7 @@ import {
   Brolog,
 } from 'brolog';
 import {HttpClient} from '@angular/common/http';
+import * as d3 from 'd3';
 
 const theClass = 'PieChart';
 
@@ -84,7 +85,114 @@ export class PieChart {
   }
 
   drawD3(features) {
+    const width = 80;
+    const pieWidth = 0.9
+    const dataset = this.prepareData(features);
+    const theFUColours = this.getFUColours();
+    // this.elementId
+    const numberSlices = dataset.length;
+    const iconAccessor = d => d.label;
+    // const datasetByIcon = d3.nest()
+    //   .key(iconAccessor)
+    //   .entries(dataset)
+    //   .sort((a, b) => {
+    //     b.count - a.count
+    //   });
+    const combinedDatasetByIcon = dataset;  // ByIcon;
+    //   [
+    //   ...datasetByIcon.slice(0, numberSlices),
+    //   {
+    //     key: "other",
+    //     values: d3.merge(datasetByIcon.slice(numberSlices).map(d => d.values))
+    //   }
+    // ]
 
+    // 2. Create chart dimensions
+
+    console.log(`${JSON.stringify(combinedDatasetByIcon, null, 2)}`);
+    const dimensions = {
+      width,
+      height: width,
+      boundedWidth: 0,
+      boundedHeight: 0,
+      margin: {
+        top: 5,
+        right: 5,
+        bottom: 5,
+        left: 5,
+      },
+    };
+    dimensions.boundedWidth = dimensions.width - dimensions.margin.left - dimensions.margin.right;
+    dimensions.boundedHeight = dimensions.height - dimensions.margin.top - dimensions.margin.bottom;
+
+    // 3. Draw canvas
+
+    const wrapper = d3.select('#' + this.elementId)
+      .append('svg')
+      .attr('width', dimensions.width)
+      .attr('height', dimensions.height);
+
+    const bounds = wrapper.append('g')
+      .style('transform', `translate(${dimensions.margin.left}px, ${dimensions.margin.top}px)`);
+
+    // 4. Create scales
+
+    const arcGenerator = d3.pie()
+      .padAngle(0.005)
+      .value(d => d.y); // .length);
+
+    const arcs = arcGenerator(combinedDatasetByIcon);
+
+    const interpolateWithSteps = numberOfSteps => new Array(numberOfSteps).fill(null).map((d, i) => i / (numberOfSteps - 1));
+    const colorScale = d3.scaleOrdinal()
+      .domain(arcs.sort((a, b) => a.y - b.y).map(d => d.data.count))
+      .range(interpolateWithSteps(combinedDatasetByIcon.length).map(d3.interpolateLab('#ffffff', '#000000')));  // "#f3a683", "#3dc1d3")))
+
+    const radius = dimensions.boundedWidth / 2;
+    const arc = d3.arc()
+      .innerRadius(radius * (1 - pieWidth)) // set to 0 for a pie chart
+      .outerRadius(radius);
+
+    // 5. Draw data
+
+    const centeredGroup = bounds.append('g')
+      .attr('transform', `translate(${dimensions.boundedHeight / 2}, ${dimensions.boundedWidth / 2})`);
+
+    centeredGroup.selectAll('path')
+      .data(arcs)
+      .enter().append('path')
+      .attr('fill', d => colorScale(d.data.y))  // d.data.key == "other" ? "#dadadd" : colorScale(d.data.key))
+      .attr('d', arc)
+      .append('title')
+      .text('bono');  // d => d.data.name);
+
+    const iconGroups = centeredGroup.selectAll('g')
+      .data(arcs)
+      .enter().append('g')
+      .attr('transform', d => `translate(${arc.centroid(d)})`);
+
+    // iconGroups.append('path')
+    //   .attr('class', 'icon')
+    //   .attr('d', d => iconPaths[d.data.key])
+    //   .attr('transform', d => `translate(-25, -32) scale(0.5)`);
+
+    // 6. Draw peripherals
+
+    // bounds.append('text')
+    //   .attr('class', 'title')
+    //   .text('2018 Weather')
+    //   .attr('transform', `translate(${dimensions.boundedWidth / 2}, ${dimensions.boundedHeight / 2})`);
+    //
+    // bounds.append('text')
+    //   .attr('class', 'title-small')
+    //   .text('New York City, CA')
+    //   .attr('transform', `translate(${dimensions.boundedWidth / 2}, ${dimensions.boundedHeight / 2 + 30})`);
+
+    iconGroups.append('text')
+      .text(d => d.data.name)
+      .attr('class', 'label')
+      .attr('transform', `translate(0, 10)`)
+      .attr('style', 'fill: #000000; stroke: #000000');
   }
 
   getFUColours() {
@@ -135,13 +243,13 @@ export class PieChart {
       return existingFUs;
     };
 
-    let eowDataFUValues = aggregateFUValues(features);
+    const eowDataFUValues = aggregateFUValues(features);
     const arrayFUValues = setMissingFUsToZero(eowDataFUValues);
     const arrayFUValuesObj = arrayToObject(arrayFUValues);
 
-    eowDataFUValues = addMissingFUValues(eowDataFUValues, arrayFUValuesObj);
+    // eowDataFUValues = addMissingFUValues(eowDataFUValues, arrayFUValuesObj);
 
-    const eowData = Object.keys(eowDataFUValues).map(k => {
+    const eowData = Object.keys(arrayFUValuesObj).map(k => {
       return {name: k, y: eowDataFUValues[k]};
     });
     this.log.verbose(theClass, `EOWData: ${JSON.stringify(eowData)}`);
