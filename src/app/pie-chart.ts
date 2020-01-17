@@ -22,17 +22,13 @@ export class PieChart {
    * @param features - EOW Data
    * @param coordinate - the position of the mouse click in the viewport
    */
-  draw(features) {
+  drawHighchart(features) {
     if (this.highchart) {
       this.highchart.destroy();
       this.highchart = null;
     } else {
-      const cArray = Object.keys(colors);
-      const theFUColours = cArray.map(c => {
-        const index = (parseInt(c, 10)) % cArray.length;
-        // console.log(`colors length: ${cArray.length}, c: ${c}, color index: ${index}`);
-        return colors[index];
-      });
+      const theFUColours = this.getFUColours();
+
       // console.table(theFUColours);
 
       setOptions({
@@ -52,44 +48,7 @@ export class PieChart {
       });
     }
 
-    const aggregateFUValues = (fuValuesInFeatures) => {
-      const eowDataReducer = (acc, currentValue) => {
-        acc[currentValue.values_.fu_value] = acc.hasOwnProperty(currentValue.values_.fu_value) ? ++acc[currentValue.values_.fu_value] : 1;
-        return acc;
-      };
-      return features.reduce(eowDataReducer, {});
-    };
-    // Add zeros for all the other FUs since the colours in Highcharts pie charts are from the ordinal number of the data, NOT the value
-    // of it's "name" attribute
-    const setMissingFUsToZero = (fUValuesObj) => {
-      return Object.keys(fUValuesObj).map(i => {
-        return parseInt(i, 10);
-      });
-    };
-    const arrayToObject = (array) =>
-      array.reduce((obj, item) => {
-        obj[item] = item;
-        return obj;
-      }, {});
-    const addMissingFUValues = (existingFUs, missingFUs) => {
-      Object.keys(colors).forEach((key, index) => {
-        if (! missingFUs.hasOwnProperty(index)) {
-          existingFUs[index] = 0;
-        }
-      });
-      return existingFUs;
-    };
-
-    let eowDataFUValues = aggregateFUValues(features);
-    const arrayFUValues = setMissingFUsToZero(eowDataFUValues);
-    const arrayFUValuesObj = arrayToObject(arrayFUValues);
-
-    eowDataFUValues = addMissingFUValues(eowDataFUValues, arrayFUValuesObj);
-
-    const eowData = Object.keys(eowDataFUValues).map(k => {
-      return {name: k, y: eowDataFUValues[k]};
-    });
-    this.log.verbose(theClass, `EOWData: ${JSON.stringify(eowData)}`);
+    const eowData = this.prepareData(features);
 
     // Build the chart
     this.highchart = chart(this.elementId, {
@@ -119,9 +78,21 @@ export class PieChart {
         }
       },
       series: [{
-        name: 'Share',
         data: eowData
       } as SeriesPieOptions]
+    });
+  }
+
+  drawD3(features) {
+
+  }
+
+  getFUColours() {
+    const cArray = Object.keys(colors);
+    return cArray.map(c => {
+      const index = (parseInt(c, 10)) % cArray.length;
+      // console.log(`colors length: ${cArray.length}, c: ${c}, color index: ${index}`);
+      return colors[index];
     });
   }
 
@@ -133,5 +104,47 @@ export class PieChart {
    */
   fixForThisPieChart(html: string) {
     return html.replace('class="pieChart"', 'id="pieChart"');
+  }
+
+  prepareData(features): any {
+    const aggregateFUValues = (fuValuesInFeatures) => {
+      const eowDataReducer = (acc, currentValue) => {
+        acc[currentValue.values_.fu_value] = acc.hasOwnProperty(currentValue.values_.fu_value) ? ++acc[currentValue.values_.fu_value] : 1;
+        return acc;
+      };
+      return features.reduce(eowDataReducer, {});
+    };
+    // Add zeros for all the other FUs since the colours in Highcharts pie charts are from the ordinal number of the data, NOT the value
+    // of it's "name" attribute
+    const setMissingFUsToZero = (fUValuesObj) => {
+      return Object.keys(fUValuesObj).map(i => {
+        return parseInt(i, 10);
+      });
+    };
+    const arrayToObject = (array) =>
+      array.reduce((obj, item) => {
+        obj[item] = item;
+        return obj;
+      }, {});
+    const addMissingFUValues = (existingFUs, missingFUs) => {
+      Object.keys(colors).forEach((key, index) => {
+        if (!missingFUs.hasOwnProperty(index)) {
+          existingFUs[index] = 0;
+        }
+      });
+      return existingFUs;
+    };
+
+    let eowDataFUValues = aggregateFUValues(features);
+    const arrayFUValues = setMissingFUsToZero(eowDataFUValues);
+    const arrayFUValuesObj = arrayToObject(arrayFUValues);
+
+    eowDataFUValues = addMissingFUValues(eowDataFUValues, arrayFUValuesObj);
+
+    const eowData = Object.keys(eowDataFUValues).map(k => {
+      return {name: k, y: eowDataFUValues[k]};
+    });
+    this.log.verbose(theClass, `EOWData: ${JSON.stringify(eowData)}`);
+    return eowData;
   }
 }

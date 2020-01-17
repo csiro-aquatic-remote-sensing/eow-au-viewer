@@ -38,7 +38,7 @@ export class AppComponent implements OnInit {
   eowData: EowDataLayer;
   // dataLayer: any;
   // allDataSource: any;
-  pieChart: any;
+  pieChart: PieChart;
   layers: Layers;
   // htmlDocument: Document;
   eowDataGeometries: EowDataGeometries;
