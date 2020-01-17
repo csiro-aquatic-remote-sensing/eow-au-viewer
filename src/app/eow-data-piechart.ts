@@ -8,6 +8,7 @@ import Overlay from 'ol/Overlay';
 import OverlayPositioning from 'ol/OverlayPositioning';
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import {EOWMap} from './eow-map';
+import {PieChart} from './pie-chart';
 
 const theClass = `EOWDataPieChart`;
 const htmlElementId = 'waterbody';
@@ -15,16 +16,11 @@ const htmlElementId = 'waterbody';
 type Coords = [number, number];
 
 export default class EOWDataPieChart {
-  log: Brolog;
-  geometryOps: GeometryOps;
   pieChartMap: any;
   eowMap: EOWMap;
   htmlDocument: Document;
 
-  constructor(geometryOps: GeometryOps, log: Brolog) {
-    this.geometryOps = geometryOps;
-    this.log = log;
-  }
+  constructor(private geometryOps: GeometryOps, private pieChart: PieChart, private log: Brolog) { }
 
   init(eowMap: EOWMap, htmlDocument) {
     this.eowMap = eowMap;
@@ -73,7 +69,7 @@ export default class EOWDataPieChart {
           }
           if (centroid) {
             this.log.verbose(theClass + '.plot', `Centroid: ${JSON.stringify(centroid)}`);
-            this.draw(centroid, map);
+            this.draw(eowDataInWaterbodies, centroid, map);
           } else {
             this.log.verbose(theClass + '.plot', 'No Centroid to draw at');
           }
@@ -87,15 +83,17 @@ export default class EOWDataPieChart {
    *
    * @param point where to draw
    */
-  draw(point: number[], map: Map) {
+  draw(eowDataInWaterbodies: EowWaterbodyIntersection[], point: number[], map: Map) {
     if (point[0] && point[1] && !isNaN(point[0]) && !isNaN(point[1])) {
       this.log.info(theClass, `Draw pieChart at ${point[0]}, ${point[1]})}`);
       const el = this.htmlDocument.createElement('div');
-      const img = this.htmlDocument.createElement('img');
-      el.setAttribute('id', '' + Math.random() * 1000);
-      img.src = 'https://www.gravatar.com/avatar/0dbc9574f3382f14a5f4c38a0aec4286?s=80';
-      el.appendChild(img);
+      // const img = this.htmlDocument.createElement('img');
+      const id = 'pieChart-' + Math.floor(Math.random() * 100000);
+      el.setAttribute('id', id);
+      // img.src = 'https://www.gravatar.com/avatar/0dbc9574f3382f14a5f4c38a0aec4286?s=20';
+      // el.appendChild(img);
       this.htmlDocument.getElementById(htmlElementId).appendChild(el);
+      this.pieChart.drawD3(eowDataInWaterbodies.map(e => e.eowData).filter(e => e !== null), id);
       const pieChartMap = new Overlay({
         element: el,
         position: point,

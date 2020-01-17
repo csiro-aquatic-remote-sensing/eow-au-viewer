@@ -38,7 +38,7 @@ export class AppComponent implements OnInit {
   eowData: EowDataLayer;
   // dataLayer: any;
   // allDataSource: any;
-  pieChart: any;
+  pieChart: PieChart;
   layers: Layers;
   // htmlDocument: Document;
   eowDataGeometries: EowDataGeometries;
@@ -61,7 +61,7 @@ export class AppComponent implements OnInit {
     this.eowDataGeometries = await new EowDataGeometries(this.log).init();
     this.layersGeometries = new LayerGeometries(this.log);
     this.geometryOps = new GeometryOps(this.log);
-    this.eowDataPieChart = new EOWDataPieChart(this.geometryOps, this.log);
+    this.eowDataPieChart = new EOWDataPieChart(this.geometryOps, this.pieChart,  this.log);
 
     this.popupObject.init(this.eowMap);
     this.eowDataPieChart.init(this.eowMap, this.htmlDocument);
@@ -89,6 +89,10 @@ export class AppComponent implements OnInit {
     this.eowDataGeometries.pointsObs.asObservable().subscribe(async (points) => {
       eowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, this.layersGeometries, 'i5516 reservoirs');
       this.eowDataPieChart.plot(eowWaterBodyIntersections);
+
+      eowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, this.layersGeometries, 'Waterbodies shape');
+      this.eowDataPieChart.plot(eowWaterBodyIntersections);
+
     });
   }
 

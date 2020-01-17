@@ -7,15 +7,16 @@ import {
 import colors from './colors.json';
 import OverlayPositioning from 'ol/OverlayPositioning';
 import {EOWMap} from './eow-map';
+import {PieChart} from './pie-chart';
 
 export class Popup {
   elementId = 'popup';
   popup: any;
   htmlDocument: Document;
   userStore: any;
-  pieChart: any;
+  pieChart: PieChart;
 
-  constructor(htmlDocument: Document, pieChart: any, userStore: any) {
+  constructor(htmlDocument: Document, pieChart: PieChart, userStore: any) {
     this.htmlDocument = htmlDocument;
     this.pieChart = pieChart;
     this.userStore = userStore;
@@ -80,7 +81,8 @@ export class Popup {
       element.classList.add('active');
       this.popup.setPosition(coordinate); // [28468637.79432749, 5368841.526355445]);  //
       this.popup.setVisible(true);
-      this.pieChart.draw(features);
+      // this.pieChart.drawHighchart(features);
+      this.pieChart.drawD3(features, 'pieChart');
     } else {
       this.popup.setVisible(false);
     }
