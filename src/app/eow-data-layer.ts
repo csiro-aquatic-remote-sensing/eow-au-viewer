@@ -22,6 +22,7 @@ import {EOWMap} from './eow-map';
 
 const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia?service=WFS'
   + '&version=1.0.0&request=GetFeature&typeName=eow_australia&maxFeatures=5000&outputFormat=application%2Fjson';
+const LOG2 = Math.log2(2);
 
 export class EowDataLayer {
   allDataSourceObs: BehaviorSubject<VectorSource>;  // Observers that outside subscribers can use to know when data ready
@@ -47,7 +48,7 @@ export class EowDataLayer {
         feature.set('visible', true);
         const styleOptions = {
           image: new CircleStyle({
-            radius: map.getView().getZoom() * Math.log2(2),
+            radius: map.getView().getZoom() * LOG2,
             stroke: new Stroke({
               color: 'white'
             }),

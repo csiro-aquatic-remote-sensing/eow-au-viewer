@@ -1,17 +1,17 @@
 import {Feature, FeatureCollection, Point} from '@turf/helpers';
 import {featureEach, featureReduce} from '@turf/meta';
-import clustersKmeans from '@turf/clusters-kmeans';
 import Brolog from 'brolog';
 import GeometryOps, {EowWaterbodyIntersection} from './geometry-ops';
 import Map from 'ol/Map';
 import Overlay from 'ol/Overlay';
 import OverlayPositioning from 'ol/OverlayPositioning';
-import SimpleGeometry from 'ol/geom/SimpleGeometry';
+
 import {EOWMap} from './eow-map';
 import {PieChart} from './pie-chart';
 
 const theClass = `EOWDataPieChart`;
 const htmlElementId = 'waterbody';
+const LOG2 = Math.log(2);
 
 type Coords = [number, number];
 
@@ -84,7 +84,8 @@ export default class EOWDataPieChart {
    * @param point where to draw
    */
   draw(eowDataInWaterbodies: EowWaterbodyIntersection[], point: number[], map: Map) {
-    if (point[0] && point[1] && !isNaN(point[0]) && !isNaN(point[1])) {
+    const validData = eowDataInWaterbodies.map(e => e.eowData).filter(f => f !== null);
+    if (validData.length > 0 && point[0] && point[1] && !isNaN(point[0]) && !isNaN(point[1])) {
       this.log.info(theClass, `Draw pieChart at ${point[0]}, ${point[1]})}`);
       const el = this.htmlDocument.createElement('div');
       // const img = this.htmlDocument.createElement('img');
@@ -93,7 +94,7 @@ export default class EOWDataPieChart {
       // img.src = 'https://www.gravatar.com/avatar/0dbc9574f3382f14a5f4c38a0aec4286?s=20';
       // el.appendChild(img);
       this.htmlDocument.getElementById(htmlElementId).appendChild(el);
-      this.pieChart.drawD3(eowDataInWaterbodies.map(e => e.eowData).filter(e => e !== null), id);
+      this.pieChart.drawD3(validData, id, map.getView().getZoom() * LOG2);
       const pieChartMap = new Overlay({
         element: el,
         position: point,
@@ -102,8 +103,12 @@ export default class EOWDataPieChart {
         positioning: OverlayPositioning.TOP_LEFT
       });
       map.addOverlay(pieChartMap);
+      map.on('moveend', (evt) => {
+        // force a redraw so as to change size if zoom in / out
+        this.pieChart.drawD3(validData, id, map.getView().getZoom() * LOG2);
+      });
     } else {
-      this.log.info(theClass, `NOT Draw pieChart at "${point[0]}", "${point[1]}")}`);
+      this.log.info(theClass, `NOT Drawing pieChart at "${point[0]}", "${point[1]}")}`);
     }
   }
 }
