@@ -94,7 +94,7 @@ export default class EOWDataPieChart {
       // img.src = 'https://www.gravatar.com/avatar/0dbc9574f3382f14a5f4c38a0aec4286?s=20';
       // el.appendChild(img);
       this.htmlDocument.getElementById(htmlElementId).appendChild(el);
-      this.pieChart.drawD3(validData, id, map.getView().getZoom() * LOG2);
+      this.pieChart.drawD3(validData, id, map.getView().getZoom() * LOG2, point);
       const pieChartMap = new Overlay({
         element: el,
         position: point,
@@ -105,7 +105,7 @@ export default class EOWDataPieChart {
       map.addOverlay(pieChartMap);
       map.on('moveend', (evt) => {
         // force a redraw so as to change size if zoom in / out
-        this.pieChart.drawD3(validData, id, map.getView().getZoom() * LOG2);
+        this.pieChart.drawD3(validData, id, map.getView().getZoom() * LOG2, point);
       });
     } else {
       this.log.info(theClass, `NOT Drawing pieChart at "${point[0]}", "${point[1]}")}`);

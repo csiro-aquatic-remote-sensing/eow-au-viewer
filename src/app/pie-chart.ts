@@ -6,6 +6,11 @@ import * as d3 from 'd3';
 
 const theClass = 'PieChart';
 
+const widthFactor = 9;
+const pieWidth = 1.0;
+const opaqueness = 0.7;
+
+const DEBUG_DrawLines = true; // If true then draw line from center of pie chart to the features that the chart is for
 export class PieChart {
   constructor(private log: Brolog) {
   }
@@ -16,12 +21,12 @@ export class PieChart {
    * @param features to make up the segments of the pie chart
    * @param elementId of div to draw chart in to
    * @param sizeScaleFactor used to create the height and width
+   * @param point that the chart will be drawn at.  This doesn't need to know this but use for debug purposes.  For example draw line from
+   * this point to the point of each feature that the chart is for.
    */
-  drawD3(features, elementId, sizeScaleFactor) {
-    const widthFactor = 9;
+  drawD3(features, elementId, sizeScaleFactor, point: number[]) {
     const width = widthFactor * sizeScaleFactor;
     const fontSize = 1.0 * sizeScaleFactor;
-    const pieWidth = 1.0;
     const dataset = this.prepareData(features); // TODO - move this out
     const theFUColours = this.getFUColours();
     // this.elementId
@@ -33,7 +38,7 @@ export class PieChart {
     //   .sort((a, b) => {
     //     b.count - a.count
     //   });
-    const combinedDatasetByIcon = dataset;  // ByIcon;
+    // const dataset = dataset1;  // ByIcon;
     //   [
     //   ...datasetByIcon.slice(0, numberSlices),
     //   {
@@ -47,7 +52,7 @@ export class PieChart {
 
     // 2. Create chart dimensions
 
-    this.log.verbose(theClass, `${JSON.stringify(combinedDatasetByIcon, null, 2)}`);
+    this.log.verbose(theClass, `${JSON.stringify(dataset, null, 2)}`);
     const dimensions = {
       width,
       height: width,
@@ -66,7 +71,7 @@ export class PieChart {
     // 3. Draw canvas
 
     const wrapper = d3.select('#' + elementId)
-      // .attr('class', 'svg-container')
+    // .attr('class', 'svg-container')
       .append('svg')
       .attr('width', '' + dimensions.width)
       .attr('height', '' + dimensions.height);
@@ -80,7 +85,7 @@ export class PieChart {
       .padAngle(0.005)
       .value(d => d.y); // .length);
 
-    const arcs = arcGenerator(combinedDatasetByIcon);
+    const arcs = arcGenerator(dataset);
 
     // const interpolateWithSteps = numberOfSteps => new Array(numberOfSteps).fill(null).map((d, i) => i / (numberOfSteps - 1));
     // const colorScale = d3.scaleOrdinal()
@@ -145,7 +150,7 @@ export class PieChart {
     return cArray.map(c => {
       const index = (parseInt(c, 10)) % cArray.length;
       // console.log(`colors length: ${cArray.length}, c: ${c}, color index: ${index}`);
-      return colors[index].replace(')', ' ,0.9)');
+      return colors[index].replace(')', ` , ${opaqueness})`);
     });
   }
 
@@ -163,7 +168,23 @@ export class PieChart {
     const aggregateFUValues = (fuValuesInFeatures) => {
       const eowDataReducer = (acc, currentValue) => {
         if (currentValue.values_ && currentValue.values_.fu_value) {
-          acc[currentValue.values_.fu_value] = acc.hasOwnProperty(currentValue.values_.fu_value) ? ++acc[currentValue.values_.fu_value] : 1;
+          if (acc.hasOwnProperty(currentValue.values_.fu_value)) {
+            ++acc[currentValue.values_.fu_value].count;
+            acc[currentValue.values_.fu_value].points.push(currentValue.getGeometry().getCoordinates());
+          } else {
+            acc[currentValue.values_.fu_value] = {
+              count: 1,
+              points: [currentValue.getGeometry().getCoordinates()]
+            };
+          }
+          // acc[currentValue.values_.fu_value] = acc.hasOwnProperty(currentValue.values_.fu_value) ? {
+          //     count: ++acc[currentValue.values_.fu_value].count,
+          //     points: acc[currentValue.values_.fu_value].points.push(currentValue.getGeometry().getCoordinates())
+          //   } :
+          //   {
+          //     count: 1,
+          //     points: [currentValue.getGeometry().getCoordinates()]
+          //   };
         }
         return acc;
       };
@@ -171,6 +192,7 @@ export class PieChart {
     };
     // Add zeros for all the other FUs since the colours in the pie charts are from the ordinal number of the data, NOT the value
     // of it's "name" attribute
+    // TODO - i don't believe this is necessary, or it should be renamed 'objectToArray'
     const setMissingFUsToZero = (fUValuesObj) => {
       return Object.keys(fUValuesObj).map(i => {
         return parseInt(i, 10);
