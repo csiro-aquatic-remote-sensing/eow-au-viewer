@@ -1,5 +1,4 @@
 import Overlay from 'ol/Overlay';
-import Map from 'ol/Map';
 import {
   printStats,
   calculateStats,
@@ -81,8 +80,7 @@ export class Popup {
       element.classList.add('active');
       this.popup.setPosition(coordinate); // [28468637.79432749, 5368841.526355445]);  //
       this.popup.setVisible(true);
-      // this.pieChart.drawHighchart(features);
-      this.pieChart.drawD3(features, 'pieChart');
+      this.pieChart.drawD3(features, 'pieChart', 8);
     } else {
       this.popup.setVisible(false);
     }

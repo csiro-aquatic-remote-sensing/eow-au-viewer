@@ -16,7 +16,7 @@ import {Brolog} from 'brolog';
     {
       provide: Brolog,
       // 'silent' | 'error' | 'warn' | 'info' | 'verbose' | 'silly'
-      useFactory: function brologFactory() { return Brolog.instance('silly'); }
+      useFactory: function brologFactory() { return Brolog.instance('info'); }
     }
   ],
   bootstrap: [AppComponent]
