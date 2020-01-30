@@ -59,7 +59,7 @@ export class AppComponent implements OnInit {
     this.eowMap = new EOWMap(this.log).init(this.popupObject);
     this.eowData = new EowDataLayer().init(this.eowMap);
     this.layers = new Layers(this.eowMap, this.htmlDocument, this.http, this.log);
-    this.eowLayers = new EowLayers(this.layers, this.log).init(); //this.eowMap);
+    this.eowLayers = await new EowLayers(this.layers, this.log).init(); // this.eowMap);
     this.measurementStore = await new MeasurementStore(this.log);
     this.eowDataGeometries = await new EowDataGeometries(this.log).init();
     this.layersGeometries = new LayerGeometries(this.log);
@@ -77,11 +77,22 @@ export class AppComponent implements OnInit {
     });
 
     this.setupEventHandlers();
+
+    this.DEBUGinit();
+
     await this.layersGeometries.init();
 
     // Call one or the other - the 2nd is debug
     this.calculateIntersectionsPlot();
     // this.calculateWaterBodiesCentroidsPlot();  // DEBUG
+  }
+
+  // todo - add ENV VAR to setup debug stuff
+  DEBUGinit() {
+    this.htmlDocument.querySelectorAll('.pull-tab').forEach(e => {
+      const element = (e as HTMLElement).closest('.panel');
+      element.classList.toggle('pulled'); // Turn off initially as they are really annoying
+    });
   }
 
   /**
