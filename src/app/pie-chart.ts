@@ -10,7 +10,6 @@ const widthFactor = 9;
 const pieWidth = 1.0;
 const opaqueness = 0.7;
 
-const DEBUG_DrawLines = true; // If true then draw line from center of pie chart to the features that the chart is for
 export class PieChart {
   constructor(private log: Brolog) {
   }

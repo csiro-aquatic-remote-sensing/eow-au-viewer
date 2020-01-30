@@ -1,10 +1,12 @@
-import {Feature, FeatureCollection, Point} from '@turf/helpers';
-import {featureEach, featureReduce} from '@turf/meta';
+import {Feature, Point, lineString} from '@turf/helpers';
+import {featureEach} from '@turf/meta';
 import Brolog from 'brolog';
 import GeometryOps, {EowWaterbodyIntersection} from './geometry-ops';
 import Map from 'ol/Map';
 import Overlay from 'ol/Overlay';
 import OverlayPositioning from 'ol/OverlayPositioning';
+import VectorLayer from 'ol/layer/Vector';
+import VectorSource from 'ol/source/Vector';
 
 import {EOWMap} from './eow-map';
 import {PieChart} from './pie-chart';
@@ -14,6 +16,8 @@ const htmlElementId = 'waterbody';
 const LOG2 = Math.log(2);
 
 type Coords = [number, number];
+
+const DEBUG_DrawLines = true; // If true then draw line from center of pie chart to the features that the chart is for
 
 export default class EOWDataPieChart {
   pieChartMap: any;
@@ -83,7 +87,7 @@ export default class EOWDataPieChart {
    *
    * @param point where to draw
    */
-  draw(eowDataInWaterbodies: EowWaterbodyIntersection[], point: number[], map: Map) {
+  draw(eowDataInWaterbodies: EowWaterbodyIntersection[], point: Coords, map: Map) {
     const validData = eowDataInWaterbodies.map(e => e.eowData).filter(f => f !== null);
     if (validData.length > 0 && point[0] && point[1] && !isNaN(point[0]) && !isNaN(point[1])) {
       this.log.info(theClass, `Draw pieChart at ${point[0]}, ${point[1]})}`);
@@ -108,19 +112,26 @@ export default class EOWDataPieChart {
         // force a redraw so as to change size if zoom in / out
         this.pieChart.drawD3(preparedChartData, id, map.getView().getZoom() * LOG2, point);
       });
+      this.drawDebugLines(point, preparedChartData);
     } else {
       this.log.info(theClass, `NOT Drawing pieChart at "${point[0]}", "${point[1]}")}`);
     }
   }
 
   /**
-   * Return Aggregated FU data as an object.:
-   * {
-   *   <fu value> : {count: number of that <fu value>, points: the map geo points that have those values>}
-   * }
+   * Return Aggregated FU data as an array of objects:
+   * [
+   *  {
+   *    name: <FU Value>,
+   *    y: {
+   *       <fu value> : {count: number of that <fu value>, points: the map geo points that have those values>}
+   *    }
+   *  },
+   *  ...
+   * ]
    * @param features - the EOWdata that is all located in the same waterbody
    */
-  prepareChartData(features): any {
+  private prepareChartData(features): any {
     const aggregateFUValues = (fuValuesInFeatures) => {
       const eowDataReducer = (acc, currentValue) => {
         if (currentValue.values_ && currentValue.values_.fu_value) {
@@ -161,5 +172,24 @@ export default class EOWDataPieChart {
     });
     this.log.verbose(theClass, `EOWData: ${JSON.stringify(eowData)}`);
     return eowData;
+  }
+
+  /**
+   * Debug method that draws lines from the point where the Pie Chart is drawn to each EOWData point.
+   *
+   * @param point where the Pie Chart is drawn (the centroid of the EOW Data points)
+   * @param preparedChartData that contains the points of hte EOWData
+   */
+  private drawDebugLines(point: Coords, preparedChartData: any) {
+    if (DEBUG_DrawLines) {
+      const allEOWDataPoints = () => {
+        return preparedChartData.flatMap(p => p.y.points.map(p2 => p2));
+      };
+      allEOWDataPoints().forEach(p => {
+        this.log.info(theClass, `Draw chart to EOWData line: ${JSON.stringify(point)}, ${JSON.stringify(p)}`);
+        const ls = lineString([point, p, point], {name: 'FUChart to EOWData line'});
+        this.log.info(theClass, `  LineString: ${JSON.stringify(ls)}`);
+      });
+    }
   }
 }

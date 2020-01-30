@@ -21,6 +21,7 @@ import {FeatureCollection, Point} from '@turf/helpers';
 import EOWDataPieChart from './eow-data-piechart';
 import {Coordinate} from 'ol/coordinate';
 import {EOWMap} from './eow-map';
+import {EowLayers} from './eow-layers';
 
 const theClass = 'AppComponent';
 
@@ -40,6 +41,7 @@ export class AppComponent implements OnInit {
   // allDataSource: any;
   pieChart: PieChart;
   layers: Layers;
+  eowLayers: EowLayers;
   // htmlDocument: Document;
   eowDataGeometries: EowDataGeometries;
   layersGeometries: LayerGeometries;
@@ -56,7 +58,8 @@ export class AppComponent implements OnInit {
     this.popupObject = new Popup(this.htmlDocument, this.pieChart, this.userStore);
     this.eowMap = new EOWMap(this.log).init(this.popupObject);
     this.eowData = new EowDataLayer().init(this.eowMap);
-    this.layers = new Layers(this.htmlDocument, this.http, this.log).init(this.eowMap);
+    this.layers = new Layers(this.eowMap, this.htmlDocument, this.http, this.log);
+    this.eowLayers = new EowLayers(this.layers, this.log).init(); //this.eowMap);
     this.measurementStore = await new MeasurementStore(this.log);
     this.eowDataGeometries = await new EowDataGeometries(this.log).init();
     this.layersGeometries = new LayerGeometries(this.log);
