@@ -9,6 +9,8 @@ import Brolog from 'brolog';
 import {BehaviorSubject} from 'rxjs';
 import {MeasurementStore} from './measurement-store';
 
+const theClass = 'UserStore';
+
 export class UserStore {
   // htmlDocument: Document;
   users: [];
@@ -40,7 +42,7 @@ export class UserStore {
         this.users = users;
         this.userById = keyBy(this.users, 'id');
         this.renderUsers(this.users);
-        this.log.info(`Users Loaded - ids: ${JSON.stringify(Object.keys(this.userById))}`);
+        this.log.silly(theClass, `Users Loaded - ids: ${JSON.stringify(Object.keys(this.userById))}`);
         this.setupEventHandlers(measurementStore);
         resolve();
       });
@@ -88,7 +90,7 @@ export class UserStore {
     const userList = orderBy(users, ['photo_count', 'points'], ['desc', 'desc']).slice(0, n)
       .filter(user => this.getUserById(user.id).photos.length > 0) // user => user.photo_count && user.photo_count > 0)
       .map(user => {
-        console.log(`renderUsers - add user ${user.id}, ${user.nickname}`);
+        this.log.silly(theClass, `renderUsers - add user ${user.id}, ${user.nickname}`);
         return `
             <li class="item" data-user="${user.id}">
               <div>

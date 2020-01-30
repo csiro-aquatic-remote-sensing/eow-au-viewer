@@ -1,7 +1,6 @@
 import Map from 'ol/Map';
 import {BehaviorSubject} from 'rxjs';
 import Brolog from 'brolog';
-import {EowDataLayer} from './eow-data-layer';
 import {Popup} from './popup';
 import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
