@@ -7,7 +7,7 @@
     "build": "ng build --base-href /static/eyeonwater/",
     "deploy:csiro": "./deploy_csiro.sh",
     "test": "ng test",
-    "test-mocha": "mocha -r ts-node/register src/**/*.spec.ts",
+    "test-mocha": "mocha --require testHooks.js --require esm --require jsdom-global/register src/**/*.spec.ts",
     "lint": "ng lint",
     "e2e": "ng e2e"
   },
