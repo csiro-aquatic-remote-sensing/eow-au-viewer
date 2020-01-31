@@ -2,9 +2,7 @@ import LayerGeometries from './layers-geometries';
 import {Feature, FeatureCollection, Point, Polygon, point as turfPoint, featureCollection} from '@turf/helpers';
 import centroid from '@turf/centroid';
 import pointsWithinPolygon from '@turf/points-within-polygon';
-import {
-  Brolog,
-} from 'brolog';
+import {Brolog} from 'brolog';
 
 const theClass = 'GeometryOps';
 type Coords = [number, number];

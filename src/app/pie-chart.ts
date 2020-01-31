@@ -17,13 +17,11 @@ export class PieChart {
   /**
    * Draw pie chart of features (FU Values) at elementId
    *
-   * @param features to make up the segments of the pie chart
+   * @param preparedChartData to make up the segments of the pie chart
    * @param elementId of div to draw chart in to
    * @param sizeScaleFactor used to create the height and width
-   * @param point that the chart will be drawn at.  This doesn't need to know this but use for debug purposes.  For example draw line from
-   * this point to the point of each feature that the chart is for.
    */
-  drawD3(preparedChartData, elementId, sizeScaleFactor, point: number[]) {
+  drawD3(preparedChartData, elementId, sizeScaleFactor) {
     const width = widthFactor * sizeScaleFactor;
     const fontSize = 1.0 * sizeScaleFactor;
     const theFUColours = this.getFUColours();
