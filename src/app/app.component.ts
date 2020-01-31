@@ -64,7 +64,7 @@ export class AppComponent implements OnInit {
     this.eowDataGeometries = await new EowDataGeometries(this.log).init();
     this.layersGeometries = new LayerGeometries(this.log);
     this.geometryOps = new GeometryOps(this.log);
-    this.eowDataPieChart = new EOWDataPieChart(this.geometryOps, this.pieChart,  this.log);
+    this.eowDataPieChart = new EOWDataPieChart(this.geometryOps, this.pieChart,  this.layers, this.log);
 
     this.popupObject.init(this.eowMap);
     this.eowDataPieChart.init(this.eowMap, this.htmlDocument);

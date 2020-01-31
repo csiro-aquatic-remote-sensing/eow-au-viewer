@@ -96,16 +96,17 @@ export class Layers {
 
   async createLayerFromWFSFeatures(title, features, options: Options = {}): Promise<any> {
     return new Promise((resolve) => {
+      const featureSource = new VectorSource();
+      featureSource.addFeatures(features);
       this.eowMap.mapObs.asObservable().subscribe(async map => {
         const newLayer = new VectorLayer(Object.assign(options, {
           title,
-          source: features
+          source: featureSource
         }));
         newLayer.set('name', title);
         this.addLayer(newLayer);
         newLayer.setVisible(options.hasOwnProperty('visible') ? options.visible : true);
         resolve(newLayer);
-
       });
     });
   }

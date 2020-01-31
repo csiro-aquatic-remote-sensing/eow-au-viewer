@@ -5,11 +5,11 @@ import GeometryOps, {EowWaterbodyIntersection} from './geometry-ops';
 import Map from 'ol/Map';
 import Overlay from 'ol/Overlay';
 import OverlayPositioning from 'ol/OverlayPositioning';
-import VectorLayer from 'ol/layer/Vector';
-import VectorSource from 'ol/source/Vector';
+import GeoJSON from 'ol/format/GeoJSON';
 
 import {EOWMap} from './eow-map';
 import {PieChart} from './pie-chart';
+import {Layers} from './layers';
 
 const theClass = `EOWDataPieChart`;
 const htmlElementId = 'waterbody';
@@ -17,14 +17,14 @@ const LOG2 = Math.log(2);
 
 type Coords = [number, number];
 
-const DEBUG_DrawLines = true; // If true then draw line from center of pie chart to the features that the chart is for
+const debugDrawLines = true; // If true then draw line from center of pie chart to the features that the chart is for
 
 export default class EOWDataPieChart {
   pieChartMap: any;
   eowMap: EOWMap;
   htmlDocument: Document;
 
-  constructor(private geometryOps: GeometryOps, private pieChart: PieChart, private log: Brolog) { }
+  constructor(private geometryOps: GeometryOps, private pieChart: PieChart, private layers: Layers, private log: Brolog) { }
 
   init(eowMap: EOWMap, htmlDocument) {
     this.eowMap = eowMap;
@@ -46,6 +46,7 @@ export default class EOWDataPieChart {
       3. Get the centroid of the polygon
       4. Draw something at that point
      */
+    let waterBodyIndex = 0;
     this.eowMap.mapObs.asObservable().subscribe(map => {
       for (const eowWaterbodyIntersection of eowDataInWaterbodies) {
         // These eowWaterbodyIntersection are between the EOW Data Points and the polygons in the chosen layer (selected outside of here with
@@ -73,21 +74,25 @@ export default class EOWDataPieChart {
           }
           if (centroid) {
             this.log.verbose(theClass + '.plot', `Centroid: ${JSON.stringify(centroid)}`);
-            this.draw(eowDataInWaterbodies, centroid, map);
+            this.draw(eowDataInWaterbodies, centroid, map, waterBodyIndex++);
           } else {
             this.log.verbose(theClass + '.plot', 'No Centroid to draw at');
           }
         }
       }
+      console.log(`finished going through waterbodies`);
     });
   }
 
   /**
    * Draw an overlay with pie chart at the point given for the data point representing FU values.
    *
-   * @param point where to draw
+   * @param eowDataInWaterbodies - array of EOW Data that belongs to same water body
+   * @param point where to draw - centroid of data (EOW Data points or Waterbody polygon points - I may change which is used sometime)
+   * @param map to draw on
+   * @param waterBodyIndex for DEBUG when line groups are drawn
    */
-  draw(eowDataInWaterbodies: EowWaterbodyIntersection[], point: Coords, map: Map) {
+  draw(eowDataInWaterbodies: EowWaterbodyIntersection[], point: Coords, map: Map, waterBodyIndex: number) {
     const validData = eowDataInWaterbodies.map(e => e.eowData).filter(f => f !== null);
     if (validData.length > 0 && point[0] && point[1] && !isNaN(point[0]) && !isNaN(point[1])) {
       this.log.info(theClass, `Draw pieChart at ${point[0]}, ${point[1]})}`);
@@ -112,7 +117,7 @@ export default class EOWDataPieChart {
         // force a redraw so as to change size if zoom in / out
         this.pieChart.drawD3(preparedChartData, id, map.getView().getZoom() * LOG2, point);
       });
-      this.drawDebugLines(point, preparedChartData);
+      this.drawDebugLines(point, preparedChartData, waterBodyIndex);
     } else {
       this.log.info(theClass, `NOT Drawing pieChart at "${point[0]}", "${point[1]}")}`);
     }
@@ -179,17 +184,26 @@ export default class EOWDataPieChart {
    *
    * @param point where the Pie Chart is drawn (the centroid of the EOW Data points)
    * @param preparedChartData that contains the points of hte EOWData
+   * @param index as may get lots of the same name
    */
-  private drawDebugLines(point: Coords, preparedChartData: any) {
-    if (DEBUG_DrawLines) {
+  private async drawDebugLines(point: Coords, preparedChartData: any, index: number) {
+    if (debugDrawLines) {
       const allEOWDataPoints = () => {
         return preparedChartData.flatMap(p => p.y.points.map(p2 => p2));
       };
-      allEOWDataPoints().forEach(p => {
+      const prefix = Math.floor(Math.random() * 10000);
+      const format = new GeoJSON();
+      const lineFeatures = allEOWDataPoints().map(p => {
         this.log.info(theClass, `Draw chart to EOWData line: ${JSON.stringify(point)}, ${JSON.stringify(p)}`);
-        const ls = lineString([point, p, point], {name: 'FUChart to EOWData line'});
+        const ls = lineString([point, p], {name: 'FUChart to EOWData line'}, {id: prefix + index});
         this.log.info(theClass, `  LineString: ${JSON.stringify(ls)}`);
+        const lsFeature = format.readFeature(ls);
+        // lsFeature.getGeometry().transform('EPSG:4326', 'EPSG:3857');
+        return lsFeature;
       });
+      // const lineFeatures = [lineString([point, ...allEOWDataPoints()], {name: 'FUChart to EOWData line'})];
+      console.log(`drawDebugLines - ${JSON.stringify(lineFeatures.slice(0, 2), null, 2)}`);
+      await this.layers.createLayerFromWFSFeatures('Lines ' + index, lineFeatures);
     }
   }
 }
