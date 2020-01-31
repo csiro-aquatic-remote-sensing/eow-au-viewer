@@ -23,7 +23,8 @@ export class PieChart {
    */
   drawD3(preparedChartData, elementId, sizeScaleFactor) {
     const width = widthFactor * sizeScaleFactor;
-    const fontSize = 1.0 * sizeScaleFactor;
+    const fontSize = 0.8 * sizeScaleFactor;
+    const fontWeight = 20;
     const theFUColours = this.getFUColours();
 
     // Delete any existing pie-chart that existed in the elementId
@@ -115,7 +116,7 @@ export class PieChart {
       .text(d => d.data.name)
       .attr('class', 'label')
       .attr('transform', `translate(0, 0)`)
-      .attr('style', `fill: #000000; stroke: #000000; font-size: ${fontSize}`);
+      .attr('style', `fill: #000000; stroke: #000000; font-size: ${fontSize}; font-weight: ${fontWeight};`);
   }
 
   setChartSize() {
