@@ -66,7 +66,7 @@ export class Layers {
           newLayer.set('name', title);
           this.addLayer(newLayer);
           this.log.verbose(`map.add layer "${title} - there are now ${map.getLayers().getArray().length} layers`);
-          newLayer.setVisible(options.hasOwnProperty('visible') ? options.visible : true);
+          newLayer.setVisible(false); // options.hasOwnProperty('visible') ? options.visible : true);
           resolve(newLayer);
         }).catch(e => {
           // reject() this?
@@ -88,7 +88,7 @@ export class Layers {
         });
         wms.set('name', title);
         this.addLayer(wms);
-        wms.setVisible(true);
+        wms.setVisible(false);
         resolve();
       });
     });

@@ -7,14 +7,20 @@ import {Brolog} from 'brolog';
 const theClass = 'GeometryOps';
 type Coords = [number, number];
 
+/**
+ * Data structure for the waterbody - the polygon that defines it and an English name
+ */
 export interface Waterbody {
-  polygon: FeatureCollection<Point>;
+  polygon: Feature<Polygon>;
   name: string;
 }
 
+/**
+ * Data structure for the waterbody and the points from the EOWData that are contained within it
+ */
 export interface EowWaterbodyIntersection {
   waterBody: Waterbody;
-  eowData: any;  // TBD
+  eowData: FeatureCollection<Point>;
 }
 
 export default class GeometryOps {
@@ -59,7 +65,7 @@ export default class GeometryOps {
    *            polygon: FeatureCollection<Point>s
    *            name: Waterbody name (TODO)
    *          },
-   *          eowData: as returned by Maris (defined elsewhere)
+   *          eowData: The EOWData (as returned by Maris (defined elsewhere)) that are contained within the waterbody
    * If the waterBody has no intersection with the EOWData it will return:
    *          waterBody: null,
    *          eowData: null
@@ -74,7 +80,7 @@ export default class GeometryOps {
       // layerGeometry.forEach(layerPolygon => {
       for (const layerPolygon of layerGeometry) {
         const intersection: FeatureCollection<Point> = pointsWithinPolygon(eowDataGeometry, layerPolygon) as FeatureCollection<Point>;
-        eowWaterbodyIntersections.push(this.createEoWFormat(intersection));
+        eowWaterbodyIntersections.push(this.createEoWFormat(intersection, layerPolygon));
       }
       this.log.silly(theClass, `intersections: ${JSON.stringify(eowWaterbodyIntersections, null, 2)}`);
       resolve(eowWaterbodyIntersections);
@@ -92,7 +98,7 @@ export default class GeometryOps {
       for (const layerPolygon of layerGeometry) {
         const thePoints: Feature<Point>[] = layerPolygon.geometry.coordinates[0].map(c => turfPoint(c));
         const theFeatureCollection = featureCollection(thePoints);
-        eowWaterbodyPoints.push(this.createEoWFormat(theFeatureCollection));
+        eowWaterbodyPoints.push(this.createEoWFormat(theFeatureCollection, layerPolygon));
       }
       this.log.silly(theClass, `convertLayerToDataForamt: ${JSON.stringify(eowWaterbodyPoints, null, 2)}`);
       resolve(eowWaterbodyPoints);
@@ -104,7 +110,7 @@ export default class GeometryOps {
    *
    * @param intersection - the data from the Turfjs pointsWithinPolygon()
    */
-  private createEoWFormat(intersection: FeatureCollection<Point>): EowWaterbodyIntersection {
+  private createEoWFormat(intersection: FeatureCollection<Point>, waterBody: Feature<Polygon>): EowWaterbodyIntersection {
     if (intersection.features.length === 0) {
       return {
         waterBody: null,
@@ -113,12 +119,12 @@ export default class GeometryOps {
     }
     const eowWaterbodyIntersection: EowWaterbodyIntersection = {
       waterBody: {
-        polygon: intersection,
+        polygon: waterBody,
         name: 'TBD'
       },
-      eowData: intersection.features[0].properties
+      eowData: intersection
     };
-    intersection.features[0].properties = {'now in eowData field': true};
+    // intersection.features[0].properties = {'now in eowData field': true};
     return eowWaterbodyIntersection;
   }
 

@@ -61,7 +61,7 @@ export class AppComponent implements OnInit {
     this.layers = new Layers(this.eowMap, this.htmlDocument, this.http, this.log);
     this.eowLayers = await new EowLayers(this.layers, this.log).init(); // this.eowMap);
     this.measurementStore = await new MeasurementStore(this.log);
-    this.eowDataGeometries = await new EowDataGeometries(this.log).init();
+    this.eowDataGeometries = await new EowDataGeometries(this.log).init();  // TODO this seems to do similar to EowDataLayer - combine
     this.layersGeometries = new LayerGeometries(this.log);
     this.geometryOps = new GeometryOps(this.log);
     this.eowDataPieChart = new EOWDataPieChart(this.geometryOps, this.pieChart,  this.layers, this.log);
@@ -84,6 +84,7 @@ export class AppComponent implements OnInit {
 
     // Call one or the other - the 2nd is debug
     this.calculateIntersectionsPlot();
+    this.debug_WriteDataToSpreadsheet();
     // this.calculateWaterBodiesCentroidsPlot();  // DEBUG
   }
 
@@ -104,8 +105,8 @@ export class AppComponent implements OnInit {
       eowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, this.layersGeometries, 'i5516 reservoirs');
       this.eowDataPieChart.plot(eowWaterBodyIntersections);
 
-      eowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, this.layersGeometries, 'Waterbodies shape');
-      this.eowDataPieChart.plot(eowWaterBodyIntersections);
+      // eowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, this.layersGeometries, 'Waterbodies shape');
+      // this.eowDataPieChart.plot(eowWaterBodyIntersections);
 
     });
   }
@@ -140,6 +141,13 @@ export class AppComponent implements OnInit {
       console.log(`Number of measurements per user: ${
         JSON.stringify(this.measurementStore.numberMeasurmentsPerUser(this.userStore), null, 2)}`);
     });
+  }
+
+  /**
+   * I'm getting weird results and I could craft a solution (and tests) if I could visualise the data
+   */
+  private debug_WriteDataToSpreadsheet() {
+
   }
 
   private setupEventHandlers() {

@@ -1,4 +1,4 @@
-import {Feature, Point, lineString} from '@turf/helpers';
+import {Feature, Point, lineString, FeatureCollection} from '@turf/helpers';
 import {featureEach} from '@turf/meta';
 import Brolog from 'brolog';
 import GeometryOps, {EowWaterbodyIntersection} from './geometry-ops';
@@ -49,19 +49,19 @@ export default class EOWDataPieChart {
      */
     let waterBodyIndex = 0;
     this.eowMap.mapObs.asObservable().subscribe(map => {
-      for (const eowWaterbodyIntersection of eowDataInWaterbodies) {
+      for (const eowDataInWaterbody of eowDataInWaterbodies) {
         // These eowWaterbodyIntersection are between the EOW Data Points and the polygons in the chosen layer (selected outside of here with
         //  the result being passed in as EowWaterbodyIntersection[].
         // Each Object is:
         //  waterBody: <the polygon that represents the waterbody>
         //  eowData: <the EOW Data points within that waterbody>
         //
-        // If there is no EOWData within the waterbody, both fields will be null
+        // If there is no EOWData points within the waterbody, both fields will be null
 
         const points: Coords[] = [];
-        if (eowWaterbodyIntersection.waterBody) {
-          this.log.verbose(theClass + '.plot', `eowWaterbodyIntersection.waterBody: ${JSON.stringify(eowWaterbodyIntersection.waterBody.polygon, null, 2)}`);
-          featureEach(eowWaterbodyIntersection.waterBody.polygon, (feature: Feature<Point>) => {
+        if (eowDataInWaterbody.eowData) {
+          this.log.verbose(theClass + '.plot', `eowWaterbodyIntersection.waterBody: ${JSON.stringify(eowDataInWaterbody.eowData, null, 2)}`);
+          featureEach(eowDataInWaterbody.eowData, (feature: Feature<Point>) => {
             if (feature.hasOwnProperty('geometry')) {
               points.push(feature.geometry.coordinates as Coords);
             }
@@ -75,7 +75,7 @@ export default class EOWDataPieChart {
           }
           if (centroid) {
             this.log.verbose(theClass + '.plot', `Centroid: ${JSON.stringify(centroid)}`);
-            this.draw(eowDataInWaterbodies, centroid, map, waterBodyIndex++);
+            this.draw(eowDataInWaterbody.eowData, centroid, map, waterBodyIndex++);
           } else {
             this.log.verbose(theClass + '.plot', 'No Centroid to draw at');
           }
@@ -93,8 +93,14 @@ export default class EOWDataPieChart {
    * @param map to draw on
    * @param waterBodyIndex for DEBUG when line groups are drawn
    */
-  draw(eowDataInWaterbodies: EowWaterbodyIntersection[], point: Coords, map: Map, waterBodyIndex: number) {
-    const validData = eowDataInWaterbodies.map(e => e.eowData).filter(f => f !== null);
+  draw(eowDataInWaterbody: FeatureCollection<Point>, point: Coords, map: Map, waterBodyIndex: number) {
+    // const validData = eowDataInWaterbody.map(e => e.eowData).filter(f => f !== null);
+    const validData: Feature<Point>[] = [];
+    featureEach(eowDataInWaterbody, eowDataPoint => {
+      if (eowDataPoint) {
+        validData.push(eowDataPoint);
+      }
+    });
     if (validData.length > 0 && point[0] && point[1] && !isNaN(point[0]) && !isNaN(point[1])) {
       this.log.info(theClass, `Draw pieChart at ${point[0]}, ${point[1]})}`);
       const preparedChartData = EowDataStruct.prepareChartData(validData);

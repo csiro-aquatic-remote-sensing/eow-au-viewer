@@ -24,6 +24,9 @@ const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia?se
   + '&version=1.0.0&request=GetFeature&typeName=eow_australia&maxFeatures=5000&outputFormat=application%2Fjson';
 const LOG2 = Math.log2(2);
 
+/**
+ * This is for drawing the EOW Data on the map.
+ */
 export class EowDataLayer {
   allDataSourceObs: BehaviorSubject<VectorSource>;  // Observers that outside subscribers can use to know when data ready
   dataLayerObs: BehaviorSubject<VectorLayer>;
