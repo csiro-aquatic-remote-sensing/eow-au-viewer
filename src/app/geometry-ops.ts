@@ -3,25 +3,9 @@ import {Feature, FeatureCollection, Point, Polygon, point as turfPoint, featureC
 import centroid from '@turf/centroid';
 import pointsWithinPolygon from '@turf/points-within-polygon';
 import {Brolog} from 'brolog';
+import {EowDataStruct, EowWaterBodyIntersection} from './eow-data-struct';
 
 const theClass = 'GeometryOps';
-type Coords = [number, number];
-
-/**
- * Data structure for the waterbody - the polygon that defines it and an English name
- */
-export interface Waterbody {
-  polygon: Feature<Polygon>;
-  name: string;
-}
-
-/**
- * Data structure for the waterbody and the points from the EOWData that are contained within it
- */
-export interface EowWaterbodyIntersection {
-  waterBody: Waterbody;
-  eowData: FeatureCollection<Point>;
-}
 
 export default class GeometryOps {
   constructor(private log: Brolog) {
@@ -71,62 +55,40 @@ export default class GeometryOps {
    *          eowData: null
    */
   async calculateLayerIntersections(eowDataGeometry: FeatureCollection<Point>, layerGeometries: LayerGeometries, layerName: string):
-    Promise<EowWaterbodyIntersection[]> {
-    return new Promise<EowWaterbodyIntersection[]>(resolve => {
+    Promise<EowWaterBodyIntersection[]> {
+    return new Promise<EowWaterBodyIntersection[]>(resolve => {
       const layerGeometry: Feature<Polygon>[] = layerGeometries.getLayer(layerName);
-      const eowWaterbodyIntersections: EowWaterbodyIntersection[] = [];
+      const eowWaterBodyIntersections: EowWaterBodyIntersection[] = [];
 
       this.log.verbose(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
       // layerGeometry.forEach(layerPolygon => {
       for (const layerPolygon of layerGeometry) {
         const intersection: FeatureCollection<Point> = pointsWithinPolygon(eowDataGeometry, layerPolygon) as FeatureCollection<Point>;
-        eowWaterbodyIntersections.push(this.createEoWFormat(intersection, layerPolygon));
+        eowWaterBodyIntersections.push(EowDataStruct.createEoWFormat(intersection, layerPolygon));
       }
-      this.log.silly(theClass, `intersections: ${JSON.stringify(eowWaterbodyIntersections, null, 2)}`);
-      resolve(eowWaterbodyIntersections);
+      this.log.silly(theClass, `intersections: ${JSON.stringify(eowWaterBodyIntersections, null, 2)}`);
+      resolve(eowWaterBodyIntersections);
     });
   }
 
   // Mainly for debug purposes so I can see something happening!  I don't think the EOW Data is intersecting the polygons and want to know more.
   async convertLayerToDataForamt(layerGeometries: LayerGeometries, layerName: string):
-    Promise<EowWaterbodyIntersection[]> {
-    return new Promise<EowWaterbodyIntersection[]>(resolve => {
+    Promise<EowWaterBodyIntersection[]> {
+    return new Promise<EowWaterBodyIntersection[]>(resolve => {
       const layerGeometry: Feature<Polygon>[] = layerGeometries.getLayer(layerName);
-      const eowWaterbodyPoints: EowWaterbodyIntersection[] = [];
+      const eowWaterBodyPoints: EowWaterBodyIntersection[] = [];
 
       this.log.verbose(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
       for (const layerPolygon of layerGeometry) {
         const thePoints: Feature<Point>[] = layerPolygon.geometry.coordinates[0].map(c => turfPoint(c));
         const theFeatureCollection = featureCollection(thePoints);
-        eowWaterbodyPoints.push(this.createEoWFormat(theFeatureCollection, layerPolygon));
+        eowWaterBodyPoints.push(EowDataStruct.createEoWFormat(theFeatureCollection, layerPolygon));
       }
-      this.log.silly(theClass, `convertLayerToDataForamt: ${JSON.stringify(eowWaterbodyPoints, null, 2)}`);
-      resolve(eowWaterbodyPoints);
+      this.log.silly(theClass, `convertLayerToDataForamt: ${JSON.stringify(eowWaterBodyPoints, null, 2)}`);
+      resolve(eowWaterBodyPoints);
     });
   }
 
-  /**
-   * Modify in to format as specified in calculateLayerIntersections().
-   *
-   * @param intersection - the data from the Turfjs pointsWithinPolygon()
-   */
-  private createEoWFormat(intersection: FeatureCollection<Point>, waterBody: Feature<Polygon>): EowWaterbodyIntersection {
-    if (intersection.features.length === 0) {
-      return {
-        waterBody: null,
-        eowData: null
-      };
-    }
-    const eowWaterbodyIntersection: EowWaterbodyIntersection = {
-      waterBody: {
-        polygon: waterBody,
-        name: 'TBD'
-      },
-      eowData: intersection
-    };
-    // intersection.features[0].properties = {'now in eowData field': true};
-    return eowWaterbodyIntersection;
-  }
 
   /**
    * I don't think the Turf version of centroid, or k-means-cluster (clusterSize=1), is correct.  Hence my own below.

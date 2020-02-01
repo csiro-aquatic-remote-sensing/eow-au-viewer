@@ -1,7 +1,7 @@
 import {Feature, Point, lineString, FeatureCollection} from '@turf/helpers';
 import {featureEach} from '@turf/meta';
 import Brolog from 'brolog';
-import GeometryOps, {EowWaterbodyIntersection} from './geometry-ops';
+import GeometryOps from './geometry-ops';
 import Map from 'ol/Map';
 import Overlay from 'ol/Overlay';
 import OverlayPositioning from 'ol/OverlayPositioning';
@@ -10,7 +10,7 @@ import GeoJSON from 'ol/format/GeoJSON';
 import {EOWMap} from './eow-map';
 import {PieChart} from './pie-chart';
 import {Layers} from './layers';
-import {EowDataStruct} from './eow-data-struct';
+import {EowDataStruct, EowWaterBodyIntersection} from './eow-data-struct';
 
 const theClass = `EOWDataPieChart`;
 const htmlElementId = 'waterbody';
@@ -40,7 +40,7 @@ export default class EOWDataPieChart {
    * represents the water body.  The Pie chart is the FU values in that water body.
    * @param eowDataInWaterbodies - Polygons of waterbodies that contain EOW Points data
    */
-  plot(eowDataInWaterbodies: EowWaterbodyIntersection[]) { // FeatureCollection<Point>[]) {
+  plot(eowDataInWaterbodies: EowWaterBodyIntersection[]) { // FeatureCollection<Point>[]) {
     /*
       1. Loop through array of Waterbody polygons
       2. If the FeatureCollection has property 'geometry'
@@ -50,8 +50,8 @@ export default class EOWDataPieChart {
     let waterBodyIndex = 0;
     this.eowMap.mapObs.asObservable().subscribe(map => {
       for (const eowDataInWaterbody of eowDataInWaterbodies) {
-        // These eowWaterbodyIntersection are between the EOW Data Points and the polygons in the chosen layer (selected outside of here with
-        //  the result being passed in as EowWaterbodyIntersection[].
+        // These EowWaterBodyIntersection are between the EOW Data Points and the polygons in the chosen layer (selected outside of here with
+        //  the result being passed in as EowWaterBodyIntersection[].
         // Each Object is:
         //  waterBody: <the polygon that represents the waterbody>
         //  eowData: <the EOW Data points within that waterbody>
@@ -60,7 +60,7 @@ export default class EOWDataPieChart {
 
         const points: Coords[] = [];
         if (eowDataInWaterbody.eowData) {
-          this.log.verbose(theClass + '.plot', `eowWaterbodyIntersection.waterBody: ${JSON.stringify(eowDataInWaterbody.eowData, null, 2)}`);
+          this.log.verbose(theClass + '.plot', `EowWaterBodyIntersection.waterBody: ${JSON.stringify(eowDataInWaterbody.eowData, null, 2)}`);
           featureEach(eowDataInWaterbody.eowData, (feature: Feature<Point>) => {
             if (feature.hasOwnProperty('geometry')) {
               points.push(feature.geometry.coordinates as Coords);

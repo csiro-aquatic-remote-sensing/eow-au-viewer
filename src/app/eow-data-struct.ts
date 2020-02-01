@@ -1,8 +1,27 @@
 import Brolog from 'brolog';
+import {Feature, FeatureCollection, Point, Polygon} from '@turf/helpers';
 
 const theClass = 'EowDataStruct';
 const brologLevel = 'verbose';
 const log = new Brolog();
+
+export type Coords = [number, number];
+
+/**
+ * Data structure for the waterbody - the polygon that defines it and an English name
+ */
+export interface WaterBody {
+  name: string;
+  polygon: Feature<Polygon>;
+}
+
+/**
+ * Data structure for the waterbody and the points from the EOWData that are contained within it
+ */
+export interface EowWaterBodyIntersection {
+  waterBody: WaterBody;
+  eowData: FeatureCollection<Point>;
+}
 
 export class EowDataStruct {
 
@@ -62,4 +81,31 @@ export class EowDataStruct {
     log.verbose(theClass, `EOWData: ${JSON.stringify(eowData)}`);
     return eowData;
   }
+
+  /**
+   * Modify in to format as specified in calculateLayerIntersections().
+   *
+   * @param intersection - the data from the Turfjs pointsWithinPolygon()
+   */
+  static createEoWFormat(intersection: FeatureCollection<Point>, waterBody: Feature<Polygon>): EowWaterBodyIntersection {
+    if (intersection.features.length === 0) {
+      return {
+        waterBody: {
+          polygon: waterBody,
+          name: 'TBD'
+        },
+        eowData: null
+      };
+    }
+    const eowWaterbodyIntersection: EowWaterBodyIntersection = {
+      waterBody: {
+        polygon: waterBody,
+        name: 'TBD'
+      },
+      eowData: intersection
+    };
+    // intersection.features[0].properties = {'now in eowData field': true};
+    return eowWaterbodyIntersection;
+  }
+
 }

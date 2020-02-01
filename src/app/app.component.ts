@@ -14,7 +14,7 @@ import {UserStore} from './user-store';
 import {EowDataLayer} from './eow-data-layer';
 import EowDataGeometries from './eow-data-geometries';
 import LayerGeometries from './layers-geometries';
-import GeometryOps, {EowWaterbodyIntersection} from './geometry-ops';
+import GeometryOps from './geometry-ops';
 import {Brolog} from 'brolog';
 import {timeout} from 'rxjs/operators';
 import {FeatureCollection, Point} from '@turf/helpers';
@@ -22,6 +22,7 @@ import EOWDataPieChart from './eow-data-piechart';
 import {Coordinate} from 'ol/coordinate';
 import {EOWMap} from './eow-map';
 import {EowLayers} from './eow-layers';
+import {EowWaterBodyIntersection} from './eow-data-struct';
 
 const theClass = 'AppComponent';
 
@@ -100,13 +101,13 @@ export class AppComponent implements OnInit {
    * Calculate intersections between EOW Data points and waterbodies and plot information about the data points
    */
   private calculateIntersectionsPlot() {
-    let eowWaterBodyIntersections: EowWaterbodyIntersection[] = undefined; // tslint:disable-line
+    let EowWaterBodyIntersections: EowWaterBodyIntersection[] = undefined; // tslint:disable-line
     this.eowDataGeometries.pointsObs.asObservable().subscribe(async (points) => {
-      eowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, this.layersGeometries, 'i5516 reservoirs');
-      this.eowDataPieChart.plot(eowWaterBodyIntersections);
+      EowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, this.layersGeometries, 'i5516 reservoirs');
+      this.eowDataPieChart.plot(EowWaterBodyIntersections);
 
-      // eowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, this.layersGeometries, 'Waterbodies shape');
-      // this.eowDataPieChart.plot(eowWaterBodyIntersections);
+      // EowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, this.layersGeometries, 'Waterbodies shape');
+      // this.eowDataPieChart.plot(EowWaterBodyIntersections);
 
     });
   }
@@ -115,7 +116,7 @@ export class AppComponent implements OnInit {
    * DEBUG - find centroids for ALL water bodies and plot something - eg. my avatar
    */
   private async calculateWaterBodiesCentroidsPlot() {
-    const eowWaterbodyPoints: EowWaterbodyIntersection[] = await this.geometryOps.convertLayerToDataForamt(this.layersGeometries, 'i5516 reservoirs');
+    const eowWaterbodyPoints: EowWaterBodyIntersection[] = await this.geometryOps.convertLayerToDataForamt(this.layersGeometries, 'i5516 reservoirs');
     this.eowDataPieChart.plot(eowWaterbodyPoints);
   }
 
