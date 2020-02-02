@@ -88,7 +88,7 @@ export class PieChart {
       .attr('fill', d => '' + theFUColours[d.data.name])  // d.data.key == "other" ? "#dadadd" : colorScale(d.data.key))
       .attr('d', arc)
       .append('title')
-      .text(d => `FU: ${d.data.name}`);  // d => d.data.name);
+      .text(d => `FU: ${d.data.name} #: ${d.data.y.count}`);  // d => d.data.name);
 
     const iconGroups = centeredGroup.selectAll('g')
       .data(arcs)

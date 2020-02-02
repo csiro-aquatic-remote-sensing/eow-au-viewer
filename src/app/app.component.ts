@@ -101,14 +101,13 @@ export class AppComponent implements OnInit {
    * Calculate intersections between EOW Data points and waterbodies and plot information about the data points
    */
   private calculateIntersectionsPlot() {
-    let EowWaterBodyIntersections: EowWaterBodyIntersection[] = undefined; // tslint:disable-line
+    let eowWaterBodyIntersections: EowWaterBodyIntersection[] = undefined; // tslint:disable-line
     this.eowDataGeometries.pointsObs.asObservable().subscribe(async (points) => {
-      EowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, this.layersGeometries, 'i5516 reservoirs');
-      this.eowDataPieChart.plot(EowWaterBodyIntersections);
+      eowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, this.layersGeometries, 'i5516 reservoirs');
+      this.eowDataPieChart.plot(eowWaterBodyIntersections);
 
-      // EowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, this.layersGeometries, 'Waterbodies shape');
-      // this.eowDataPieChart.plot(EowWaterBodyIntersections);
-
+      eowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, this.layersGeometries, 'Waterbodies shape');
+      this.eowDataPieChart.plot(eowWaterBodyIntersections);
     });
   }
 
