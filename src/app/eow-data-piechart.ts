@@ -105,11 +105,8 @@ export default class EOWDataPieChart {
       this.log.info(theClass, `Draw pieChart at ${point[0]}, ${point[1]})}`);
       const preparedChartData = EowDataStruct.prepareChartData(validData);
       const el = this.htmlDocument.createElement('div');
-      // const img = this.htmlDocument.createElement('img');
       const id = 'pieChart-' + Math.floor(Math.random() * 100000);
       el.setAttribute('id', id);
-      // img.src = 'https://www.gravatar.com/avatar/0dbc9574f3382f14a5f4c38a0aec4286?s=20';
-      // el.appendChild(img);
       this.htmlDocument.getElementById(htmlElementId).appendChild(el);
       this.pieChart.drawD3(preparedChartData, id, map.getView().getZoom() * LOG2);
       const pieChartMap = new Overlay({
@@ -117,11 +114,11 @@ export default class EOWDataPieChart {
         position: point,
         autoPan: true,
         autoPanMargin: 275,
-        positioning: OverlayPositioning.TOP_LEFT
+        positioning: OverlayPositioning.CENTER_CENTER
       });
       map.addOverlay(pieChartMap);
       map.on('moveend', (evt) => {
-        // force a redraw so as to change size if zoom in / out
+        // force a redraw when change size due to zoom in / out
         this.pieChart.drawD3(preparedChartData, id, map.getView().getZoom() * LOG2);
       });
       this.drawDebugLines(point, preparedChartData, waterBodyIndex);
@@ -146,14 +143,13 @@ export default class EOWDataPieChart {
       const format = new GeoJSON();
       const lineFeatures = allEOWDataPoints().map(p => {
         this.log.info(theClass, `Draw chart to EOWData line: ${JSON.stringify(point)}, ${JSON.stringify(p)}`);
-        const ls = lineString([point, p], {name: 'FUChart to EOWData line'}, {id: prefix + index});
+        const ls = lineString([point, p], {name: 'FUChart to EOWData line'});
         this.log.info(theClass, `  LineString: ${JSON.stringify(ls)}`);
-        const lsFeature = format.readFeature(ls);
-        // lsFeature.getGeometry().transform('EPSG:4326', 'EPSG:3857');
+        const lsFeature = format.readFeature(ls, {
+          featureProjection: 'EPSG:4326'
+        });
         return lsFeature;
       });
-      // const lineFeatures = [lineString([point, ...allEOWDataPoints()], {name: 'FUChart to EOWData line'})];
-      console.log(`drawDebugLines - ${JSON.stringify(lineFeatures.slice(0, 2), null, 2)}`);
       await this.layers.createLayerFromWFSFeatures('Lines ' + index, lineFeatures);
     }
   }

@@ -98,16 +98,16 @@ export class Layers {
     return new Promise((resolve) => {
       const featureSource = new VectorSource();
       featureSource.addFeatures(features);
-      this.eowMap.mapObs.asObservable().subscribe(async map => {
-        const newLayer = new VectorLayer(Object.assign(options, {
-          title,
-          source: featureSource
-        }));
-        newLayer.set('name', title);
-        this.addLayer(newLayer);
-        newLayer.setVisible(options.hasOwnProperty('visible') ? options.visible : true);
-        resolve(newLayer);
-      });
+      const name = title + '_' + Math.floor(Math.random() * 1000);
+      console.log(`Lines layer: ${name} - # lines added: ${features.length}`);
+      const newLayer = new VectorLayer(Object.assign(options, {
+        name,
+        source: featureSource
+      }));
+      newLayer.set('name', name);
+      this.addLayer(newLayer);
+      newLayer.setVisible(options.hasOwnProperty('visible') ? options.visible : true);
+      resolve(newLayer);
     });
   }
 
@@ -133,7 +133,7 @@ export class Layers {
       return theCheckbox;
     };
 
-    if (! layer) {
+    if (!layer) {
       return;
     }
 

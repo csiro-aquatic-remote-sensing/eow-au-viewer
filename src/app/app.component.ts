@@ -106,8 +106,8 @@ export class AppComponent implements OnInit {
       eowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, this.layersGeometries, 'i5516 reservoirs');
       this.eowDataPieChart.plot(eowWaterBodyIntersections);
 
-      eowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, this.layersGeometries, 'Waterbodies shape');
-      this.eowDataPieChart.plot(eowWaterBodyIntersections);
+      // eowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, this.layersGeometries, 'Waterbodies shape');
+      // this.eowDataPieChart.plot(eowWaterBodyIntersections);
     });
   }
 

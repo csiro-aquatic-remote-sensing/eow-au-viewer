@@ -39,10 +39,10 @@ export class PieChart {
       boundedWidth: 0,
       boundedHeight: 0,
       margin: {
-        top: 5,
-        right: 5,
-        bottom: 5,
-        left: 5,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
       },
     };
     dimensions.boundedWidth = dimensions.width - dimensions.margin.left - dimensions.margin.right;
@@ -56,8 +56,8 @@ export class PieChart {
       .attr('width', '' + dimensions.width)
       .attr('height', '' + dimensions.height);
 
-    const bounds = wrapper.append('g')
-      .style('transform', `translate(${dimensions.margin.left}px, ${dimensions.margin.top}px)`);
+    const bounds = wrapper.append('g');
+      // .style('transform', `translate(${dimensions.margin.left}px, ${dimensions.margin.top}px)`);
 
     // 4. Create scales
 
