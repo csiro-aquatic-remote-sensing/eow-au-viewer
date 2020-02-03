@@ -40,7 +40,7 @@ export default class EOWDataPieChart {
    * represents the water body.  The Pie chart is the FU values in that water body.
    * @param eowDataInWaterbodies - Polygons of waterbodies that contain EOW Points data
    */
-  plot(eowDataInWaterbodies: EowWaterBodyIntersection[]) { // FeatureCollection<Point>[]) {
+  plot(eowDataInWaterbodies: EowWaterBodyIntersection[], layerName: string) { // FeatureCollection<Point>[]) {
     /*
       1. Loop through array of Waterbody polygons
       2. If the FeatureCollection has property 'geometry'
@@ -75,7 +75,7 @@ export default class EOWDataPieChart {
           }
           if (centroid) {
             this.log.verbose(theClass + '.plot', `Centroid: ${JSON.stringify(centroid)}`);
-            this.draw(eowDataInWaterbody.eowData, centroid, map, waterBodyIndex++);
+            this.draw(eowDataInWaterbody.eowData, centroid, map, waterBodyIndex++, layerName);
           } else {
             this.log.verbose(theClass + '.plot', 'No Centroid to draw at');
           }
@@ -93,7 +93,7 @@ export default class EOWDataPieChart {
    * @param map to draw on
    * @param waterBodyIndex for DEBUG when line groups are drawn
    */
-  draw(eowDataInWaterbody: FeatureCollection<Point>, point: Coords, map: Map, waterBodyIndex: number) {
+  draw(eowDataInWaterbody: FeatureCollection<Point>, point: Coords, map: Map, waterBodyIndex: number, layerName: string) {
     // const validData = eowDataInWaterbody.map(e => e.eowData).filter(f => f !== null);
     const validData: Feature<Point>[] = [];
     featureEach(eowDataInWaterbody, eowDataPoint => {
@@ -121,7 +121,7 @@ export default class EOWDataPieChart {
         // force a redraw when change size due to zoom in / out
         this.pieChart.drawD3(preparedChartData, id, map.getView().getZoom() * LOG2);
       });
-      this.drawDebugLines(point, preparedChartData, waterBodyIndex);
+      this.drawDebugLines(point, preparedChartData, waterBodyIndex, layerName);
     } else {
       this.log.info(theClass, `NOT Drawing pieChart at "${point[0]}", "${point[1]}")}`);
     }
@@ -134,12 +134,11 @@ export default class EOWDataPieChart {
    * @param preparedChartData that contains the points of hte EOWData
    * @param index as may get lots of the same name
    */
-  private async drawDebugLines(point: Coords, preparedChartData: any, index: number) {
+  private async drawDebugLines(point: Coords, preparedChartData: any, index: number, layerName: string) {
     if (debugDrawLines) {
       const allEOWDataPoints = () => {
         return preparedChartData.flatMap(p => p.y.points.map(p2 => p2));
       };
-      const prefix = Math.floor(Math.random() * 10000);
       const format = new GeoJSON();
       const lineFeatures = allEOWDataPoints().map(p => {
         this.log.info(theClass, `Draw chart to EOWData line: ${JSON.stringify(point)}, ${JSON.stringify(p)}`);
@@ -150,7 +149,7 @@ export default class EOWDataPieChart {
         });
         return lsFeature;
       });
-      await this.layers.createLayerFromWFSFeatures('Lines ' + index, lineFeatures);
+      await this.layers.createLayerFromWFSFeatures(`Lines for  ${layerName}`, lineFeatures);
     }
   }
 }

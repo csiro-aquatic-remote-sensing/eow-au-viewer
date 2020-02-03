@@ -40,8 +40,13 @@ export interface Options {
   params?: any;
 }
 
+// Internally to the Map, layers are stored in an array but we need to get to them through the layer 'name'.
+// We need to have the ability to append to existing features in createLayerFromWFSFeatures
+type LayerNames = { [name: string]: number }; // tslint:disable-line
+
 export class Layers {
   private mapLayersObs: BehaviorSubject<any>;
+  private layerNames: LayerNames = {};
 
   constructor(private eowMap: EOWMap, private htmlDocument: Document, private http: HttpClient, private log: Brolog) {
     this.mapLayersObs = new BehaviorSubject(null);
@@ -64,7 +69,7 @@ export class Layers {
             })
           }));
           newLayer.set('name', title);
-          this.addLayer(newLayer);
+          this.addLayer(newLayer, title);
           this.log.verbose(`map.add layer "${title} - there are now ${map.getLayers().getArray().length} layers`);
           newLayer.setVisible(false); // options.hasOwnProperty('visible') ? options.visible : true);
           resolve(newLayer);
@@ -87,33 +92,51 @@ export class Layers {
           })
         });
         wms.set('name', title);
-        this.addLayer(wms);
+        this.addLayer(wms, title);
         wms.setVisible(false);
         resolve();
       });
     });
   }
 
+  /**
+   * Create a new layer and set the features or append features to an existing layer with the same name (title)
+   * @param title / name
+   * @param features to set / append to layer
+   * @param options when creating layer
+   */
   async createLayerFromWFSFeatures(title, features, options: Options = {}): Promise<any> {
     return new Promise((resolve) => {
-      const featureSource = new VectorSource();
-      featureSource.addFeatures(features);
-      const name = title + '_' + Math.floor(Math.random() * 1000);
-      console.log(`Lines layer: ${name} - # lines added: ${features.length}`);
-      const newLayer = new VectorLayer(Object.assign(options, {
-        name,
-        source: featureSource
-      }));
-      newLayer.set('name', name);
-      this.addLayer(newLayer);
-      newLayer.setVisible(options.hasOwnProperty('visible') ? options.visible : true);
-      resolve(newLayer);
+      this.eowMap.mapObs.asObservable().subscribe(async map => {
+
+        const existingLayerIndex = this.layerNames.hasOwnProperty(title) ? this.layerNames[title] : -1;
+        let newLayer;
+        if (existingLayerIndex > -1) {
+          newLayer = map.getLayers().getArray()[existingLayerIndex];
+          const source: VectorSource = newLayer.getSource();
+          source.addFeatures(features);
+        } else {
+          const featureSource = new VectorSource();
+          featureSource.addFeatures(features);
+          console.log(`Lines layer: ${name} - # lines added: ${features.length}`);
+          newLayer = new VectorLayer(Object.assign(options, {
+            name,
+            source: featureSource
+          }));
+          newLayer.set('name', title);
+          this.addLayer(newLayer, title);
+          newLayer.get('name');
+          newLayer.setVisible(options.hasOwnProperty('visible') ? options.visible : true);
+        }
+        resolve(newLayer);
+      });
     });
   }
 
-  private addLayer(layer: any) {
+  private addLayer(layer: any, layerName: string) {
     this.eowMap.mapObs.asObservable().subscribe(async map => {
       map.addLayer(layer);
+      this.layerNames[layerName] = map.getLayers().getArray().length - 1;
       this.log.verbose(`map.add layer "${layer.get('name')} - there are now ${map.getLayers().getArray().length} layers`);
 
       this.mapLayersObs.next(layer);
