@@ -6,6 +6,7 @@ import Map from 'ol/Map';
 import Overlay from 'ol/Overlay';
 import OverlayPositioning from 'ol/OverlayPositioning';
 import GeoJSON from 'ol/format/GeoJSON';
+import {fromLonLat} from 'ol/proj';
 
 import {EOWMap} from './eow-map';
 import {PieChart} from './pie-chart';
@@ -60,7 +61,7 @@ export default class EOWDataPieChart {
 
         const points: Coords[] = [];
         if (eowDataInWaterbody.eowData) {
-          this.log.verbose(theClass + '.plot', `EowWaterBodyIntersection.waterBody: ${JSON.stringify(eowDataInWaterbody.eowData, null, 2)}`);
+          this.log.silly(theClass + '.plot', `EowWaterBodyIntersection.waterBody: ${JSON.stringify(eowDataInWaterbody.eowData, null, 2)}`);
           featureEach(eowDataInWaterbody.eowData, (feature: Feature<Point>) => {
             if (feature.hasOwnProperty('geometry')) {
               points.push(feature.geometry.coordinates as Coords);
@@ -68,13 +69,13 @@ export default class EOWDataPieChart {
           });
           let centroid;
           if (points.length > 1) {
-            this.log.verbose(theClass + '.plot', `EOWDatum points: ${JSON.stringify(points)}`);
+            this.log.silly(theClass + '.plot', `EOWDatum points: ${JSON.stringify(points)}`);
             centroid = this.geometryOps.calculateCentroidFromPoints(points).geometry.coordinates;
           } else if (points.length === 1) {
             centroid = points[0];
           }
           if (centroid) {
-            this.log.verbose(theClass + '.plot', `Centroid: ${JSON.stringify(centroid)}`);
+            this.log.info(theClass + '.plot', `Centroid: ${JSON.stringify(centroid)}`);
             this.draw(eowDataInWaterbody.eowData, centroid, map, waterBodyIndex++, layerName);
           } else {
             this.log.verbose(theClass + '.plot', 'No Centroid to draw at');
@@ -109,9 +110,10 @@ export default class EOWDataPieChart {
       el.setAttribute('id', id);
       this.htmlDocument.getElementById(htmlElementId).appendChild(el);
       this.pieChart.drawD3(preparedChartData, id, map.getView().getZoom() * LOG2);
+      const epsg3587Point = fromLonLat(point);
       const pieChartMap = new Overlay({
         element: el,
-        position: point,
+        position: epsg3587Point,
         autoPan: true,
         autoPanMargin: 275,
         positioning: OverlayPositioning.CENTER_CENTER
@@ -143,9 +145,10 @@ export default class EOWDataPieChart {
       const lineFeatures = allEOWDataPoints().map(p => {
         this.log.info(theClass, `Draw chart to EOWData line: ${JSON.stringify(point)}, ${JSON.stringify(p)}`);
         const ls = lineString([point, p], {name: 'FUChart to EOWData line'});
-        this.log.info(theClass, `  LineString: ${JSON.stringify(ls)}`);
+        this.log.silly(theClass, `  LineString: ${JSON.stringify(ls)}`);
         const lsFeature = format.readFeature(ls, {
-          featureProjection: 'EPSG:4326'
+          dataProjection: 'EPSG:4326',
+          featureProjection: 'EPSG:3857'
         });
         return lsFeature;
       });

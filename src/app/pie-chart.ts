@@ -32,7 +32,7 @@ export class PieChart {
 
     // 2. Create chart dimensions
 
-    this.log.verbose(theClass, `${JSON.stringify(preparedChartData, null, 2)}`);
+    this.log.silly(theClass, `${JSON.stringify(preparedChartData, null, 2)}`);
     const dimensions = {
       width,
       height: width,

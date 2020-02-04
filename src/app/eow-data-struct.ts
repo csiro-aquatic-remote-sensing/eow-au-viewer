@@ -78,7 +78,7 @@ export class EowDataStruct {
     const eowData = Object.keys(arrayFUValuesObj).map(k => {
       return {name: k, y: eowDataFUValues[k]};
     });
-    log.verbose(theClass, `EOWData: ${JSON.stringify(eowData)}`);
+    log.silly(theClass, `EOWData: ${JSON.stringify(eowData)}`);
     return eowData;
   }
 

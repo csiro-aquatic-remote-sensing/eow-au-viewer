@@ -1,11 +1,26 @@
 import LayerGeometries from './layers-geometries';
-import {Feature, FeatureCollection, Point, Polygon, point as turfPoint, featureCollection} from '@turf/helpers';
+import {
+  Feature,
+  FeatureCollection,
+  Point,
+  Polygon,
+  point as turfPoint,
+  feature,
+  featureCollection,
+  featureCollection as turfFeatureCollection
+} from '@turf/helpers';
+import {featureEach} from '@turf/meta';
+import circle from '@turf/circle';
 import centroid from '@turf/centroid';
 import pointsWithinPolygon from '@turf/points-within-polygon';
 import {Brolog} from 'brolog';
 import {EowDataStruct, EowWaterBodyIntersection} from './eow-data-struct';
 
 const theClass = 'GeometryOps';
+
+export interface GeometryOpsOptions {
+  radius?: number;
+}
 
 export default class GeometryOps {
   constructor(private log: Brolog) {
@@ -43,6 +58,8 @@ export default class GeometryOps {
    *          }]
    *        }
    * @param layerName - name of layer with vectors (polygons) to peform intersection with.  It should be in layerGeometries
+   * @param options - radius: number (metres) - if given then a ring of points at radius from given points in eowDataGeometry are used to determine
+   * an intersection for the 'parent' point
    * @return an array of objects, where the array is all waterbodies (polygons) that contain EOWData and each array item is an object
    *        containing:
    *          waterBody: {
@@ -54,15 +71,24 @@ export default class GeometryOps {
    *          waterBody: null,
    *          eowData: null
    */
-  async calculateLayerIntersections(eowDataGeometry: FeatureCollection<Point>, layerGeometries: LayerGeometries, layerName: string):
+  async calculateLayerIntersections(eowDataGeometry: FeatureCollection<Point>, layerGeometries: LayerGeometries, layerName: string, options: GeometryOpsOptions = {}):
     Promise<EowWaterBodyIntersection[]> {
     return new Promise<EowWaterBodyIntersection[]>(resolve => {
       const layerGeometry: Feature<Polygon>[] = layerGeometries.getLayer(layerName);
       const eowWaterBodyIntersections: EowWaterBodyIntersection[] = [];
 
-      this.log.verbose(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
+      this.log.info(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
       // layerGeometry.forEach(layerPolygon => {
       for (const layerPolygon of layerGeometry) {
+        if (options.radius) {
+          // featureEach(eowDataGeometry, f => {
+          //   const circleAround: Feature<Polygon> = circle(f.geometry as Point, options.radius / 1000, {steps: 10, units: 'kilometers'});  // TODO - the eowDataGeometry doesn't change between layers
+          //   // const circlePoints = featureCollection(circleAround.geometry.coordinates[0].map(c => turfPoint(c)));
+          //   // eowDataGeometry.
+          //   const a = 1;
+          //   // console.log(`Circle: ${circleAround}`);
+          // });
+        }
         const intersection: FeatureCollection<Point> = pointsWithinPolygon(eowDataGeometry, layerPolygon) as FeatureCollection<Point>;
         eowWaterBodyIntersections.push(EowDataStruct.createEoWFormat(intersection, layerPolygon));
       }
@@ -99,6 +125,11 @@ export default class GeometryOps {
     return centroid(featurePoints);
   }
 
+  calculateCentroidTurfVerUsingPoints(points: number[][]): Feature<Point> {
+    const featurePoints = turfFeatureCollection(points.map(c => turfPoint(c)));
+    return centroid(featurePoints);
+  }
+
   /**
    * https://en.wikipedia.org/wiki/Centroid#Of_a_polygon
    * @param featurePoints of points forming a polygon to return the centroid for
@@ -111,6 +142,10 @@ export default class GeometryOps {
 
   calculateCentroidFromPoints(points: number[][]): Feature<Point> {
     this.log.verbose('calculateCentroidFromPoints', `  points: ${JSON.stringify(points)}`);
+    return this.calculateCentroidTurfVerUsingPoints(points);
+
+    // I'm happy to let my code go and use the library version for now
+
     // let i = 0;
     let area = 0;
     let cx = 0;

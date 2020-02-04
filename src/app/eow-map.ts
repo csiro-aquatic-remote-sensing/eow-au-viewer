@@ -31,7 +31,8 @@ export class EOWMap {
       ],
       view: new View({
         center: fromLonLat(canberra),
-        zoom: theZoom
+        zoom: theZoom,
+        // projection: 'EPSG:4326'
       }),
       controls: [],
     });

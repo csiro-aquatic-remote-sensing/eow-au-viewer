@@ -55,14 +55,13 @@ export default class LayerGeometries {
 
     try {
       const format = new OLGeoJson();
-      const geoJSONFeatures = format.readFeatures(json, {featureProjection: 'EPSG:3857'});
+      const geoJSONFeatures = format.readFeatures(json, {dataProjection: 'EPSG:4326', featureProjection: 'EPSG:4326'});
       if (! geoJSONFeatures) {
         return;
       }
 
       this.layerFeatures[this.mapNames(name)] = [];
       geoJSONFeatures.forEach(feature => {
-        this.log.verbose(theClass, `feature: ${feature.getGeometry().getType()}`);
         const simpleGeometry = feature.getGeometry() as SimpleGeometry;
         switch (feature.getGeometry().getType().toLowerCase()) {
           case  'linestring':
