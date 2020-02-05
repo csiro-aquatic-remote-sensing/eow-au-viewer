@@ -16,6 +16,8 @@ import {
 import IconAnchorUnits from 'ol/style/IconAnchorUnits';
 import {EOWMap} from './eow-map';
 import {BehaviorSubject} from 'rxjs';
+import Feature from 'ol/Feature';
+import Stroke from 'ol/style/Stroke';
 
 const theClass = 'Layers';
 
@@ -31,6 +33,9 @@ export const iconStyle = new Style({
 });
 export const fillStyle = new Style({
   fill: new Fill({color: 'rgba(224, 255, 255, 0.33)'})
+});
+export const redLines = new Style({
+  stroke: new Stroke({color: 'rgba(125, 25, 0, 1)'})
 });
 
 export interface Options {
@@ -105,7 +110,7 @@ export class Layers {
    * @param features to set / append to layer
    * @param options when creating layer
    */
-  async createLayerFromWFSFeatures(title, features, options: Options = {}): Promise<any> {
+  async createLayerFromWFSFeatures(title, features: Feature[], options: Options = {}): Promise<any> {
     return new Promise((resolve) => {
       this.eowMap.mapObs.asObservable().subscribe(async map => {
 

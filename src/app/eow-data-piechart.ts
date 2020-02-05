@@ -1,4 +1,12 @@
-import {Feature, feature as turfFeature, Point, point as turfPoint, lineString, FeatureCollection} from '@turf/helpers';
+import {
+  Feature,
+  feature as turfFeature,
+  Point,
+  point as turfPoint,
+  lineString as turfLineString,
+  FeatureCollection,
+  LineString
+} from '@turf/helpers';
 import {featureEach} from '@turf/meta';
 import Brolog from 'brolog';
 import GeometryOps from './geometry-ops';
@@ -10,7 +18,7 @@ import {fromLonLat} from 'ol/proj';
 
 import {EOWMap} from './eow-map';
 import {PieChart} from './pie-chart';
-import {Layers} from './layers';
+import {fillStyle, Layers, redLines} from './layers';
 import {EowDataStruct, EowWaterBodyIntersection, PointsMap, SourcePointMarginsType} from './eow-data-struct';
 
 const theClass = `EOWDataPieChart`;
@@ -145,7 +153,7 @@ export default class EOWDataPieChart {
       const format = new GeoJSON();
       const lineFeatures = allEOWDataPoints().map(p => {
         this.log.info(theClass, `Draw chart to EOWData line: ${JSON.stringify(point)}, ${JSON.stringify(p)}`);
-        const ls = lineString([point, p], {name: 'FUChart to EOWData line'});
+        const ls = turfLineString([point, p], {name: 'FUChart to EOWData line'});
         this.log.silly(theClass, `  LineString: ${JSON.stringify(ls)}`);
         const lsFeature = format.readFeature(ls, {
           dataProjection: 'EPSG:4326',
@@ -153,7 +161,7 @@ export default class EOWDataPieChart {
         });
         return lsFeature;
       });
-      await this.layers.createLayerFromWFSFeatures(`Lines for  ${layerName}`, lineFeatures);
+      await this.layers.createLayerFromWFSFeatures(`Lines for  ${layerName}`, lineFeatures, {visible: false});
     }
   }
 
@@ -162,20 +170,23 @@ export default class EOWDataPieChart {
    *
    * @param errorMarginPoints to draw
    */
-  async debugDrawErrorMarginPoints(pointsMap: SourcePointMarginsType) {
-    // TODO fix
+  async debugDrawErrorMarginPoints(pointsMap: SourcePointMarginsType[]) {
     const format = new GeoJSON();
-    const pointsWithStrokes = Object.keys(pointsMap).map(e => {
-      const source = EowDataStruct.recreatePointFromString(e);
-      return (pointsMap[e]. margins.features.map(m => {
-        const ls = lineString([source, m.geometry.coordinates]);
+    const errorMarginPoints = {
+      features: [],  // Array<Feature<Point, Properties>>,
+      type: 'FeatureCollection'
+    };
+    pointsMap.map(e => {
+      const source = e.sourcePoint;
+      e.margins.features.map(m => {
+        const ls = turfLineString([source.geometry.coordinates, m.geometry.coordinates]);
         const lsFeature = format.readFeature(ls, {
           dataProjection: 'EPSG:4326',
           featureProjection: 'EPSG:3857'
         });
-        return lsFeature;
-      }));
+        errorMarginPoints.features.push(lsFeature);
+      });
     });
-    await this.layers.createLayerFromWFSFeatures(`error margin points`, pointsWithStrokes);
+    await this.layers.createLayerFromWFSFeatures(`Error margin lines`, errorMarginPoints.features, {style: redLines, visible: false});
   }
 }
