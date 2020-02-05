@@ -1,5 +1,5 @@
 import Brolog from 'brolog';
-import {Feature, FeatureCollection, Point, Polygon} from '@turf/helpers';
+import {Feature, feature as turfFeature, FeatureCollection, Point, point as turfPoint, Polygon} from '@turf/helpers';
 
 const theClass = 'EowDataStruct';
 const brologLevel = 'verbose';
@@ -133,6 +133,11 @@ export class EowDataStruct {
   static createPointString(point: Feature<Point>): string {
     const c = point.geometry.coordinates;
     return '' + c[0] + '+' + c[1];
+  }
+
+  static recreatePointFromString(pointString: string): Feature<Point> {
+    const parts = pointString.split('+');
+    return turfPoint([parseInt(parts[0], 10), parseInt(parts[1], 10)]);
   }
 }
 

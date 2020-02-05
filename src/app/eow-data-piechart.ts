@@ -1,4 +1,4 @@
-import {Feature, Point, lineString, FeatureCollection} from '@turf/helpers';
+import {Feature, feature as turfFeature, Point, point as turfPoint, lineString, FeatureCollection} from '@turf/helpers';
 import {featureEach} from '@turf/meta';
 import Brolog from 'brolog';
 import GeometryOps from './geometry-ops';
@@ -11,7 +11,7 @@ import {fromLonLat} from 'ol/proj';
 import {EOWMap} from './eow-map';
 import {PieChart} from './pie-chart';
 import {Layers} from './layers';
-import {EowDataStruct, EowWaterBodyIntersection} from './eow-data-struct';
+import {EowDataStruct, EowWaterBodyIntersection, PointsMap, SourcePointMarginsType} from './eow-data-struct';
 
 const theClass = `EOWDataPieChart`;
 const htmlElementId = 'waterbody';
@@ -162,20 +162,20 @@ export default class EOWDataPieChart {
    *
    * @param errorMarginPoints to draw
    */
-  async debugDrawErrorMarginPoints(errorMarginPoints: FeatureCollection<Point>) {
+  async debugDrawErrorMarginPoints(pointsMap: SourcePointMarginsType) {
     // TODO fix
     const format = new GeoJSON();
-    // const pointsWithStrokes = errorMarginPoints.map(e => {
-    //   const source = e.sourcePoint.geometry.coordinates;
-    //   return (e.margins.features.map(m => {
-    //     const ls = lineString([source, m.geometry.coordinates]);
-    //     const lsFeature = format.readFeature(ls, {
-    //       dataProjection: 'EPSG:4326',
-    //       featureProjection: 'EPSG:3857'
-    //     });
-    //     return lsFeature;
-    //   }));
-    // });
-    // await this.layers.createLayerFromWFSFeatures(`error margin points`, pointsWithStrokes);
+    const pointsWithStrokes = Object.keys(pointsMap).map(e => {
+      const source = EowDataStruct.recreatePointFromString(e);
+      return (pointsMap[e]. margins.features.map(m => {
+        const ls = lineString([source, m.geometry.coordinates]);
+        const lsFeature = format.readFeature(ls, {
+          dataProjection: 'EPSG:4326',
+          featureProjection: 'EPSG:3857'
+        });
+        return lsFeature;
+      }));
+    });
+    await this.layers.createLayerFromWFSFeatures(`error margin points`, pointsWithStrokes);
   }
 }

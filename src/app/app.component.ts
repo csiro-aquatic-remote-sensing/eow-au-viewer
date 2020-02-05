@@ -105,13 +105,15 @@ export class AppComponent implements OnInit {
           let layerName = 'i5516 reservoirs';
           eowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, sourceNErrorMarginPoints, allPointsMap, this.layersGeometries, layerName);
           this.eowDataPieChart.plot(eowWaterBodyIntersections, layerName);
-          this.eowDataPieChart.debugDrawErrorMarginPoints(sourceNErrorMarginPoints);
 
           layerName = 'Waterbodies shape';
           eowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, null, allPointsMap, this.layersGeometries, layerName);
           this.eowDataPieChart.plot(eowWaterBodyIntersections, layerName);
         });
       });
+    });
+    this.eowDataGeometries.pointsErrorMarginObs.asObservable().subscribe(pointsErrorMargins => {
+      this.eowDataPieChart.debugDrawErrorMarginPoints(pointsErrorMargins);
     });
   }
 
