@@ -5,22 +5,15 @@ import {
   Point,
   Polygon,
   point as turfPoint,
-  feature,
   featureCollection,
   featureCollection as turfFeatureCollection
 } from '@turf/helpers';
-import {featureEach} from '@turf/meta';
-import circle from '@turf/circle';
 import centroid from '@turf/centroid';
 import pointsWithinPolygon from '@turf/points-within-polygon';
 import {Brolog} from 'brolog';
-import {EowDataStruct, EowWaterBodyIntersection} from './eow-data-struct';
+import {EowDataStruct, EowWaterBodyIntersection, PointsMap} from './eow-data-struct';
 
 const theClass = 'GeometryOps';
-
-export interface GeometryOpsOptions {
-  radius?: number;
-}
 
 export default class GeometryOps {
   constructor(private log: Brolog) {
@@ -42,6 +35,11 @@ export default class GeometryOps {
    *            ...
    *          ]
    *        }
+   * @param errorMarginPoints - data struct of {
+   *                              sourcePoint: Feature<Point> - original EOWData Points;
+   *                              margins: FeatureCollection<Point> - circle of points around that point;
+   *                            }
+   *      This can be null to mean that no error margin is being  used
    * @param layerGeometries - all layers - object
    *        {
    *          layerFeatures: [{
@@ -57,7 +55,7 @@ export default class GeometryOps {
    *            ]
    *          }]
    *        }
-   * @param layerName - name of layer with vectors (polygons) to peform intersection with.  It should be in layerGeometries
+   * @param layerName - name of layer with vectors (polygons) to perform intersection with.  It should be in layerGeometries
    * @param options - radius: number (metres) - if given then a ring of points at radius from given points in eowDataGeometry are used to determine
    * an intersection for the 'parent' point
    * @return an array of objects, where the array is all waterbodies (polygons) that contain EOWData and each array item is an object
@@ -71,26 +69,20 @@ export default class GeometryOps {
    *          waterBody: null,
    *          eowData: null
    */
-  async calculateLayerIntersections(eowDataGeometry: FeatureCollection<Point>, layerGeometries: LayerGeometries, layerName: string, options: GeometryOpsOptions = {}):
+  async calculateLayerIntersections(eowDataGeometry: FeatureCollection<Point>, errorMarginPoints: FeatureCollection<Point>,
+                                    allPointsMap: PointsMap, layerGeometries: LayerGeometries, layerName: string):
     Promise<EowWaterBodyIntersection[]> {
     return new Promise<EowWaterBodyIntersection[]>(resolve => {
       const layerGeometry: Feature<Polygon>[] = layerGeometries.getLayer(layerName);
       const eowWaterBodyIntersections: EowWaterBodyIntersection[] = [];
+      const pointsToUse = errorMarginPoints ? errorMarginPoints : eowDataGeometry;
 
       this.log.info(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
-      // layerGeometry.forEach(layerPolygon => {
       for (const layerPolygon of layerGeometry) {
-        if (options.radius) {
-          // featureEach(eowDataGeometry, f => {
-          //   const circleAround: Feature<Polygon> = circle(f.geometry as Point, options.radius / 1000, {steps: 10, units: 'kilometers'});  // TODO - the eowDataGeometry doesn't change between layers
-          //   // const circlePoints = featureCollection(circleAround.geometry.coordinates[0].map(c => turfPoint(c)));
-          //   // eowDataGeometry.
-          //   const a = 1;
-          //   // console.log(`Circle: ${circleAround}`);
-          // });
-        }
-        const intersection: FeatureCollection<Point> = pointsWithinPolygon(eowDataGeometry, layerPolygon) as FeatureCollection<Point>;
-        eowWaterBodyIntersections.push(EowDataStruct.createEoWFormat(intersection, layerPolygon));
+        const intersection: FeatureCollection<Point> = pointsWithinPolygon(pointsToUse, layerPolygon) as FeatureCollection<Point>;
+        // TODO - now build a FeatureCollection<Point> from allPointsMapObs
+        const intersectionSourcePoints = this.filterSourcePoints(intersection, allPointsMap);
+        eowWaterBodyIntersections.push(EowDataStruct.createEoWFormat(intersectionSourcePoints, layerPolygon));
       }
       this.log.silly(theClass, `intersections: ${JSON.stringify(eowWaterBodyIntersections, null, 2)}`);
       resolve(eowWaterBodyIntersections);
@@ -98,7 +90,7 @@ export default class GeometryOps {
   }
 
   // Mainly for debug purposes so I can see something happening!  I don't think the EOW Data is intersecting the polygons and want to know more.
-  async convertLayerToDataForamt(layerGeometries: LayerGeometries, layerName: string):
+  async convertLayerToDataFormat(layerGeometries: LayerGeometries, layerName: string):
     Promise<EowWaterBodyIntersection[]> {
     return new Promise<EowWaterBodyIntersection[]>(resolve => {
       const layerGeometry: Feature<Polygon>[] = layerGeometries.getLayer(layerName);
@@ -174,5 +166,35 @@ export default class GeometryOps {
     cy = Math.round(cy / (6 * area));
     this.log.verbose('calculateCentroidFromPoints', `finished - area: ${area}, (centroid) cx: ${cx}, cy: ${cy}`);
     return turfPoint([cx, cy]);
+  }
+
+
+  private appendFeatureFeatureCollection(f1: FeatureCollection<Point>, f2: Feature<Point>): FeatureCollection<Point> {
+    if (f1) {
+      if (f2) {
+        f1.features.push(f2);
+      }
+    } else {
+      throw new Error(`Can't append to a null FeatureCollection`);
+    }
+    return f1;
+  }
+
+
+  private filterSourcePoints(allPointsIntersection: FeatureCollection<Point>, allPointsMap: PointsMap): FeatureCollection<Point> {
+    const filteredPoints: FeatureCollection<Point> = {
+      features: [] ,  // Array<Feature<Point, Properties>>,
+      type: 'FeatureCollection'
+    };
+    const pointsAlreadyFiltered: PointsMap = {};
+    allPointsIntersection.features.forEach(api => {
+      const coords = api.geometry.coordinates;
+      const pointString = EowDataStruct.createPointString(turfPoint(api.geometry.coordinates));
+      if (allPointsMap.hasOwnProperty(pointString) && ! pointsAlreadyFiltered.hasOwnProperty(pointString)) {
+        pointsAlreadyFiltered[pointString] = null;
+        filteredPoints.features.push(allPointsMap[pointString]);
+      }
+    });
+    return filteredPoints;
   }
 }

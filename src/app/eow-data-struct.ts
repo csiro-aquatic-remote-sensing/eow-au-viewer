@@ -23,7 +23,25 @@ export interface EowWaterBodyIntersection {
   eowData: FeatureCollection<Point>;
 }
 
+/**
+ * For every EOWData point, generate a circle of 'error margin' points around it
+ */
+export interface SourcePointMarginsType {
+  sourcePoint: Feature<Point>;
+  margins: FeatureCollection<Point>;
+}
+
+export type PointsMap = { [pointString: string]: Feature<Point> };  // tslint:disable-line
+
+const STATIC_INIT = Symbol();
+
 export class EowDataStruct {
+  /**
+   * Static Constructor (called at end of file)
+   */
+  public static[STATIC_INIT] = () => {
+    log.level(brologLevel);
+  }
 
   /**
    * Return Aggregated FU data as an array of objects:
@@ -39,7 +57,6 @@ export class EowDataStruct {
    * @param features - the EOWdata that is all located in the same waterbody
    */
   static prepareChartData(features): any {
-    log.level(brologLevel);
     const aggregateFUValues = (fuValuesInFeatures) => {
       const eowDataReducer = (acc, currentValue) => {
         if (currentValue.properties.values_ && currentValue.properties.values_.fu_value) {
@@ -108,4 +125,16 @@ export class EowDataStruct {
     return eowWaterbodyIntersection;
   }
 
+  /**
+   * For use with type PointsMap.
+   *
+   * @param point to create string version of required when the point used as an Object key
+   */
+  static createPointString(point: Feature<Point>): string {
+    const c = point.geometry.coordinates;
+    return '' + c[0] + '+' + c[1];
+  }
 }
+
+// Call the init once
+EowDataStruct[STATIC_INIT]();

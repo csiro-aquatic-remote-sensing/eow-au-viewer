@@ -26,7 +26,8 @@ export default class EOWDataPieChart {
   eowMap: EOWMap;
   htmlDocument: Document;
 
-  constructor(private geometryOps: GeometryOps, private pieChart: PieChart, private layers: Layers, private log: Brolog) { }
+  constructor(private geometryOps: GeometryOps, private pieChart: PieChart, private layers: Layers, private log: Brolog) {
+  }
 
   init(eowMap: EOWMap, htmlDocument) {
     this.eowMap = eowMap;
@@ -154,5 +155,27 @@ export default class EOWDataPieChart {
       });
       await this.layers.createLayerFromWFSFeatures(`Lines for  ${layerName}`, lineFeatures);
     }
+  }
+
+  /**
+   * ErrorMarginPoints are points around the EOW Data points.  Draw them so can see this is working.
+   *
+   * @param errorMarginPoints to draw
+   */
+  async debugDrawErrorMarginPoints(errorMarginPoints: FeatureCollection<Point>) {
+    // TODO fix
+    const format = new GeoJSON();
+    // const pointsWithStrokes = errorMarginPoints.map(e => {
+    //   const source = e.sourcePoint.geometry.coordinates;
+    //   return (e.margins.features.map(m => {
+    //     const ls = lineString([source, m.geometry.coordinates]);
+    //     const lsFeature = format.readFeature(ls, {
+    //       dataProjection: 'EPSG:4326',
+    //       featureProjection: 'EPSG:3857'
+    //     });
+    //     return lsFeature;
+    //   }));
+    // });
+    // await this.layers.createLayerFromWFSFeatures(`error margin points`, pointsWithStrokes);
   }
 }
