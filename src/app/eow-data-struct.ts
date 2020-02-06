@@ -59,14 +59,14 @@ export class EowDataStruct {
   static prepareChartData(features): any {
     const aggregateFUValues = (fuValuesInFeatures) => {
       const eowDataReducer = (acc, currentValue) => {
-        if (currentValue.properties.values_ && currentValue.properties.values_.fu_value) {
-          if (acc.hasOwnProperty(currentValue.properties.values_.fu_value)) {
-            ++acc[currentValue.properties.values_.fu_value].count;
-            acc[currentValue.properties.values_.fu_value].points.push(currentValue.properties.getGeometry().getCoordinates());
+        if (currentValue.values_ && currentValue.values_.fu_value) {
+          if (acc.hasOwnProperty(currentValue.values_.fu_value)) {
+            ++acc[currentValue.values_.fu_value].count;
+            acc[currentValue.values_.fu_value].points.push(currentValue.getGeometry().getCoordinates());
           } else {
-            acc[currentValue.properties.values_.fu_value] = {
+            acc[currentValue.values_.fu_value] = {
               count: 1,
-              points: [currentValue.properties.getGeometry().getCoordinates()]
+              points: [currentValue.getGeometry().getCoordinates()]
             };
           }
         }
