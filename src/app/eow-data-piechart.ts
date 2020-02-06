@@ -105,10 +105,10 @@ export default class EOWDataPieChart {
    */
   draw(eowDataInWaterbody: FeatureCollection<Point>, point: Coords, map: Map, waterBodyIndex: number, layerName: string) {
     // const validData = eowDataInWaterbody.map(e => e.eowData).filter(f => f !== null);
-    const validData: Feature<Point>[] = [];
+    const validData: any[] = [];
     featureEach(eowDataInWaterbody, eowDataPoint => {
       if (eowDataPoint) {
-        validData.push(eowDataPoint);
+        validData.push(eowDataPoint.properties);
       }
     });
     if (validData.length > 0 && point[0] && point[1] && !isNaN(point[0]) && !isNaN(point[1])) {
