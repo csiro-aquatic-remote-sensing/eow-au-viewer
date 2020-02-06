@@ -1,19 +1,22 @@
 import Overlay from 'ol/Overlay';
-import Map from 'ol/Map';
 import {
   printStats,
   calculateStats,
 } from './utils';
 import colors from './colors.json';
+import OverlayPositioning from 'ol/OverlayPositioning';
+import {EOWMap} from './eow-map';
+import {PieChart} from './pie-chart';
+import {EowDataStruct} from './eow-data-struct';
 
 export class Popup {
   elementId = 'popup';
   popup: any;
   htmlDocument: Document;
   userStore: any;
-  pieChart: any;
+  pieChart: PieChart;
 
-  constructor(htmlDocument: Document, pieChart: any, userStore: any) {
+  constructor(htmlDocument: Document, pieChart: PieChart, userStore: any) {
     this.htmlDocument = htmlDocument;
     this.pieChart = pieChart;
     this.userStore = userStore;
@@ -23,17 +26,19 @@ export class Popup {
    * Create the map overlay.
    * @param elementId to draw into
    */
-  init(map: Map) {
-    if (! this.popup) {
-      this.popup = new Overlay({
-        element: this.htmlDocument.getElementById(this.elementId),
-        position: [0, 0],
-        autoPan: true,
-        autoPanMargin: 275,
-        positioning: 'center-left'
+  init(eowMap: EOWMap) {
+    if (!this.popup) {
+      eowMap.mapObs.asObservable().subscribe(map => {
+        this.popup = new Overlay({
+          element: this.htmlDocument.getElementById(this.elementId),
+          position: [0, 0],
+          autoPan: true,
+          autoPanMargin: 275,
+          positioning: OverlayPositioning.CENTER_LEFT
+        });
+        map.addOverlay(this.popup);
+        this.setupEventHandlers();
       });
-      map.addOverlay(this.popup);
-      this.setupEventHandlers();
     }
   }
 
@@ -52,7 +57,7 @@ export class Popup {
   }
 
   getOverlay(): Overlay {
-    if (! this.popup) {
+    if (!this.popup) {
       throw new Error('Popup / getOverlay - popup is null - it has not been initialised.');
     }
 
@@ -76,7 +81,8 @@ export class Popup {
       element.classList.add('active');
       this.popup.setPosition(coordinate); // [28468637.79432749, 5368841.526355445]);  //
       this.popup.setVisible(true);
-      this.pieChart.draw(features);
+      const preparedFeatures = EowDataStruct.prepareChartData(features);
+      this.pieChart.drawD3(preparedFeatures, 'pieChart', 8);
     } else {
       this.popup.setVisible(false);
     }

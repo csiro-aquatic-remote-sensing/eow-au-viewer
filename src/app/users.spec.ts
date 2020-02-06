@@ -1,7 +1,10 @@
-import { Users } from './user-store';
+import { UserStore } from './user-store';
+import * as chai from 'chai';
+
+const expect = chai.expect;
 
 describe('Users', () => {
   it('should create an instance', () => {
-    expect(new Users()).toBeTruthy();
+    expect(new UserStore(null, null)).is.not.undefined;  // tslint:disable-line
   });
 });

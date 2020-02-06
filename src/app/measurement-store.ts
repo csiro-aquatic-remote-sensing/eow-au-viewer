@@ -8,22 +8,55 @@ import keyBy from 'lodash/keyBy';
 import groupBy from 'lodash/groupBy';
 import {UserStore} from './user-store';
 import Brolog from 'brolog';
+import {BehaviorSubject} from 'rxjs';
+import {EowDataLayer} from './eow-data-layer';
+import {EOWMap} from './eow-map';
+
+/**
+ * Event handling utility function.  This is not a method as i have to pass userStore and for some reason when using bind I could
+ * not pass the extra argument.
+ *
+ * @param userStore to lookup if any selected user since we don't want to run this again in this case
+ * @param event that triggered this
+ */
+function initialLoadMeasurements(userStore, event) {
+  if (!event.target.loading && userStore.selectedUserId === '') {
+    this.allDataSourceObs.asObservable().subscribe(allDataSource => {
+      // const source = event.target;
+      const features = allDataSource.getFeatures();
+      // Store the measurements in easy to access data structure
+      this.measurements = features;
+      this.measurementsById = keyBy(features, f => f.get('n_code'));
+      this.measurementsByOwner = groupBy(features, f => f.get('user_n_code'));
+
+      this.recentMeasurements(this.measurements);
+      allDataSource.un('change', initialLoadMeasurements.bind(this, userStore));
+      allDataSource.removeEventListener('change', initialLoadMeasurements);
+      // console.log(`loadMeasurements (by Id): ${JSON.stringify(Object.keys(this.measurementsById))}`);
+      // console.log(`loadMeasurements (by Owner): ${JSON.stringify(Object.keys(this.measurementsByOwner))}`);
+      // }
+    });
+  }
+}
 
 export class MeasurementStore {
   measurements: [];
   measurementsById: {};
   measurementsByOwner: {};
-  map: Map;
-  dataLayer: any;
-  allDataSource: any;
-  log: Brolog;
+  eowMap: EOWMap;
+  dataLayerObs: BehaviorSubject<any>;
+  allDataSourceObs: BehaviorSubject<any>;
 
-  init(map: Map, dataLayer: any, allDataSource: any, log: Brolog) {
-    this.map = map;
-    this.dataLayer = dataLayer;
-    this.allDataSource = allDataSource;
-    this.log = log;
-    this.setupEventHandling();
+  constructor(private log: Brolog) {
+  }
+
+  init(eowMap: EOWMap, eowData: EowDataLayer, userStore: UserStore) {
+    this.eowMap = eowMap;
+    this.allDataSourceObs = eowData.allDataSourceObs;
+    this.dataLayerObs = eowData.dataLayerObs;
+    this.setupEventHandling(userStore);
+
+    return this;
   }
 
   getByOwner(userId) {
@@ -34,14 +67,15 @@ export class MeasurementStore {
     return this.measurementsById[id] || [];
   }
 
-  setupEventHandling() {
-    this.allDataSource.on('change', this.initialLoadMeasurements.bind(this));
+  setupEventHandling(userStore: UserStore) {
+    this.allDataSourceObs.asObservable().subscribe(allDataSource => {
+      allDataSource.on('change', initialLoadMeasurements.bind(this, userStore));
+    });
   }
 
   clearFilter() {
     this.recentMeasurements(this.measurements);
   }
-
 
   private recentMeasurements(measurements, n = 20) {
     const userList = orderBy(measurements, [(f) => (new Date(f.get('date_photo'))).getTime()], ['desc']).slice(0, n).map((measurement) => {
@@ -56,22 +90,6 @@ export class MeasurementStore {
     document.querySelector('.measurement-list ul').innerHTML = userList.join('\n');
   }
 
-  initialLoadMeasurements(event) {
-    const source = event.target;
-    if (!source.loading) {
-      const features = this.allDataSource.getFeatures();
-      // Store the measurements in easy to access data structure
-      this.measurements = features;
-      this.measurementsById = keyBy(features, f => f.get('n_code'));
-      this.measurementsByOwner = groupBy(features, f => f.get('user_n_code'));
-
-      this.recentMeasurements(this.measurements);
-      this.allDataSource.un('change', this.initialLoadMeasurements);
-      // console.log(`loadMeasurements (by Id): ${JSON.stringify(Object.keys(this.measurementsById))}`);
-      // console.log(`loadMeasurements (by Owner): ${JSON.stringify(Object.keys(this.measurementsByOwner))}`);
-    }
-  }
-
   showMeasurements(userId = null) {
     const selection = this.getByOwner(userId);
     if (!selection.length) {
@@ -79,14 +97,18 @@ export class MeasurementStore {
     }
     const newSource = new VectorSource();
     newSource.addFeatures(selection);
-    this.map.getView().fit(newSource.getExtent(), {
-      size: this.map.getSize(),
-      padding: [100, 100, 100, 100],
-      nearest: false,
-      duration: 1300
+    this.eowMap.mapObs.asObservable().subscribe(map => {
+      map.getView().fit(newSource.getExtent(), {
+        size: map.getSize(),
+        padding: [100, 100, 100, 100],
+        nearest: false,
+        duration: 1300
+      });
+      this.dataLayerObs.asObservable().subscribe(dataLayer => {
+        dataLayer.setSource(newSource);
+      });
+      this.recentMeasurements(selection);
     });
-    this.dataLayer.setSource(newSource);
-    this.recentMeasurements(selection);
     return true;
   }
 
