@@ -5,19 +5,24 @@ import {
   printStats,
   calculateStats,
 } from './utils';
+import Brolog from 'brolog';
+import {BehaviorSubject} from 'rxjs';
+import {MeasurementStore} from './measurement-store';
+
+const theClass = 'UserStore';
 
 export class UserStore {
-  htmlDocument: Document;
+  // htmlDocument: Document;
   users: [];
   userById: {};
-  dataLayer: any;
+  dataLayerObs: BehaviorSubject<any>;
+  selectedUserId = '';
 
-  constructor(htmlDocument: Document) {
-    this.htmlDocument = htmlDocument;
+  constructor(private htmlDocument: Document, private log: Brolog) {
   }
 
-  async init(dataLayer: any): Promise<void> {
-    this.dataLayer = dataLayer;
+  async init(dataLayerObs: BehaviorSubject<any>, measurementStore: MeasurementStore): Promise<UserStore> {
+    this.dataLayerObs = dataLayerObs;
     const USER_SERVICE = 'https://www.eyeonwater.org/api/users';
 
     async function loadUsers() {
@@ -33,23 +38,40 @@ export class UserStore {
 
 // Load users
     return new Promise((resolve) => {
-      this.setupEventHandlers();
       loadUsers().then((users) => {
         this.users = users;
         this.userById = keyBy(this.users, 'id');
         this.renderUsers(this.users);
-        console.log(`Users Loaded - ids: ${JSON.stringify(Object.keys(this.userById))}`);
+        this.log.silly(theClass, `Users Loaded - ids: ${JSON.stringify(Object.keys(this.userById))}`);
+        this.setupEventHandlers(measurementStore);
         resolve();
       });
     });
+
+    return this;
   }
 
-  setupEventHandlers() {
-    this.dataLayer.on('change', debounce(({target}) => {
-      // Populate datalayer
-      const element = this.htmlDocument.querySelector('.sub-header-stats') as HTMLElement;
-      element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), this);
-    }, 200));
+  setupEventHandlers(measurementStore: MeasurementStore) {
+    this.dataLayerObs.asObservable().subscribe(dataLayer => {
+      dataLayer.on('change', debounce(({target}) => {
+        // Populate datalayer
+        const element = this.htmlDocument.querySelector('.sub-header-stats') as HTMLElement;
+        element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), this);
+      }, 200));
+    });
+
+    // User List
+    document.querySelector('.user-list').addEventListener('click', (event) => {
+      const element = (event.target as HTMLElement).closest('.item');
+      const selectedUserId = element.getAttribute('data-user');
+      console.log(`clicked on user-id: ${this.selectedUserId}`);
+      if (measurementStore.showMeasurements(selectedUserId)) {
+        this.clearSelectedUser();
+        this.selectedUserId = selectedUserId;
+        element.classList.add('selectedUser', 'box-shadow');
+        this.toggleFilterButton(true);
+      }
+    }, true);
   }
 
   getUserById(userId) {
@@ -57,6 +79,7 @@ export class UserStore {
   }
 
   clearSelectedUser() {
+    this.selectedUserId = '';
     this.htmlDocument.querySelectorAll('.user-list .item').forEach(item => {
       item.classList.remove('selectedUser', 'box-shadow');
     });
@@ -67,7 +90,7 @@ export class UserStore {
     const userList = orderBy(users, ['photo_count', 'points'], ['desc', 'desc']).slice(0, n)
       .filter(user => this.getUserById(user.id).photos.length > 0) // user => user.photo_count && user.photo_count > 0)
       .map(user => {
-        console.log(`renderUsers - add user ${user.id}, ${user.nickname}`);
+        this.log.silly(theClass, `renderUsers - add user ${user.id}, ${user.nickname}`);
         return `
             <li class="item" data-user="${user.id}">
               <div>
@@ -93,5 +116,10 @@ export class UserStore {
 
   userExists(userId) {
     return Object.keys(this.getUserById(userId)).length > 0;
+  }
+
+  private toggleFilterButton(state = false) {
+    const element = this.htmlDocument.getElementById('clearFilterButton');
+    element.classList.toggle('hidden', !state);
   }
 }

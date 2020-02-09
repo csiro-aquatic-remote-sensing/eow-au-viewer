@@ -95,6 +95,7 @@ html {
 
 .raw-details {
   display: none;
+  font-size: 8pt;
 }
 
 .popup-item.active .raw-details {
@@ -295,6 +296,20 @@ li.item {
   /*bottom: 20px;*/
 }
 
-.highcharts-background {
-  padding: 0;
+.label {
+  font-size: 0.9em;
+  text-anchor: middle;
+  font-weight: 800;
+  fill: #3c6382;
+  mix-blend-mode: luminosity;
+}
+
+td, th {
+  /*border: 1px solid #999;*/
+  padding: 0.5rem;
+}
+
+.thead {
+  font-weight: bold;
+  border-left: 0.5px solid #bebebe;
 }

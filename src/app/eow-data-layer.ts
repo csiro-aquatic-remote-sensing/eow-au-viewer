@@ -17,56 +17,67 @@ import {
 import colors from './colors.json';
 import {UserStore} from './user-store';
 import {MeasurementStore} from './measurement-store';
+import {BehaviorSubject} from 'rxjs';
+import {EOWMap} from './eow-map';
 
 const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia?service=WFS'
   + '&version=1.0.0&request=GetFeature&typeName=eow_australia&maxFeatures=5000&outputFormat=application%2Fjson';
+const LOG2 = Math.log2(2);
 
+/**
+ * This is for drawing the EOW Data on the map.
+ */
 export class EowDataLayer {
-  map: Map;
-  htmlDocument: Document;
-  allDataSource: any;
-  dataLayer: any;
+  allDataSourceObs: BehaviorSubject<VectorSource>;  // Observers that outside subscribers can use to know when data ready
+  dataLayerObs: BehaviorSubject<VectorLayer>;
   styleCache = {};
 
-  init(map: Map, htmlDocument: Document) {
-    this.map = map;
-    this.htmlDocument = htmlDocument;
-    this.allDataSource = new VectorSource({
+  init(eowMap: EOWMap) { // , htmlDocument: Document) {
+    const allDataSource = new VectorSource({
       format: new GeoJSON(),
       url: WFS_URL
     });
+    this.allDataSourceObs = new BehaviorSubject<VectorSource>(allDataSource);
+    this.dataLayerObs = new BehaviorSubject<VectorLayer>(null);
 
-    const basicStyle = (feature, resolution) => {
-      const fuValue = feature.get('fu_value');
-      const styleKey = `${fuValue}_${resolution}`;
-      // Avoid some unnecessary computation
-      if (this.styleCache[styleKey]) {
-        return this.styleCache[styleKey];
-      }
-      feature.set('visible', true);
-      const styleOptions = {
-        image: new CircleStyle({
-          radius: this.map.getView().getZoom() * Math.log2(5),
-          stroke: new Stroke({
-            color: 'white'
-          }),
-          fill: new Fill({
-            color: colors[fuValue]
+    eowMap.mapObs.asObservable().subscribe(map => {
+      const basicStyle = (feature, resolution) => {
+        const fuValue = feature.get('fu_value');
+        const styleKey = `${fuValue}_${resolution}`;
+        // Avoid some unnecessary computation
+        if (this.styleCache[styleKey]) {
+          return this.styleCache[styleKey];
+        }
+        feature.set('visible', true);
+        const styleOptions = {
+          image: new CircleStyle({
+            radius: map.getView().getZoom() * LOG2,
+            stroke: new Stroke({
+              color: 'white'
+            }),
+            fill: new Fill({
+              color: colors[fuValue]
+            })
           })
-        })
+        };
+
+        this.styleCache[styleKey] = new Style(styleOptions);
+        return this.styleCache[styleKey];
       };
-
-      this.styleCache[styleKey] = new Style(styleOptions);
-      return this.styleCache[styleKey];
-    };
-    this.dataLayer = new VectorLayer({
-      source: this.allDataSource,
-      style: basicStyle
+      const dataLayer = new VectorLayer({
+        source: allDataSource,
+        style: basicStyle
+      });
+      dataLayer.set('name', 'EOW Data');
+      this.dataLayerObs.next(dataLayer);
+      this.dataLayerObs.asObservable().subscribe(oDataLayer => {
+        map.addLayer(oDataLayer);
+      });
     });
-    this.dataLayer.set('name', 'EOW Data');
 
-    this.map.addLayer(this.dataLayer);
     this.setupEventHandlers();
+
+    return this;
   }
 
   setupEventHandlers() {
