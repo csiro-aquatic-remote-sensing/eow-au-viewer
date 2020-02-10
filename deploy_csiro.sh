@@ -72,6 +72,12 @@ UNTAR="tar xzvf dist.tgz --strip-components=1"
 MVFILES="mv $TEMPDIR/* $SERVERDIR"
 
 echo Setup the web files in $SERVERDIR
+echo RM: $RM
+echo MKDIR: $MKDIR
+echo cd TEMPDIR: cd $TEMPDIR
+echo CPTAR: $CPTAR
+echo UNTAR: $UNTAR
+echo MVFILES: $MVFILES
 
 ssh ${USER}@${SITE_SERVER} "eval $RM && eval $MKDIR && cd $TEMPDIR && pwd && $CPTAR && eval $UNTAR && eval $MVFILES"
 
