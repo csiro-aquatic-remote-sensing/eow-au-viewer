@@ -7,7 +7,7 @@ import {
   polygon as turfPolygon, FeatureCollection
 } from '@turf/helpers';
 import {Feature, lineString, LineString, multiLineString, Polygon, polygon} from '@turf/helpers';
-import EOWDataPieChart from './eow-data-piechart';
+import EowDataCharts from './eow-data-charts';
 import * as chai from 'chai';
 import GeometryOps from './geometry-ops';
 import Brolog from 'brolog';

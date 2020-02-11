@@ -56,7 +56,7 @@ export class EowDataStruct {
    * ]
    * @param features - the EOWdata that is all located in the same waterbody
    */
-  static prepareChartData(features): any {
+  static preparePieChartData(features): any {
     const aggregateFUValues = (fuValuesInFeatures) => {
       const eowDataReducer = (acc, currentValue) => {
         if (currentValue.values_ && currentValue.values_.fu_value) {

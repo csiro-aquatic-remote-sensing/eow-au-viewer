@@ -10,8 +10,17 @@ const widthFactor = 9;
 const pieWidth = 1.0;
 const opaqueness = 0.7;
 
+const brologLevel = 'verbose';
+const log = new Brolog();
+
+const STATIC_INIT = Symbol();
+
 export class PieChart {
-  constructor(private log: Brolog) {
+  /**
+   * Static Constructor (called at end of file)
+   */
+  public static[STATIC_INIT] = () => {
+    log.level(brologLevel);
   }
 
   /**
@@ -21,18 +30,19 @@ export class PieChart {
    * @param elementId of div to draw chart in to
    * @param sizeScaleFactor used to create the height and width
    */
-  drawD3(preparedChartData, elementId, sizeScaleFactor) {
+  // TODO - define the type for this data
+  static drawD3(preparedChartData, elementId, sizeScaleFactor) {
     const width = widthFactor * sizeScaleFactor;
     const fontSize = 0.8 * sizeScaleFactor;
     const fontWeight = 20;
-    const theFUColours = this.getFUColours();
+    const theFUColours = PieChart.getFUColours();
 
     // Delete any existing pie-chart that existed in the elementId
     d3.select('#' + elementId).select('svg').remove();
 
     // 2. Create chart dimensions
 
-    this.log.silly(theClass, `${JSON.stringify(preparedChartData, null, 2)}`);
+    log.silly(theClass, `${JSON.stringify(preparedChartData, null, 2)}`);
     const dimensions = {
       width,
       height: width,
@@ -119,13 +129,13 @@ export class PieChart {
       .attr('style', `fill: #000000; stroke: #000000; font-size: ${fontSize}; font-weight: ${fontWeight};`);
   }
 
-  setChartSize() {
+  static setChartSize() {
     // d3.select('.pieChart_svg')
     //   .attr('width', '200')
     //   .attr('height', '200');
   }
 
-  getFUColours() {
+  static getFUColours() {
     const cArray = Object.keys(colors);
     return cArray.map(c => {
       const index = (parseInt(c, 10)) % cArray.length;
@@ -144,3 +154,6 @@ export class PieChart {
     return html.replace('class="pieChart"', 'id="pieChart"');
   }
 }
+
+// Call the init once
+PieChart[STATIC_INIT]();
