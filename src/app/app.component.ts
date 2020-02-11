@@ -2,7 +2,6 @@ import {Component, OnInit, Inject} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
 import {AnimationOptions} from 'ol/View';
 import {HttpClient} from '@angular/common/http';
-import {PieChart} from './pie-chart';
 import {Popup} from './popup';
 import {Layers} from './layers';
 import {MeasurementStore} from './measurement-store';
@@ -12,12 +11,12 @@ import EowDataGeometries from './eow-data-geometries';
 import LayerGeometries from './layers-geometries';
 import GeometryOps from './geometry-ops';
 import {Brolog} from 'brolog';
-import EowDataCharts from './eow-data-charts';
 import {Coordinate} from 'ol/coordinate';
 import {EOWMap} from './eow-map';
 import {EowLayers} from './eow-layers';
 import {EowWaterBodyIntersection, PointsMap} from './eow-data-struct';
 import {FeatureCollection, Point} from '@turf/helpers';
+import EowDataCharts from './charts/eow-data-charts';
 
 const theClass = 'AppComponent';
 
@@ -33,7 +32,6 @@ export class AppComponent implements OnInit {
   measurementStore: MeasurementStore;
   userStore: UserStore;
   eowData: EowDataLayer;
-  // pieChart: PieChart;
   layers: Layers;
   eowLayers: EowLayers;
   eowDataGeometries: EowDataGeometries;
@@ -42,7 +40,6 @@ export class AppComponent implements OnInit {
   eowDataCharts: EowDataCharts;
 
   constructor(@Inject(DOCUMENT) private htmlDocument: Document, private http: HttpClient, private log: Brolog) {
-    // this.pieChart = new PieChart(log);
   }
 
   async ngOnInit() {

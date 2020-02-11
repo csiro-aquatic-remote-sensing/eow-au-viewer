@@ -4,7 +4,6 @@ import OverlayPositioning from 'ol/OverlayPositioning';
 import Map from 'ol/Map';
 
 import {Coords} from '../eow-data-struct';
-import {PieChart} from '../pie-chart';
 import Brolog from 'brolog';
 import {Layers} from '../layers';
 

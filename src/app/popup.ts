@@ -6,7 +6,7 @@ import {
 import colors from './colors.json';
 import OverlayPositioning from 'ol/OverlayPositioning';
 import {EOWMap} from './eow-map';
-import {PieChart} from './pie-chart';
+import {PieChart} from './charts/pie-chart';
 import {EowDataStruct} from './eow-data-struct';
 import moment = require('moment');
 

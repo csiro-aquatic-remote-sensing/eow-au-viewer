@@ -1,33 +1,22 @@
 import {
   Feature,
-  feature as turfFeature,
   Point,
-  point as turfPoint,
   lineString as turfLineString,
-  FeatureCollection,
-  LineString
-} from '@turf/helpers';
+  FeatureCollection} from '@turf/helpers';
 import {featureEach} from '@turf/meta';
 import Brolog from 'brolog';
-import GeometryOps from './geometry-ops';
+import GeometryOps from '../geometry-ops';
 import Map from 'ol/Map';
-import Overlay from 'ol/Overlay';
-import OverlayPositioning from 'ol/OverlayPositioning';
 import GeoJSON from 'ol/format/GeoJSON';
-import {fromLonLat} from 'ol/proj';
 
-import {EOWMap} from './eow-map';
-import {PieChart} from './pie-chart';
-import {fillStyle, Layers, redLines} from './layers';
-import {EowDataStruct, EowWaterBodyIntersection, PointsMap, SourcePointMarginsType} from './eow-data-struct';
-import {PieChartContainer} from './charts/pie-chart-container';
+import {EOWMap} from '../eow-map';
+import {Layers, redLines} from '../layers';
+import {EowWaterBodyIntersection, SourcePointMarginsType} from '../eow-data-struct';
+import {PieChartContainer} from './pie-chart-container';
 
 const theClass = `EOWDataPieChart`;
 
 type Coords = [number, number];
-
-const drawPieCharts = true;
-const drawTimeSeriesCharts = true;
 
 export default class EowDataCharts {
   pieChartMap: any;

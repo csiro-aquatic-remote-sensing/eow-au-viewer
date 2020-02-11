@@ -1,5 +1,5 @@
 import {ChartContainer, LOG2} from './chart-container';
-import {PieChart} from '../pie-chart';
+import {PieChart} from './pie-chart';
 import {Coords, EowDataStruct} from '../eow-data-struct';
 import Map from 'ol/Map';
 import GeoJSON from 'ol/format/GeoJSON';
