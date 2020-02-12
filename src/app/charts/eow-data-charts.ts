@@ -13,6 +13,7 @@ import {EOWMap} from '../eow-map';
 import {Layers, redLines} from '../layers';
 import {EowWaterBodyIntersection, SourcePointMarginsType} from '../eow-data-struct';
 import {PieChartContainer} from './pie-chart-container';
+import {TimeSeriesChartContainer} from './time-series-chart-container';
 
 const theClass = `EOWDataPieChart`;
 
@@ -104,6 +105,7 @@ export default class EowDataCharts {
       this.log.info(theClass, `Draw pieChart at ${point[0]}, ${point[1]})}`);
       const id = this.getId('chart-');
       new PieChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, point, map, id, validData).draw();
+      new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, point, map, id, validData).draw();
       // new timeSeriesChartContainer(this.htmlDocument, id, validData).draw();
       // const el = this.htmlDocument.createElement('div');
       // el.setAttribute('id', id);

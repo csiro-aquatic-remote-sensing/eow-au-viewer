@@ -57,6 +57,4 @@ export class PieChartContainer extends ChartContainer {
       await this.layers.createLayerFromWFSFeatures(`Lines for  ${layerName}`, lineFeatures, {visible: false});
     }
   }
-
-
 }

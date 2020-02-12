@@ -1,5 +1,6 @@
 import Brolog from 'brolog';
 import {Feature, feature as turfFeature, FeatureCollection, Point, point as turfPoint, Polygon} from '@turf/helpers';
+import moment from 'moment';
 
 const theClass = 'EowDataStruct';
 const brologLevel = 'verbose';
@@ -44,7 +45,7 @@ export class EowDataStruct {
   }
 
   /**
-   * Return Aggregated FU data as an array of objects:
+   * @Return Aggregated FU data as an array of objects:
    * [
    *  {
    *    name: <FU Value>,
@@ -97,6 +98,48 @@ export class EowDataStruct {
     });
     log.silly(theClass, `EOWData: ${JSON.stringify(eowData)}`);
     return eowData;
+  }
+
+  /**
+   * @Return FU data sorted by date in ascending order as an array of objects.  If there are the same date sort those in FU order:
+   * [
+   *  {
+   *    name: <FU Value>,
+   *    date: <date>
+   *  },
+   *  ...
+   * ]
+   * @param features - the EOWdata that is all located in the same waterbody
+   */
+  static prepareTimeSeriesChartData(features): any {
+    const aggregateFUValues = (theFeatures) => {
+      return theFeatures.map(f => {
+        return {fu: f.values_.fu_value, date: f.values_.date_photo};
+      });
+    };
+    const arrayToObject = (array) =>
+      array.reduce((obj, item) => {
+        obj[item] = item;
+        return obj;
+      }, {});
+
+    const fuDateComparator = (a, b) => {
+      const dA = moment(a.date);
+      const dB = moment(b.data);
+
+      if (dA.isSame(dB)) {
+        return a.fu - b.fu;
+      } else {
+        return dA.isBefore(dB);
+      }
+    };
+
+    const eowDataFUValues = aggregateFUValues(features);
+    // const arrayFUValuesObj = arrayToObject(eowDataFUValues);
+    const sortedFUDates = eowDataFUValues.sort(fuDateComparator);
+
+    log.silly(theClass, `EOWData: ${JSON.stringify(sortedFUDates)}`);
+    return sortedFUDates;
   }
 
   /**
