@@ -103,33 +103,18 @@ export default class EowDataCharts {
     });
     if (validData.length > 0 && point[0] && point[1] && !isNaN(point[0]) && !isNaN(point[1])) {
       this.log.info(theClass, `Draw pieChart at ${point[0]}, ${point[1]})}`);
-      const id = this.getId('chart-');
-      new PieChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, point, map, id, validData).draw();
-      new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, point, map, id, validData).draw();
-      // new timeSeriesChartContainer(this.htmlDocument, id, validData).draw();
-      // const el = this.htmlDocument.createElement('div');
-      // el.setAttribute('id', id);
-      // this.htmlDocument.getElementById(htmlElementId).appendChild(el);
-      // this.pieChart.drawD3(preparedPieChartData, id, map.getView().getZoom() * LOG2);
-      // const epsg3587Point = fromLonLat(point);
-      // const pieChartMap = new Overlay({
-      //   element: el,
-      //   position: epsg3587Point,
-      //   autoPan: true,
-      //   autoPanMargin: 275,
-      //   positioning: OverlayPositioning.CENTER_CENTER
-      // });
-      // map.addOverlay(pieChartMap);
-      // map.on('moveend', (evt) => {
-      //   // force a redraw when change size due to zoom in / out
-      //   this.pieChart.drawD3(preparedPieChartData, id, map.getView().getZoom() * LOG2);
-      // });
+      new PieChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, point, map, this.getId('pieChart-'), validData).draw();
+      new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, point, map, this.getId('timeSeriesChart-'), validData).draw();
     } else {
       this.log.info(theClass, `NOT Drawing pieChart at "${point[0]}", "${point[1]}")}`);
     }
   }
 
   // TODO move to a util
+  /**
+   * Create a unique id for each new HTML element
+   * @param prefix in the id
+   */
   private getId(prefix: string) {
     for (;;) {
       const id = prefix + Math.floor(Math.random() * 100000);
