@@ -11,7 +11,7 @@ import {TimeSeriesItem, TimeSeriesItems} from '../eow-data-struct';
 
 const theClass = 'TimeSeriesChart';
 
-const widthFactor = 9;
+const widthFactor = 50;
 const pieWidth = 1.0;
 const opaqueness = 0.7;
 
@@ -83,15 +83,28 @@ export class TimeSeriesChart {
       .enter()
       .append('g');
 
-    const barPadding = 1;
+    const barPadding = 0;
+    const stripeWidth = 2;
 
     const barRects = groups.append('rect')
-      .attr('x', d => d.index + barPadding / 2)
+      .attr('x', d => d.index * (stripeWidth + barPadding / 2))
       .attr('y', 1)
-      .attr('width', 5)
-      .attr('height', 100)
+      .attr('width', stripeWidth)
+      .attr('height', 50)
       .attr('fill', d => '' + theFUColours[d.fu]);
+
+    TimeSeriesChart.debugBarRects(barRects);
   }
+
+  static debugBarRects(barRects) {
+    console.log(`BarRects:`);
+    barRects._groups[0].forEach((rect, index) => {
+      const attr = rect.attributes;
+      console.log(`  x: ${attr.x.value}, y: ${attr.y.value}, width: ${attr.width.value}, `
+        + `height: ${attr.height.value}, colour: ${attr.fill.value}`);
+    });
+  }
+
 
   // TODO this is dupe with PieChart
   static getFUColours() {

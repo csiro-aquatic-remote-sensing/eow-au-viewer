@@ -104,7 +104,7 @@ export default class EowDataCharts {
     if (validData.length > 0 && point[0] && point[1] && !isNaN(point[0]) && !isNaN(point[1])) {
       this.log.info(theClass, `Draw pieChart at ${point[0]}, ${point[1]})}`);
       new PieChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, point, map, this.getId('pieChart-'), validData).draw();
-      new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, point, map, this.getId('timeSeriesChart-'), validData).draw();
+      new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.offSet(point, 1), map, this.getId('timeSeriesChart-'), validData).draw();
     } else {
       this.log.info(theClass, `NOT Drawing pieChart at "${point[0]}", "${point[1]}")}`);
     }
@@ -123,6 +123,15 @@ export default class EowDataCharts {
         return id;
       }
     }
+  }
+
+  /**
+   * Offset subsequent charts so they don't appear on exactly the same spot.
+   *
+   * @param amount as multiplier
+   */
+  private offSet(point: Coords, amount: number): Coords {
+    return point.map(p => p + (amount * .009)) as Coords;
   }
 
   /**

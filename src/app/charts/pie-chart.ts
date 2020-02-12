@@ -35,7 +35,6 @@ export class PieChart {
    * @param elementId of div to draw chart in to
    * @param sizeScaleFactor used to create the height and width
    */
-  // TODO - define the type for this data
   static drawD3(preparedChartData: PieItems, elementId: string, sizeScaleFactor: number) {
     const width = widthFactor * sizeScaleFactor;
     const fontSize = 0.8 * sizeScaleFactor;
