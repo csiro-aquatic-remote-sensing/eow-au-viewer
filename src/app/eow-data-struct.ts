@@ -7,6 +7,16 @@ const brologLevel = 'verbose';
 const log = new Brolog();
 
 export type Coords = [number, number];
+export interface TimeSeriesItem {
+  fu: string;
+  date: string;
+  index: number;
+}
+export type TimeSeriesItems = TimeSeriesItem[];
+export interface PieItemObject {
+  count: number;
+  points: Coords[];
+}
 export interface PieItem {
   name: string;
   y: PieItemObject;
@@ -135,12 +145,25 @@ export class EowDataStruct {
       }
     };
 
+    /**
+     * Add the 'index' field.  I don't know if necessary but using to help to graph.
+     *
+     * @param items - add index field to all of the items
+     */
+    const addOrdinal = (items: TimeSeriesItems) => {
+      let index = 0;
+      return items.map(i => {
+        return {...i, index: index++};
+      });
+    };
+
     const eowDataFUValues = aggregateFUValues(features);
     // const arrayFUValuesObj = arrayToObject(eowDataFUValues);
     const sortedFUDates = eowDataFUValues.sort(fuDateComparator);
+    const withOrdinal = addOrdinal(sortedFUDates);
 
-    log.silly(theClass, `EOWData: ${JSON.stringify(sortedFUDates)}`);
-    return sortedFUDates;
+    log.silly(theClass, `EOWData: ${JSON.stringify(withOrdinal)}`);
+    return withOrdinal;
   }
 
   /**

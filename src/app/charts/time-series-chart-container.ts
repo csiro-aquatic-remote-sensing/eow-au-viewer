@@ -1,6 +1,6 @@
 import {ChartContainer, LOG2} from './chart-container';
 import {PieChart} from './pie-chart';
-import {Coords, EowDataStruct} from '../eow-data-struct';
+import {Coords, EowDataStruct, TimeSeriesItems} from '../eow-data-struct';
 import Map from 'ol/Map';
 import GeoJSON from 'ol/format/GeoJSON';
 import {lineString as turfLineString} from '@turf/helpers';
@@ -22,7 +22,7 @@ export class TimeSeriesChartContainer extends ChartContainer {
   }
 
   // TODO type this data
-  buildPrepareData(data: any): any {
+  getBuildPrepareData(data: any): TimeSeriesItems {
     return EowDataStruct.prepareTimeSeriesChartData(data);
   }
 

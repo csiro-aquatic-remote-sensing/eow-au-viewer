@@ -15,6 +15,7 @@ describe(`prepareTimeSeriesChartData`, () => {
       expect(timeSeriesData[0].fu).to.equal(a.values_.fu_value);
       expect(timeSeriesData[1].date).to.equal(b.values_.date_photo);
       expect(timeSeriesData[1].fu).to.equal(b.values_.fu_value);
+      timeSeriesData.forEach((t, i) => expect(t.index).to.equal(i));
     });
 
     it(`2 different dates, different fu, not sorted by date`, () => {
@@ -27,6 +28,7 @@ describe(`prepareTimeSeriesChartData`, () => {
       expect(timeSeriesData[0].fu).to.equal(a.values_.fu_value);
       expect(timeSeriesData[1].date).to.equal(b.values_.date_photo);
       expect(timeSeriesData[1].fu).to.equal(b.values_.fu_value);
+      timeSeriesData.forEach((t, i) => expect(t.index).to.equal(i));
     });
 
     it(`2 dates same, different fu, sorted by fu`, () => {
@@ -39,6 +41,7 @@ describe(`prepareTimeSeriesChartData`, () => {
       expect(timeSeriesData[0].fu).to.equal(a.values_.fu_value);
       expect(timeSeriesData[1].date).to.equal(b.values_.date_photo);
       expect(timeSeriesData[1].fu).to.equal(b.values_.fu_value);
+      timeSeriesData.forEach((t, i) => expect(t.index).to.equal(i));
     });
 
     it(`2 dates same, different fu, not sorted by fu`, () => {
@@ -51,6 +54,7 @@ describe(`prepareTimeSeriesChartData`, () => {
       expect(timeSeriesData[0].fu).to.equal(a.values_.fu_value);
       expect(timeSeriesData[1].date).to.equal(b.values_.date_photo);
       expect(timeSeriesData[1].fu).to.equal(b.values_.fu_value);
+      timeSeriesData.forEach((t, i) => expect(t.index).to.equal(i));
     });
   });
   describe(`3 dates`, () => {
@@ -67,6 +71,7 @@ describe(`prepareTimeSeriesChartData`, () => {
       expect(timeSeriesData[1].fu).to.equal(b.values_.fu_value);
       expect(timeSeriesData[2].date).to.equal(c.values_.date_photo);
       expect(timeSeriesData[2].fu).to.equal(c.values_.fu_value);
+      timeSeriesData.forEach((t, i) => expect(t.index).to.equal(i));
     });
 
     it(`3 different dates, different fu, not sorted by date`, () => {
@@ -82,6 +87,7 @@ describe(`prepareTimeSeriesChartData`, () => {
       expect(timeSeriesData[1].fu).to.equal(b.values_.fu_value);
       expect(timeSeriesData[2].date).to.equal(c.values_.date_photo);
       expect(timeSeriesData[2].fu).to.equal(c.values_.fu_value);
+      timeSeriesData.forEach((t, i) => expect(t.index).to.equal(i));
     });
 
     it(`3 dates same, different fu, sorted by fu`, () => {
@@ -97,6 +103,7 @@ describe(`prepareTimeSeriesChartData`, () => {
       expect(timeSeriesData[1].fu).to.equal(b.values_.fu_value);
       expect(timeSeriesData[2].date).to.equal(c.values_.date_photo);
       expect(timeSeriesData[2].fu).to.equal(c.values_.fu_value);
+      timeSeriesData.forEach((t, i) => expect(t.index).to.equal(i));
     });
 
     it(`3 dates same, different fu, not sorted by fu`, () => {
@@ -112,6 +119,7 @@ describe(`prepareTimeSeriesChartData`, () => {
       expect(timeSeriesData[1].fu).to.equal(b.values_.fu_value);
       expect(timeSeriesData[2].date).to.equal(c.values_.date_photo);
       expect(timeSeriesData[2].fu).to.equal(c.values_.fu_value);
+      timeSeriesData.forEach((t, i) => expect(t.index).to.equal(i));
     });
   });
 

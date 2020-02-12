@@ -1,9 +1,13 @@
 import {
   Brolog,
 } from 'brolog';
-import * as d3 from 'd3';
+// import d3 from 'd3';
+import { select } from 'd3-selection';
+import { scaleTime } from 'd3-scale';
+import { extent } from 'd3-array';
 import colors from '../colors.json';
 import {PieChart} from './pie-chart';
+import {TimeSeriesItem, TimeSeriesItems} from '../eow-data-struct';
 
 const theClass = 'TimeSeriesChart';
 
@@ -21,7 +25,7 @@ export class TimeSeriesChart {
   /**
    * Static Constructor (called at end of file)
    */
-  public static[STATIC_INIT] = () => {
+  public static [STATIC_INIT] = () => {
     log.level(brologLevel);
   }
 
@@ -32,14 +36,61 @@ export class TimeSeriesChart {
    * @param elementId of div to draw chart in to
    * @param sizeScaleFactor used to create the height and width
    */
-  static draw(preparedChartData, elementId, sizeScaleFactor) {
+  static draw(preparedChartData: TimeSeriesItems, elementId: string, sizeScaleFactor: number) {
     const width = widthFactor * sizeScaleFactor;
     const fontSize = 0.8 * sizeScaleFactor;
     const fontWeight = 20;
     const theFUColours = TimeSeriesChart.getFUColours();
 
+    const metricAccessor = d => d.date;
+
     // Delete any existing pie-chart that existed in the elementId
-    d3.select('#' + elementId).select('svg').remove();
+    select('#' + elementId).select('svg').remove();
+
+    const dimensions = {
+      width,
+      height: width * 0.6,
+      margin: {
+        top: 30,
+        right: 10,
+        bottom: 50,
+        left: 50
+      },
+      boundedWidth: 0,
+      boundedHeight: 0
+    };
+
+    dimensions.boundedWidth = dimensions.width - dimensions.margin.left - dimensions.margin.right;
+    dimensions.boundedHeight = dimensions.height - dimensions.margin.top - dimensions.margin.bottom;
+
+    const wrapper = select('#' + elementId)
+      .append('svg')
+      .attr('width', dimensions.width)
+      .attr('height', dimensions.height);
+
+    const bounds = wrapper.append('g')
+      .style('transform', `translate(${dimensions.margin.left}px, ${dimensions.margin.top}px`);
+
+    const xScale = scaleTime()
+      .domain(extent<TimeSeriesItem, Date>(preparedChartData, metricAccessor))
+      .range([0, dimensions.boundedWidth])
+      .nice();
+
+    const group = bounds.append('g');
+
+    const groups = group.selectAll('g')
+      .data(preparedChartData)
+      .enter()
+      .append('g');
+
+    const barPadding = 1;
+
+    const barRects = groups.append('rect')
+      .attr('x', d => d.index + barPadding / 2)
+      .attr('y', 1)
+      .attr('width', 5)
+      .attr('height', 100)
+      .attr('fill', d => '' + theFUColours[d.fu]);
   }
 
   // TODO this is dupe with PieChart
