@@ -59,14 +59,14 @@ export abstract class ChartContainer {
     // PieChart.drawD3(this.data, this.id, this.map.getView().getZoom() * LOG2);
     this.drawChartOfType();
     const epsg3587Point = fromLonLat(this.point);
-    const pieChartMap = new Overlay({
+    const chartMap = new Overlay({
       element: el,
       position: epsg3587Point,
       autoPan: true,
       autoPanMargin: 275,
       positioning: OverlayPositioning.CENTER_CENTER
     });
-    this.map.addOverlay(pieChartMap);
+    this.map.addOverlay(chartMap);
     this.map.on('moveend', (evt) => {
       // force a redraw when change size due to zoom in / out
       // PieChart.drawD3(this.data, this.id, this.map.getView().getZoom() * LOG2);

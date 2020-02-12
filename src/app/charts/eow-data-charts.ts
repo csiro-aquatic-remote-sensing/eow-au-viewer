@@ -131,7 +131,7 @@ export default class EowDataCharts {
    * @param amount as multiplier
    */
   private offSet(point: Coords, amount: number): Coords {
-    return point.map(p => p + (amount * .009)) as Coords;
+    return point.map(p => p + (amount * .02)) as Coords;
   }
 
   /**

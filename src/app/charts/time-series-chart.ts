@@ -11,7 +11,7 @@ import {TimeSeriesItem, TimeSeriesItems} from '../eow-data-struct';
 
 const theClass = 'TimeSeriesChart';
 
-const widthFactor = 50;
+const widthFactor = 10;
 const pieWidth = 1.0;
 const opaqueness = 0.7;
 
@@ -51,10 +51,10 @@ export class TimeSeriesChart {
       width,
       height: width * 0.6,
       margin: {
-        top: 30,
-        right: 10,
-        bottom: 50,
-        left: 50
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0
       },
       boundedWidth: 0,
       boundedHeight: 0
@@ -68,8 +68,8 @@ export class TimeSeriesChart {
       .attr('width', dimensions.width)
       .attr('height', dimensions.height);
 
-    const bounds = wrapper.append('g')
-      .style('transform', `translate(${dimensions.margin.left}px, ${dimensions.margin.top}px`);
+    const bounds = wrapper.append('g');
+      // .style('transform', `translate(${dimensions.margin.left}px, ${dimensions.margin.top}px`);
 
     const xScale = scaleTime()
       .domain(extent<TimeSeriesItem, Date>(preparedChartData, metricAccessor))
@@ -90,10 +90,10 @@ export class TimeSeriesChart {
       .attr('x', d => d.index * (stripeWidth + barPadding / 2))
       .attr('y', 1)
       .attr('width', stripeWidth)
-      .attr('height', 50)
+      .attr('height', 20)
       .attr('fill', d => '' + theFUColours[d.fu]);
 
-    TimeSeriesChart.debugBarRects(barRects);
+    // TimeSeriesChart.debugBarRects(barRects);
   }
 
   static debugBarRects(barRects) {
