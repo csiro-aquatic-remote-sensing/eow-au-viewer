@@ -43,7 +43,7 @@ export abstract class ChartContainer {
     this.map = map;
     this.id = id;
 
-    this.preparedData = this.buildPrepareData(data);
+    this.preparedData = this.getBuildPrepareData(data);
 
     return this;
   }
@@ -79,7 +79,7 @@ export abstract class ChartContainer {
    *
    * @param data passed in to the constructor
    */
-  abstract buildPrepareData(data: any);
+  abstract getBuildPrepareData(data: any): any;
 
   /**
    * The specific chart defines this to perform the actual drawing of chart

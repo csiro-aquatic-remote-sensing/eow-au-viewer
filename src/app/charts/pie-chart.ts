@@ -2,7 +2,12 @@ import colors from '../colors.json';
 import {
   Brolog,
 } from 'brolog';
-import * as d3 from 'd3';
+// import * as d3 from 'd3';
+import { select } from 'd3-selection';
+import { scaleLinear } from 'd3-scale';
+import { extent } from 'd3-array';
+import { pie, arc } from 'd3-shape';
+import {PieItem, PieItemObject, PieItems} from '../eow-data-struct';
 
 const theClass = 'PieChart';
 
@@ -31,14 +36,14 @@ export class PieChart {
    * @param sizeScaleFactor used to create the height and width
    */
   // TODO - define the type for this data
-  static drawD3(preparedChartData, elementId, sizeScaleFactor) {
+  static drawD3(preparedChartData: PieItems, elementId: string, sizeScaleFactor: number) {
     const width = widthFactor * sizeScaleFactor;
     const fontSize = 0.8 * sizeScaleFactor;
     const fontWeight = 20;
     const theFUColours = PieChart.getFUColours();
 
     // Delete any existing pie-chart that existed in the elementId
-    d3.select('#' + elementId).select('svg').remove();
+    select('#' + elementId).select('svg').remove();
 
     // 2. Create chart dimensions
 
@@ -60,7 +65,7 @@ export class PieChart {
 
     // 3. Draw canvas
 
-    const wrapper = d3.select('#' + elementId)
+    const wrapper = select('#' + elementId)
     // .attr('class', 'svg-container')
       .append('svg')
       .attr('width', '' + dimensions.width)
@@ -71,7 +76,7 @@ export class PieChart {
 
     // 4. Create scales
 
-    const arcGenerator = d3.pie()
+    const arcGenerator = pie<PieItem>()
       .padAngle(0.005)
       .value(d => d.y.count); // .length);
 
@@ -83,7 +88,7 @@ export class PieChart {
     //   .range(interpolateWithSteps(combinedDatasetByIcon.length).map(d3.interpolateLab('#ffffff', '#000000')));  // "#f3a683", "#3dc1d3")))
 
     const radius = dimensions.boundedWidth / 2;
-    const arc = d3.arc()
+    const arcInPie = arc<any>()
       .innerRadius(radius * (1 - pieWidth)) // set to 0 for a pie chart
       .outerRadius(radius);
 
@@ -96,14 +101,14 @@ export class PieChart {
       .data(arcs)
       .enter().append('path')
       .attr('fill', d => '' + theFUColours[d.data.name])  // d.data.key == "other" ? "#dadadd" : colorScale(d.data.key))
-      .attr('d', arc)
+      .attr('d', arcInPie)
       .append('title')
       .text(d => `FU: ${d.data.name} #: ${d.data.y.count}`);  // d => d.data.name);
 
     const iconGroups = centeredGroup.selectAll('g')
       .data(arcs)
       .enter().append('g')
-      .attr('transform', d => `translate(${arc.centroid(d)})`);
+      .attr('transform', d => `translate(${arcInPie.centroid(d)})`);
 
     // iconGroups.append('path')
     //   .attr('class', 'icon')

@@ -5,6 +5,7 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "module": "commonjs",
+    "esModuleInterop": true,
     "types": [
       "jasmine",
       "node",

@@ -7,6 +7,11 @@ const brologLevel = 'verbose';
 const log = new Brolog();
 
 export type Coords = [number, number];
+export interface PieItem {
+  name: string;
+  y: PieItemObject;
+}
+export type PieItems = PieItem[];
 
 /**
  * Data structure for the waterbody - the polygon that defines it and an English name
@@ -50,14 +55,15 @@ export class EowDataStruct {
    *  {
    *    name: <FU Value>,
    *    y: {
-   *       <fu value> : {count: number of that <fu value>, points: the map geo points that have those values>}
+   *        count: number of that <fu value>,
+   *        points: the map geo points that have those values>
    *    }
    *  },
    *  ...
    * ]
    * @param features - the EOWdata that is all located in the same waterbody
    */
-  static preparePieChartData(features): any {
+  static preparePieChartData(features): PieItems {
     const aggregateFUValues = (fuValuesInFeatures) => {
       const eowDataReducer = (acc, currentValue) => {
         if (currentValue.values_ && currentValue.values_.fu_value) {
@@ -101,28 +107,23 @@ export class EowDataStruct {
   }
 
   /**
-   * @Return FU data sorted by date in ascending order as an array of objects.  If there are the same date sort those in FU order:
+   * @Return FU data sorted by date in ascending order as an array of objects.  If there are the same date, then also sort by FU value:
    * [
    *  {
    *    name: <FU Value>,
-   *    date: <date>
+   *    date: <date>,
+   *    ordinal: index of this item in array
    *  },
    *  ...
    * ]
    * @param features - the EOWdata that is all located in the same waterbody
    */
-  static prepareTimeSeriesChartData(features): any {
+  static prepareTimeSeriesChartData(features): TimeSeriesItems {
     const aggregateFUValues = (theFeatures) => {
       return theFeatures.map(f => {
         return {fu: f.values_.fu_value, date: f.values_.date_photo};
       });
     };
-    const arrayToObject = (array) =>
-      array.reduce((obj, item) => {
-        obj[item] = item;
-        return obj;
-      }, {});
-
     const fuDateComparator = (a, b) => {
       const dA = moment(a.date);
       const dB = moment(b.data);
