@@ -2,7 +2,6 @@ import {Component, OnInit, Inject} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
 import {AnimationOptions} from 'ol/View';
 import {HttpClient} from '@angular/common/http';
-import {PieChart} from './pie-chart';
 import {Popup} from './popup';
 import {Layers} from './layers';
 import {MeasurementStore} from './measurement-store';
@@ -12,11 +11,12 @@ import EowDataGeometries from './eow-data-geometries';
 import LayerGeometries from './layers-geometries';
 import GeometryOps from './geometry-ops';
 import {Brolog} from 'brolog';
-import EOWDataPieChart from './eow-data-piechart';
 import {Coordinate} from 'ol/coordinate';
 import {EOWMap} from './eow-map';
 import {EowLayers} from './eow-layers';
-import {EowWaterBodyIntersection} from './eow-data-struct';
+import {EowWaterBodyIntersection, PointsMap} from './eow-data-struct';
+import {FeatureCollection, Point} from '@turf/helpers';
+import EowDataCharts from './charts/eow-data-charts';
 
 const theClass = 'AppComponent';
 
@@ -32,21 +32,19 @@ export class AppComponent implements OnInit {
   measurementStore: MeasurementStore;
   userStore: UserStore;
   eowData: EowDataLayer;
-  pieChart: PieChart;
   layers: Layers;
   eowLayers: EowLayers;
   eowDataGeometries: EowDataGeometries;
   layersGeometries: LayerGeometries;
   geometryOps: GeometryOps;
-  eowDataPieChart: EOWDataPieChart;
+  eowDataCharts: EowDataCharts;
 
   constructor(@Inject(DOCUMENT) private htmlDocument: Document, private http: HttpClient, private log: Brolog) {
-    this.pieChart = new PieChart(log);
   }
 
   async ngOnInit() {
     this.userStore = new UserStore(this.htmlDocument, this.log);
-    this.popupObject = new Popup(this.htmlDocument, this.pieChart, this.userStore);
+    this.popupObject = new Popup(this.htmlDocument, this.userStore);
     this.eowMap = new EOWMap(this.log).init(this.popupObject);
     this.eowData = new EowDataLayer().init(this.eowMap);
     this.layers = new Layers(this.eowMap, this.htmlDocument, this.http, this.log);
@@ -55,10 +53,10 @@ export class AppComponent implements OnInit {
     this.eowDataGeometries = await new EowDataGeometries(this.log).init();  // TODO this seems to do similar to EowDataLayer - combine
     this.layersGeometries = new LayerGeometries(this.log);
     this.geometryOps = new GeometryOps(this.log);
-    this.eowDataPieChart = new EOWDataPieChart(this.geometryOps, this.pieChart, this.layers, this.log);
+    this.eowDataCharts = new EowDataCharts(this.geometryOps, this.layers, this.log);
 
     this.popupObject.init(this.eowMap);
-    this.eowDataPieChart.init(this.eowMap, this.htmlDocument);
+    this.eowDataCharts.init(this.eowMap, this.htmlDocument);
     this.measurementStore.init(this.eowMap, this.eowData, this.userStore);
     await this.userStore.init(this.eowData.dataLayerObs, this.measurementStore);
 
@@ -73,9 +71,7 @@ export class AppComponent implements OnInit {
 
     await this.layersGeometries.init();
 
-    // Call one or the other - the 2nd is debug
     this.calculateIntersectionsPlot();
-    this.debug_WriteDataToSpreadsheet();
     // this.calculateWaterBodiesCentroidsPlot();  // DEBUG
   }
 
@@ -95,19 +91,18 @@ export class AppComponent implements OnInit {
     this.eowDataGeometries.pointsObs.asObservable().subscribe(async (points) => {
       this.eowDataGeometries.allPointsObs.asObservable().subscribe(async sourceNErrorMarginPoints => {
         this.eowDataGeometries.allPointsMapObs.asObservable().subscribe(async allPointsMap => {
-
-          let layerName = 'i5516 reservoirs';
-          eowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, sourceNErrorMarginPoints, allPointsMap, this.layersGeometries, layerName);
-          this.eowDataPieChart.plot(eowWaterBodyIntersections, layerName);
-
-          layerName = 'Waterbodies shape';
-          eowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, null, allPointsMap, this.layersGeometries, layerName);
-          this.eowDataPieChart.plot(eowWaterBodyIntersections, layerName);
+          this.intersectAndDraw('i5516 reservoirs', points, allPointsMap, sourceNErrorMarginPoints);
+          this.intersectAndDraw('Waterbodies shape', points, allPointsMap, null);
         });
       });
     });
+  }
+
+  private async intersectAndDraw(layerName: string, points: FeatureCollection<Point>, allPointsMap: PointsMap, sourceNErrorMarginPoints: FeatureCollection<Point>) {
+    const eowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, sourceNErrorMarginPoints, allPointsMap, this.layersGeometries, layerName);
+    this.eowDataCharts.plotCharts(eowWaterBodyIntersections, layerName);
     this.eowDataGeometries.pointsErrorMarginObs.asObservable().subscribe(pointsErrorMargins => {
-      this.eowDataPieChart.debugDrawErrorMarginPoints(pointsErrorMargins);
+      this.eowDataCharts.debugDrawErrorMarginPoints(pointsErrorMargins);
     });
   }
 
@@ -117,7 +112,7 @@ export class AppComponent implements OnInit {
   private async calculateWaterBodiesCentroidsPlot() {
     const layerName = 'i5516 reservoirs';
     const eowWaterbodyPoints: EowWaterBodyIntersection[] = await this.geometryOps.convertLayerToDataFormat(this.layersGeometries, layerName);
-    this.eowDataPieChart.plot(eowWaterbodyPoints, layerName);
+    this.eowDataCharts.plotCharts(eowWaterbodyPoints, layerName);
   }
 
   private debug_compareUsersNMeasurements() {
@@ -142,13 +137,6 @@ export class AppComponent implements OnInit {
       console.log(`Number of measurements per user: ${
         JSON.stringify(this.measurementStore.numberMeasurmentsPerUser(this.userStore), null, 2)}`);
     });
-  }
-
-  /**
-   * I'm getting weird results and I could craft a solution (and tests) if I could visualise the data
-   */
-  private debug_WriteDataToSpreadsheet() {
-
   }
 
   private setupEventHandlers() {

@@ -1,11 +1,27 @@
 import Brolog from 'brolog';
 import {Feature, feature as turfFeature, FeatureCollection, Point, point as turfPoint, Polygon} from '@turf/helpers';
+import moment from 'moment';
 
 const theClass = 'EowDataStruct';
 const brologLevel = 'verbose';
 const log = new Brolog();
 
 export type Coords = [number, number];
+export interface TimeSeriesItem {
+  fu: string;
+  date: string;
+  index: number;
+}
+export type TimeSeriesItems = TimeSeriesItem[];
+export interface PieItemObject {
+  count: number;
+  points: Coords[];
+}
+export interface PieItem {
+  name: string;
+  y: PieItemObject;
+}
+export type PieItems = PieItem[];
 
 /**
  * Data structure for the waterbody - the polygon that defines it and an English name
@@ -44,19 +60,20 @@ export class EowDataStruct {
   }
 
   /**
-   * Return Aggregated FU data as an array of objects:
+   * @Return Aggregated FU data as an array of objects:
    * [
    *  {
    *    name: <FU Value>,
    *    y: {
-   *       <fu value> : {count: number of that <fu value>, points: the map geo points that have those values>}
+   *        count: number of that <fu value>,
+   *        points: the map geo points that have those values>
    *    }
    *  },
    *  ...
    * ]
    * @param features - the EOWdata that is all located in the same waterbody
    */
-  static prepareChartData(features): any {
+  static preparePieChartData(features): PieItems {
     const aggregateFUValues = (fuValuesInFeatures) => {
       const eowDataReducer = (acc, currentValue) => {
         if (currentValue.values_ && currentValue.values_.fu_value) {
@@ -97,6 +114,56 @@ export class EowDataStruct {
     });
     log.silly(theClass, `EOWData: ${JSON.stringify(eowData)}`);
     return eowData;
+  }
+
+  /**
+   * @Return FU data sorted by date in ascending order as an array of objects.  If there are the same date, then also sort by FU value:
+   * [
+   *  {
+   *    name: <FU Value>,
+   *    date: <date>,
+   *    ordinal: index of this item in array
+   *  },
+   *  ...
+   * ]
+   * @param features - the EOWdata that is all located in the same waterbody
+   */
+  static prepareTimeSeriesChartData(features): TimeSeriesItems {
+    const aggregateFUValues = (theFeatures) => {
+      return theFeatures.map(f => {
+        return {fu: f.values_.fu_value, date: f.values_.date_photo};
+      });
+    };
+    const fuDateComparator = (a, b) => {
+      const dA = moment(a.date);
+      const dB = moment(b.data);
+
+      if (dA.isSame(dB)) {
+        return a.fu - b.fu;
+      } else {
+        return dA.isBefore(dB);
+      }
+    };
+
+    /**
+     * Add the 'index' field.  I don't know if necessary but using to help to graph.
+     *
+     * @param items - add index field to all of the items
+     */
+    const addOrdinal = (items: TimeSeriesItems) => {
+      let index = 0;
+      return items.map(i => {
+        return {...i, index: index++};
+      });
+    };
+
+    const eowDataFUValues = aggregateFUValues(features);
+    // const arrayFUValuesObj = arrayToObject(eowDataFUValues);
+    const sortedFUDates = eowDataFUValues.sort(fuDateComparator);
+    const withOrdinal = addOrdinal(sortedFUDates);
+
+    log.silly(theClass, `EOWData: ${JSON.stringify(withOrdinal)}`);
+    return withOrdinal;
   }
 
   /**

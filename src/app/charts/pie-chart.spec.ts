@@ -5,6 +5,6 @@ const expect = chai.expect;
 
 describe('PieChart', () => {
   it('should create an instance', () => {
-    expect(new PieChart(null)).is.not.undefined;  // tslint:disable-line
+    expect(new PieChart()).is.not.undefined;  // tslint:disable-line
   });
 });

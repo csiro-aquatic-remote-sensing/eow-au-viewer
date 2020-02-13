@@ -1,8 +1,13 @@
-import colors from './colors.json';
+import colors from '../colors.json';
 import {
   Brolog,
 } from 'brolog';
-import * as d3 from 'd3';
+// import * as d3 from 'd3';
+import { select } from 'd3-selection';
+import { scaleLinear } from 'd3-scale';
+import { extent } from 'd3-array';
+import { pie, arc } from 'd3-shape';
+import {PieItem, PieItemObject, PieItems} from '../eow-data-struct';
 
 const theClass = 'PieChart';
 
@@ -10,8 +15,17 @@ const widthFactor = 9;
 const pieWidth = 1.0;
 const opaqueness = 0.7;
 
+const brologLevel = 'verbose';
+const log = new Brolog();
+
+const STATIC_INIT = Symbol();
+
 export class PieChart {
-  constructor(private log: Brolog) {
+  /**
+   * Static Constructor (called at end of file)
+   */
+  public static[STATIC_INIT] = () => {
+    log.level(brologLevel);
   }
 
   /**
@@ -21,18 +35,18 @@ export class PieChart {
    * @param elementId of div to draw chart in to
    * @param sizeScaleFactor used to create the height and width
    */
-  drawD3(preparedChartData, elementId, sizeScaleFactor) {
+  static drawD3(preparedChartData: PieItems, elementId: string, sizeScaleFactor: number) {
     const width = widthFactor * sizeScaleFactor;
     const fontSize = 0.8 * sizeScaleFactor;
     const fontWeight = 20;
-    const theFUColours = this.getFUColours();
+    const theFUColours = PieChart.getFUColours();
 
     // Delete any existing pie-chart that existed in the elementId
-    d3.select('#' + elementId).select('svg').remove();
+    select('#' + elementId).select('svg').remove();
 
     // 2. Create chart dimensions
 
-    this.log.silly(theClass, `${JSON.stringify(preparedChartData, null, 2)}`);
+    log.silly(theClass, `${JSON.stringify(preparedChartData, null, 2)}`);
     const dimensions = {
       width,
       height: width,
@@ -50,7 +64,7 @@ export class PieChart {
 
     // 3. Draw canvas
 
-    const wrapper = d3.select('#' + elementId)
+    const wrapper = select('#' + elementId)
     // .attr('class', 'svg-container')
       .append('svg')
       .attr('width', '' + dimensions.width)
@@ -61,7 +75,7 @@ export class PieChart {
 
     // 4. Create scales
 
-    const arcGenerator = d3.pie()
+    const arcGenerator = pie<PieItem>()
       .padAngle(0.005)
       .value(d => d.y.count); // .length);
 
@@ -73,7 +87,7 @@ export class PieChart {
     //   .range(interpolateWithSteps(combinedDatasetByIcon.length).map(d3.interpolateLab('#ffffff', '#000000')));  // "#f3a683", "#3dc1d3")))
 
     const radius = dimensions.boundedWidth / 2;
-    const arc = d3.arc()
+    const arcInPie = arc<any>()
       .innerRadius(radius * (1 - pieWidth)) // set to 0 for a pie chart
       .outerRadius(radius);
 
@@ -86,14 +100,14 @@ export class PieChart {
       .data(arcs)
       .enter().append('path')
       .attr('fill', d => '' + theFUColours[d.data.name])  // d.data.key == "other" ? "#dadadd" : colorScale(d.data.key))
-      .attr('d', arc)
+      .attr('d', arcInPie)
       .append('title')
       .text(d => `FU: ${d.data.name} #: ${d.data.y.count}`);  // d => d.data.name);
 
     const iconGroups = centeredGroup.selectAll('g')
       .data(arcs)
       .enter().append('g')
-      .attr('transform', d => `translate(${arc.centroid(d)})`);
+      .attr('transform', d => `translate(${arcInPie.centroid(d)})`);
 
     // iconGroups.append('path')
     //   .attr('class', 'icon')
@@ -119,13 +133,13 @@ export class PieChart {
       .attr('style', `fill: #000000; stroke: #000000; font-size: ${fontSize}; font-weight: ${fontWeight};`);
   }
 
-  setChartSize() {
+  static setChartSize() {
     // d3.select('.pieChart_svg')
     //   .attr('width', '200')
     //   .attr('height', '200');
   }
 
-  getFUColours() {
+  static getFUColours() {
     const cArray = Object.keys(colors);
     return cArray.map(c => {
       const index = (parseInt(c, 10)) % cArray.length;
@@ -144,3 +158,6 @@ export class PieChart {
     return html.replace('class="pieChart"', 'id="pieChart"');
   }
 }
+
+// Call the init once
+PieChart[STATIC_INIT]();
