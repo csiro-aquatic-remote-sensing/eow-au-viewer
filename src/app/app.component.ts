@@ -51,7 +51,7 @@ export class AppComponent implements OnInit {
     this.eowLayers = await new EowLayers(this.layers, this.log).init(); // this.eowMap);
     this.measurementStore = await new MeasurementStore(this.log);
     this.eowDataGeometries = await new EowDataGeometries(this.log).init();  // TODO this seems to do similar to EowDataLayer - combine
-    this.layersGeometries = new LayerGeometries(this.log);
+    this.layersGeometries = new LayerGeometries(this.eowLayers, this.log);
     this.geometryOps = new GeometryOps(this.log);
     this.eowDataCharts = new EowDataCharts(this.geometryOps, this.layers, this.log);
 
@@ -91,8 +91,13 @@ export class AppComponent implements OnInit {
     this.eowDataGeometries.pointsObs.asObservable().subscribe(async (points) => {
       this.eowDataGeometries.allPointsObs.asObservable().subscribe(async sourceNErrorMarginPoints => {
         this.eowDataGeometries.allPointsMapObs.asObservable().subscribe(async allPointsMap => {
-          this.intersectAndDraw('i5516 reservoirs', points, allPointsMap, sourceNErrorMarginPoints);
-          this.intersectAndDraw('Waterbodies shape', points, allPointsMap, null);
+          return this.eowLayers.waterBodiesLayersObs.asObservable().subscribe(async waterBodyLayers => {
+            for (const waterBodyLayer of waterBodyLayers) {
+              this.intersectAndDraw(waterBodyLayer.name, points, allPointsMap, sourceNErrorMarginPoints);
+              // this.intersectAndDraw('i5516 reservoirs', points, allPointsMap, sourceNErrorMarginPoints);
+              // this.intersectAndDraw('Waterbodies shape', points, allPointsMap, null);
+            }
+          });
         });
       });
     });

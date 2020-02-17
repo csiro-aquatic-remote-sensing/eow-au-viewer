@@ -74,7 +74,7 @@ export default class EowDataCharts {
             centroid = points[0];
           }
           if (centroid) {
-            this.log.info(theClass + '.plot', `Centroid: ${JSON.stringify(centroid)}`);
+            this.log.verbose(theClass + '.plot', `Centroid: ${JSON.stringify(centroid)}`);
             this.drawCharts(eowDataInWaterbody.eowData, centroid, map, waterBodyIndex++, layerName);
           } else {
             this.log.verbose(theClass + '.plot', 'No Centroid to draw at');
@@ -102,7 +102,7 @@ export default class EowDataCharts {
       }
     });
     if (validData.length > 0 && point[0] && point[1] && !isNaN(point[0]) && !isNaN(point[1])) {
-      this.log.info(theClass, `Draw pieChart at ${point[0]}, ${point[1]})}`);
+      this.log.verbose(theClass, `Draw pieChart at ${point[0]}, ${point[1]})}`);
       new PieChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, point, map, this.getId('pieChart-'), validData).draw();
       new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.offSet(point, 1), map, this.getId('timeSeriesChart-'), validData).draw();
     } else {

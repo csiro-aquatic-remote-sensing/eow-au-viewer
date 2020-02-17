@@ -9,6 +9,7 @@ import {
 } from 'brolog';
 import {FeatureLike} from 'ol/Feature';
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
+import {EowLayers, LayersInfo} from './eow-layers';
 
 const theClass = 'LayerGeometries';
 
@@ -20,27 +21,34 @@ const theClass = 'LayerGeometries';
 export default class LayerGeometries {
   layerFeatures: { [name: string]: turfFeature<Polygon>[] } = {};  // Each Layer passed to createGeometry() has multiple polygons
 
-  constructor(private log: Brolog) {
+  constructor(private eowLayers: EowLayers, private log: Brolog) {
   }
 
   async init() {
-    // TODO this is a reuse of the layer data - combine in to one use
-    await this.createGeometry('Waterbodies shape', 'assets/waterbodies/Australia/aus25wgd_l.geojson');
-    await this.createGeometry('Waterbodies fill', 'assets/waterbodies/Australia/aus25wgd_r.geojson');
-    await this.createGeometry('Waterbodies name', 'assets/waterbodies/Australia/aus25wgd_p.geojson');
+    return this.eowLayers.waterBodiesLayersObs.asObservable().subscribe(async waterBodyLayers => {
+      return Promise.all(waterBodyLayers.map(async layer => {
+        if (layer.options.useAsWaterBodySource) {
+          await this.createGeometry(layer.name, layer.url);
+        }
+      }));
+    });
+    // await this.createGeometry('Waterbodies shape', 'assets/waterbodies/Australia/aus25wgd_l.geojson');
+    // await this.createGeometry('Waterbodies fill', 'assets/waterbodies/Australia/aus25wgd_r.geojson');
+    // await this.createGeometry('Waterbodies name', 'assets/waterbodies/Australia/aus25wgd_p.geojson');
+    //
+    // // new data but that only covers ACT + ~ 100kms square
+    // await this.createGeometry('i5516 flats', 'assets/waterbodies/Canberra/i5516_flats.geojson');
+    // await this.createGeometry('i5516 pondages', 'assets/waterbodies/Canberra/i5516_pondageareas.geojson');
+    // await this.createGeometry('i5516 waterCourseLines', 'assets/waterbodies/Canberra/i5516_watercourselines.geojson');
+    // await this.createGeometry('i5516 waterCourseAreas', 'assets/waterbodies/Canberra/i5516_watercourseareas.geojson');
+    // await this.createGeometry('i5516 lakes', 'assets/waterbodies/Canberra/i5516_waterholes.geojson');
+    // await this.createGeometry('i5516 reservoirs', 'assets/waterbodies/Canberra/i5516_reservoirs.geojson');
 
-    // new data but that only covers ACT + ~ 100kms square
-    await this.createGeometry('i5516 flats', 'assets/waterbodies/Canberra/i5516_flats.geojson');
-    await this.createGeometry('i5516 pondages', 'assets/waterbodies/Canberra/i5516_pondageareas.geojson');
-    await this.createGeometry('i5516 waterCourseLines', 'assets/waterbodies/Canberra/i5516_watercourselines.geojson');
-    await this.createGeometry('i5516 waterCourseAreas', 'assets/waterbodies/Canberra/i5516_watercourseareas.geojson');
-    await this.createGeometry('i5516 lakes', 'assets/waterbodies/Canberra/i5516_waterholes.geojson');
-    await this.createGeometry('i5516 reservoirs', 'assets/waterbodies/Canberra/i5516_reservoirs.geojson');
-
-    this.log.verbose(theClass, `Layer geometries: ${Object.keys(this.layerFeatures)}`);
+    // this.log.verbose(theClass, `Layer geometries: ${Object.keys(this.layerFeatures)}`);
   }
 
   async createGeometry(name, layerUrl) {
+    return;
     let json: any;
     this.log.verbose(theClass, `CreateGeomety - name: ${name}`);
     try {
@@ -56,7 +64,7 @@ export default class LayerGeometries {
     try {
       const format = new OLGeoJson();
       const geoJSONFeatures = format.readFeatures(json, {dataProjection: 'EPSG:4326', featureProjection: 'EPSG:4326'});
-      if (! geoJSONFeatures) {
+      if (!geoJSONFeatures) {
         return;
       }
 

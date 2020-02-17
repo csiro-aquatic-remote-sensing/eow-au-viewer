@@ -45,7 +45,7 @@ export class PieChartContainer extends ChartContainer {
       };
       const format = new GeoJSON();
       const lineFeatures = allEOWDataPoints().map(p => {
-        this.log.info(theClass, `Draw chart to EOWData line: ${JSON.stringify(point)}, ${JSON.stringify(p)}`);
+        this.log.verbose(theClass, `Draw chart to EOWData line: ${JSON.stringify(point)}, ${JSON.stringify(p)}`);
         const ls = turfLineString([point, p], {name: 'FUChart to EOWData line'});
         this.log.silly(theClass, `  LineString: ${JSON.stringify(ls)}`);
         const lsFeature = format.readFeature(ls, {

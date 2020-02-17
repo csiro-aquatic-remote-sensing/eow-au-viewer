@@ -7,6 +7,7 @@ import {
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
+import WFS from 'ol/format/WFS';
 import Map from 'ol/Map';
 import TileLayer from 'ol/layer/Tile';
 import {HttpClient} from '@angular/common/http';
@@ -18,6 +19,7 @@ import {EOWMap} from './eow-map';
 import {BehaviorSubject} from 'rxjs';
 import Feature from 'ol/Feature';
 import Stroke from 'ol/style/Stroke';
+import {bbox as bboxStrategy} from 'ol/loadingstrategy';
 
 const theClass = 'Layers';
 
@@ -60,28 +62,170 @@ export class Layers {
     });
   }
 
-  async createLayerFromWFSURL(title, url, options: Options = {}): Promise<any> {
+  async createLayerFromGeoJSON(title, url, options: Options = {}): Promise<any> {
     return new Promise((resolve, reject) => {
       this.eowMap.mapObs.asObservable().subscribe(async map => {
-        this.http.get(url).toPromise().then(d => {
-          this.log.info(theClass, `url exists: ${url}`);
-          const newLayer = new VectorLayer(Object.assign(options, {
-            title,
-            source: new VectorSource({
-              url,
-              format: new GeoJSON(),
-              // projection: 'EPSG:4326'
-            })
-          }));
-          newLayer.set('name', title);
-          this.addLayer(newLayer, title);
-          this.log.verbose(`map.add layer "${title} - there are now ${map.getLayers().getArray().length} layers`);
-          newLayer.setVisible(false); // options.hasOwnProperty('visible') ? options.visible : true);
-          resolve(newLayer);
-        }).catch(e => {
-          // reject() this?
-          this.log.warn(theClass, `URL DOES NOT EXIST: ${url}`);
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`createLayerFromWFSURL - Fetch Network response not ok for Name: "${title}", URL: ${url} - status: ${response.status}`);
+        }
+        const newLayer = new VectorLayer(Object.assign(options, {
+          title,
+          source: new VectorSource({
+            url,
+            format: new GeoJSON(),
+            // projection: 'EPSG:4326'
+          })
+        }));
+        newLayer.set('name', title);
+        this.addLayer(newLayer, title);
+        this.log.verbose(`map.add layer "${title}" - there are now ${map.getLayers().getArray().length} layers`);
+        newLayer.setVisible(options.hasOwnProperty('visible') ? options.visible : true);
+        resolve(newLayer);
+      });
+    });
+  }
+
+  async createLayerFromWFS1(title, url, options: Options = {}): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.eowMap.mapObs.asObservable().subscribe(async map => {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`createLayerFromWFSURL - Fetch Network response not ok for Name: "${title}", URL: ${url} - status: ${response.status}`);
+        }
+        const newLayer = new VectorLayer(Object.assign(options, {
+          title,
+          source: new VectorSource({
+            url,
+            format: new WFS()
+            // projection: 'EPSG:4326'
+          })
+        }));
+        newLayer.set('name', title);
+        this.addLayer(newLayer, title);
+        this.log.verbose(`map.add layer "${title}" - there are now ${map.getLayers().getArray().length} layers`);
+        newLayer.setVisible(options.hasOwnProperty('visible') ? options.visible : true);
+        resolve(newLayer);
+      });
+    });
+  }
+
+  async createLayerFromWFS2(title, url, options: Options = {}): Promise<any> {
+    // from https://openlayers.org/en/latest/examples/vector-wfs-getfeature.html
+    // featureNS: 'http://openstreemap.org',
+    // featurePrefix: 'osm',
+    // filter: andFilter(
+    //   likeFilter('name', 'Mississippi*'),
+    //   equalToFilter('waterway', 'riverbank')
+    // )
+    return new Promise((resolve, reject) => {
+      this.eowMap.mapObs.asObservable().subscribe(async map => {
+        // const responseCheck = await fetch(url);
+        // if (!responseCheck.ok) {
+        //   throw new Error(`createLayerFromWFSURL - Fetch Network response not ok for Name: "${title}", URL: ${url} - status: ${responseCheck.status}`);
+        // }
+        const vectorSource = new VectorSource({});
+        const newLayer = new VectorLayer(Object.assign(options, {
+          source: vectorSource
+        }));
+        const featureRequest = new WFS().writeGetFeature({
+          srsName: 'EPSG:3857',
+          featureTypes: [title],
+          featureNS: 'http://www.opengis.net/wfs',
+          featurePrefix: 'public',
+          outputFormat: 'application/json',
+          // bbox: map.getView().calculateExtent(map.getSize())
         });
+
+// then post the request and add the received features to a layer
+        console.log(`featureRequest: ${JSON.stringify(featureRequest)}`);
+        fetch(url, {
+          method: 'POST',
+          body: new XMLSerializer().serializeToString(featureRequest)
+        }).then((response) => {
+          return response.json();
+        }).then((json) => {
+          const features = new GeoJSON().readFeatures(json);
+          console.log(`features size: ${features.length}`)
+          vectorSource.addFeatures(features);
+          // map.getView().fit(vectorSource.getExtent());
+        }).catch(error => {
+          reject(`Unable to create layer 2: ${title} from ${url}`);
+        });
+
+        newLayer.set('name', title);
+        this.addLayer(newLayer, title);
+        this.log.verbose(`map.add layer "${title}" - there are now ${map.getLayers().getArray().length} layers`);
+        newLayer.setVisible(options.hasOwnProperty('visible') ? options.visible : true);
+        resolve(newLayer);
+      });
+    });
+  }
+
+  async createLayerFromWFS(title, url, featurePrefix, options: Options = {}): Promise<any> {
+    // from https://openlayers.org/en/latest/examples/vector-wfs-getfeature.html
+    // featureNS: 'http://openstreemap.org',
+    // featurePrefix: 'osm',
+    // filter: andFilter(
+    //   likeFilter('name', 'Mississippi*'),
+    //   equalToFilter('waterway', 'riverbank')
+    // )
+    return new Promise((resolve, reject) => {
+      this.eowMap.mapObs.asObservable().subscribe(async map => {
+        // const responseCheck = await fetch(url);
+        // if (!responseCheck.ok) {
+        //   throw new Error(`createLayerFromWFSURL - Fetch Network response not ok for Name: "${title}", URL: ${url} - status: ${responseCheck.status}`);
+        // }
+        const vectorSource = new VectorSource({
+          format: new GeoJSON(),
+          url: (extent) => {
+            return `${url}?service=WFS&` +
+              `version=1.1.0&request=GetFeature&typename=${featurePrefix}:${title}&` +
+              'outputFormat=application/json&srsname=EPSG:3857&' +
+              `bbox=${extent.join(',')},EPSG:3857`;
+          },
+          strategy: bboxStrategy
+        });
+
+        const newLayer = new VectorLayer(Object.assign(options, {
+          source: vectorSource,
+          style: new Style({
+            stroke: new Stroke({
+              color: 'rgba(0, 64, 128, 1.0)',
+              width: 2
+            })
+          })
+        }));
+//         const featureRequest = new WFS().writeGetFeature({
+//           srsName: 'EPSG:3857',
+//           featureTypes: [title],
+//           featureNS: 'http://www.opengis.net/wfs',
+//           featurePrefix: 'public',
+//           outputFormat: 'application/json',
+//           // bbox: map.getView().calculateExtent(map.getSize())
+//         });
+//
+// // then post the request and add the received features to a layer
+//         console.log(`featureRequest: ${JSON.stringify(featureRequest)}`);
+//         fetch(url, {
+//           method: 'POST',
+//           body: new XMLSerializer().serializeToString(featureRequest)
+//         }).then((response) => {
+//           return response.json();
+//         }).then((json) => {
+//           const features = new GeoJSON().readFeatures(json);
+//           console.log(`features size: ${features.length}`)
+//           vectorSource.addFeatures(features);
+//           // map.getView().fit(vectorSource.getExtent());
+//         }).catch(error => {
+//           reject(`Unable to create layer 2: ${title} from ${url}`);
+//         });
+
+        newLayer.set('name', title);
+        this.addLayer(newLayer, title);
+        this.log.verbose(`map.add layer "${title}" - there are now ${map.getLayers().getArray().length} layers`);
+        newLayer.setVisible(options.hasOwnProperty('visible') ? options.visible : true);
+        resolve(newLayer);
       });
     });
   }
@@ -123,7 +267,7 @@ export class Layers {
         } else {
           const featureSource = new VectorSource();
           featureSource.addFeatures(features);
-          console.log(`Lines layer: ${name} - # lines added: ${features.length}`);
+          this.log.verbose(`Lines layer: ${name} - # lines added: ${features.length}`);
           newLayer = new VectorLayer(Object.assign(options, {
             name,
             source: featureSource
