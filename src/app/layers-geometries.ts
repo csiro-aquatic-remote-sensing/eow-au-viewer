@@ -1,4 +1,13 @@
-import {Feature as turfFeature, lineString, LineString, multiLineString, Polygon, polygon, multiPolygon} from '@turf/helpers';
+import {
+  Feature as turfFeature,
+  lineString,
+  multiLineString,
+  Polygon,
+  polygon,
+  multiPolygon,
+  FeatureCollection,
+  featureCollection as turfFeatureCollection
+} from '@turf/helpers';
 import lineToPolygon from '@turf/line-to-polygon';
 import GeoJSONFeature from 'ol/format/Feature';
 import OLGeoJson from 'ol/format/GeoJSON';
@@ -10,6 +19,7 @@ import {
 import {FeatureLike} from 'ol/Feature';
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import {EowLayers, LayersInfo} from './eow-layers';
+import GeoJSON from 'ol/format/GeoJSON';
 
 const theClass = 'LayerGeometries';
 
@@ -24,77 +34,33 @@ export default class LayerGeometries {
   constructor(private eowLayers: EowLayers, private log: Brolog) {
   }
 
-  async init() {
-    return this.eowLayers.waterBodiesLayersObs.asObservable().subscribe(async waterBodyLayers => {
-      return Promise.all(waterBodyLayers.map(async layer => {
-        if (layer.options.useAsWaterBodySource) {
-          await this.createGeometry(layer.name, layer.url);
-        }
-      }));
+  public createFeatureCollection(features: Feature[]): FeatureCollection<Polygon> {
+    const theTurfFeatures: turfFeature<Polygon>[] = [];
+
+    features.forEach(feature => {
+      const simpleGeometry = feature.getGeometry() as SimpleGeometry;
+      switch (feature.getGeometry().getType().toLowerCase()) {
+        case  'linestring':
+          this.convertLineString(theTurfFeatures, simpleGeometry);
+          break;
+        case 'multilinestring':
+          this.convertMultiLineString(theTurfFeatures, simpleGeometry);
+          break;
+        case 'polygon':
+          this.convertPolygon(theTurfFeatures, simpleGeometry);
+          break;
+        case 'multipolygon':
+          this.convertMultiPolygon(theTurfFeatures, simpleGeometry);
+          break;
+        case 'point':
+          // ignore points
+          break;
+        default:
+          throw new Error(`Unhandled type: ${feature.getGeometry().getType()}`);
+      }
     });
-    // await this.createGeometry('Waterbodies shape', 'assets/waterbodies/Australia/aus25wgd_l.geojson');
-    // await this.createGeometry('Waterbodies fill', 'assets/waterbodies/Australia/aus25wgd_r.geojson');
-    // await this.createGeometry('Waterbodies name', 'assets/waterbodies/Australia/aus25wgd_p.geojson');
-    //
-    // // new data but that only covers ACT + ~ 100kms square
-    // await this.createGeometry('i5516 flats', 'assets/waterbodies/Canberra/i5516_flats.geojson');
-    // await this.createGeometry('i5516 pondages', 'assets/waterbodies/Canberra/i5516_pondageareas.geojson');
-    // await this.createGeometry('i5516 waterCourseLines', 'assets/waterbodies/Canberra/i5516_watercourselines.geojson');
-    // await this.createGeometry('i5516 waterCourseAreas', 'assets/waterbodies/Canberra/i5516_watercourseareas.geojson');
-    // await this.createGeometry('i5516 lakes', 'assets/waterbodies/Canberra/i5516_waterholes.geojson');
-    // await this.createGeometry('i5516 reservoirs', 'assets/waterbodies/Canberra/i5516_reservoirs.geojson');
-
-    // this.log.verbose(theClass, `Layer geometries: ${Object.keys(this.layerFeatures)}`);
-  }
-
-  async createGeometry(name, layerUrl) {
-    return;
-    let json: any;
-    this.log.verbose(theClass, `CreateGeomety - name: ${name}`);
-    try {
-      const response = await fetch(layerUrl);
-      if (!response.ok) {
-        throw new Error(`Fetch Network response not ok for Name: "${name}", URL: ${layerUrl}`);
-      }
-      json = await response.json();
-    } catch (error) {
-      this.log.error(theClass, `Fetch Network error - ${error}`);
-    }
-
-    try {
-      const format = new OLGeoJson();
-      const geoJSONFeatures = format.readFeatures(json, {dataProjection: 'EPSG:4326', featureProjection: 'EPSG:4326'});
-      if (!geoJSONFeatures) {
-        return;
-      }
-
-      this.layerFeatures[this.mapNames(name)] = [];
-      geoJSONFeatures.forEach(feature => {
-        const simpleGeometry = feature.getGeometry() as SimpleGeometry;
-        switch (feature.getGeometry().getType().toLowerCase()) {
-          case  'linestring':
-            this.convertLineString(this.layerFeatures[this.mapNames(name)], simpleGeometry);
-            break;
-          case 'multilinestring':
-            this.convertMultiLineString(this.layerFeatures[this.mapNames(name)], simpleGeometry);
-            break;
-          case 'polygon':
-            this.convertPolygon(this.layerFeatures[this.mapNames(name)], simpleGeometry);
-            break;
-          case 'multipolygon':
-            this.convertMultiPolygon(this.layerFeatures[this.mapNames(name)], simpleGeometry);
-            break;
-          case 'point':
-            // ignore points
-            break;
-          default:
-            throw new Error(`Unhandled type: ${feature.getGeometry().getType()}`);
-        }
-      });
-      this.log.verbose(theClass, `LayerGeometries add new item at '${this.mapNames(name)}`);
-    } catch (error) {
-      this.log.error(theClass, `Turf Error - ${error}`);
-    }
+    const featureCollection: FeatureCollection<Polygon> = turfFeatureCollection<Polygon>(theTurfFeatures);
+    return featureCollection;
   }
 
   private convertLineString(dataDestination, simpleGeometry: SimpleGeometry) {
