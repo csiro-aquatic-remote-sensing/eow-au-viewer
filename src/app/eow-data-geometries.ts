@@ -16,6 +16,7 @@ import circle from '@turf/circle';
 import {EowDataStruct, PointsMap, SourcePointMarginsType} from './eow-data-struct';
 import {LayersInfo} from './eow-layers';
 import {EowDataLayer} from './eow-data-layer';
+import VectorSource from 'ol/source/Vector';
 
 const theClass = 'EowDataGeometries';
 
@@ -35,31 +36,59 @@ export default class EowDataGeometries {
   /**
    * EOW Data Points as read from the WFS data.  The number field is so that only broadcast a change when there is a real change.
    */
-  pointsObs: BehaviorSubject<FeatureCollection<Point>> = new BehaviorSubject<FeatureCollection<Point>>(null);
+  private _pointsObs: BehaviorSubject<FeatureCollection<Point>> = new BehaviorSubject<FeatureCollection<Point>>(null);
+  private points: FeatureCollection<Point>;
   pointsNumber = 0;
   /**
    * EOW Data Points + margin / circle around that point.  The number field is so that only broadcast a change when there is a real change.
    */
-  pointsErrorMarginObs: BehaviorSubject<SourcePointMarginsType[]> = new BehaviorSubject<SourcePointMarginsType[]>(null);
+  private _pointsErrorMarginObs: BehaviorSubject<SourcePointMarginsType[]> = new BehaviorSubject<SourcePointMarginsType[]>(null);
+  private pointsErrorMargin: SourcePointMarginsType[];
   pointsErrorMarginNumber = 0;
   /**
    * Map from all points in pointsErrorMarginObs back to the EOW Data Point (sourcePoint).  The number field is so that only broadcast a change when there is a real change.
    */
-  allPointsMapObs: BehaviorSubject<PointsMap> = new BehaviorSubject<PointsMap>(null);
+  private _allPointsMapObs: BehaviorSubject<PointsMap> = new BehaviorSubject<PointsMap>(null);
+  private allPointsMap: PointsMap;
   allPointsMapNumber = 0;
   /**
    * FlatMap of everything in pointsErrorMarginObs.  Can use this for intersections with waterbody polygons and then use allPointsMapObs
    * to map all intersected points back to the EOW Data Point (sourcePoint).  The number field is so that only broadcast a change when there is a real change.
    */
-  allPointsObs: BehaviorSubject<FeatureCollection<Point>> = new BehaviorSubject<FeatureCollection<Point>>(null);
+  private _allPointsObs: BehaviorSubject<FeatureCollection<Point>> = new BehaviorSubject<FeatureCollection<Point>>(null);
+  private allPoints: FeatureCollection<Point>;
   allPointsNumber = 0;
+
+  private allDataSource: VectorSource;
 
   constructor(private log: Brolog) {
   }
 
   async init(eowData: EowDataLayer) {
-    await this.readEowDataPoints(eowData);
+    eowData.allDataSourceObs.subscribe(async allDataSource => {
+      if (allDataSource) {
+        this.allDataSource = allDataSource;
+        await this.readEowDataPoints(eowData);
+      }
+    });
+
     return this; // so can chain the init to the declaration
+  }
+
+  public getPoints() {
+    return this._pointsObs.asObservable();
+  }
+
+  public getPointsErrorMargin() {
+    return this._pointsErrorMarginObs.asObservable();
+  }
+
+  public getAllPointsMap() {
+    return this._allPointsMapObs.asObservable();
+  }
+
+  public getAllPoints() {
+    return this._allPointsObs.asObservable();
   }
 
   /**
@@ -68,49 +97,25 @@ export default class EowDataGeometries {
    * This calculates the data and saves in pointsObs Behaviour Subject (an Observable).
    */
   private async readEowDataPoints(eowData: EowDataLayer) {
-    // try {
-    //   const response = await fetch(WFS_URL);
-    //   const geoJSONFeatures = new GeoJSON().readFeatures(await response.json(), {
-    //     dataProjection: 'EPSG:4326',
-    //     featureProjection: 'EPSG:4326'
-    //   });
-    //   const features: Feature<Point>[] = [];
-    //   // Should return a promise here
-    //   for (const feature of geoJSONFeatures) {
-    //     const simpleGeometry = feature.getGeometry() as SimpleGeometry;
-    //     const featurePoint: Feature<Point> = turfPoint(simpleGeometry.getCoordinates(), feature);
-    //     features.push(featurePoint);
-    //   }
-    //   const points = turfFeatureCollection(features);
-    //   this.pointsObs = new BehaviorSubject<FeatureCollection<Point>>(points);
-    //
-    //   this.log.silly(theClass, `EOWDataGeometries - ${JSON.stringify(points)}`);
-    // } catch (error) {
-    //   this.log.error(error);
-    //   // reject(error);
-    //   this.pointsObs = new BehaviorSubject<FeatureCollection<Point>>(null);
-    // }
-
-    eowData.allDataSourceObs.subscribe(async allDataSource => {
-      if (allDataSource) {
-        const dsFeatures = allDataSource.getFeatures();
-        const features: Feature<Point>[] = [];
-        // Should return a promise here
-        for (const feature of dsFeatures) {
-          const simpleGeometry = feature.getGeometry() as SimpleGeometry;
-          const featurePoint: Feature<Point> = turfPoint(simpleGeometry.getCoordinates(), feature);
-          features.push(featurePoint);
-        }
-        const points = turfFeatureCollection(features);
-        if (points.features.length !== this.pointsNumber) {
-          console.log(`update pointsObs - items#: ${points.features.length}`);
-          this.pointsNumber = points.features.length;
-          this.pointsObs.next(points);
-        }
-        await this.calculatePointsErrorMargin();
-        await this.generatePointsMap();
+    if (this.allDataSource) {
+      const dsFeatures = this.allDataSource.getFeatures();
+      const features: Feature<Point>[] = [];
+      // Should return a promise here
+      for (const feature of dsFeatures) {
+        const simpleGeometry = feature.getGeometry() as SimpleGeometry;
+        const featurePoint: Feature<Point> = turfPoint(simpleGeometry.getCoordinates(), feature);
+        features.push(featurePoint);
       }
-    });
+      const points = turfFeatureCollection(features);
+      if (points.features.length !== this.pointsNumber) {
+        this.points = points;
+        console.log(`update pointsObs - items#: ${this.points.features.length}`);
+        this.pointsNumber = this.points.features.length;
+        this._pointsObs.next(this.points);
+      }
+      await this.calculatePointsErrorMargin();
+      await this.generatePointsMap();
+    }
   }
 
   /**
@@ -123,8 +128,8 @@ export default class EowDataGeometries {
    *
    * @returns object - {sourcePoint: <centre point>, margins: FeatureCollection<Point>(<points around centre point>)}
    */
-  private async calculatePointsErrorMargin() {
-    this.pointsObs.asObservable().subscribe(eowPoints => {
+  private calculatePointsErrorMargin() {
+    this.getPoints().subscribe(eowPoints => {
       const errorMarginPoints: SourcePointMarginsType[] = [];
       const allPoints: FeatureCollection<Point> = {
         features: [],  // Array<Feature<Point, Properties>>,
@@ -144,15 +149,17 @@ export default class EowDataGeometries {
       });
 
       if (errorMarginPoints.length !== this.pointsErrorMarginNumber) {
+        this.pointsErrorMargin = errorMarginPoints;
         console.log(`update pointsErrorMarginObs - items#: ${errorMarginPoints.length}`);
         this.pointsErrorMarginNumber = errorMarginPoints.length;
-        this.pointsErrorMarginObs.next(errorMarginPoints);
+        this._pointsErrorMarginObs.next(errorMarginPoints);
       }
 
       if (allPoints.features.length !== this.allPointsNumber) {
+        this.allPoints = allPoints;
         console.log(`update allPointsObs - items#: ${allPoints.features.length}`);
         this.allPointsNumber = allPoints.features.length;
-        this.allPointsObs.next(allPoints);
+        this._allPointsObs.next(allPoints);
       }
     });
   }
@@ -167,7 +174,7 @@ export default class EowDataGeometries {
    * @param errorMarginPoints with the sourcePoint feature and marginPoints FeatureCollection.
    */
   private async generatePointsMap() {
-    this.pointsErrorMarginObs.asObservable().subscribe(errorMarginPoints => {
+    this.getPointsErrorMargin().subscribe(errorMarginPoints => {
       const pointsMap: PointsMap = {};
 
       errorMarginPoints.forEach(emp => {
@@ -180,7 +187,7 @@ export default class EowDataGeometries {
       if (Object.keys(pointsMap).length !== this.pointsErrorMarginNumber) {
         console.log(`update allPointsMapObs - items#: ${Object.keys(pointsMap).length}`);
         this.pointsErrorMarginNumber = Object.keys(pointsMap).length;
-        this.allPointsMapObs.next(pointsMap);
+        this._allPointsMapObs.next(pointsMap);
       }
     });
   }

@@ -88,22 +88,22 @@ export class AppComponent implements OnInit {
 
     this.measurementStore = await new MeasurementStore(this.log);
     this.eowDataGeometries = await new EowDataGeometries(this.log).init(this.eowData);  // TODO this seems to do similar to EowDataLayer - combine
-    this.eowDataGeometries.pointsObs.asObservable().subscribe(async (points) => {
+    this.eowDataGeometries.getPoints().subscribe(async (points) => {
       this.points = points;
       const pointsLength = this.points ? this.points.features.length : 'null';
       console.log(`  pointsObs subscription updated - points#: ${pointsLength}`);
     });
-    this.eowDataGeometries.allPointsObs.asObservable().subscribe(async sourceNErrorMarginPoints => {
+    this.eowDataGeometries.getAllPoints().subscribe(async sourceNErrorMarginPoints => {
       this.sourceNErrorMarginPoints = sourceNErrorMarginPoints;
       const theSourceNErrorMarginPointsLength = this.sourceNErrorMarginPoints ? this.sourceNErrorMarginPoints.features.length : 'null';
       console.log(`  sourceNErrorMarginPoints subscription updated - points#: ${theSourceNErrorMarginPointsLength}`);
     });
-    this.eowDataGeometries.allPointsMapObs.asObservable().subscribe(async allPointsMap => {
+    this.eowDataGeometries.getAllPointsMap().subscribe(async allPointsMap => {
       this.allPointsMap = allPointsMap;
       const theAllPointsMapObsLength = this.allPointsMap ? Object.keys(this.allPointsMap).length : 'null';
       console.log(`  allPointsMap subscription updated - points#: ${theAllPointsMapObsLength}`);
     });
-    this.eowDataGeometries.pointsErrorMarginObs.asObservable().subscribe(pointsErrorMargins => {
+    this.eowDataGeometries.getPointsErrorMargin().subscribe(pointsErrorMargins => {
       this.pointsErrorMargins = pointsErrorMargins;
     });
 
