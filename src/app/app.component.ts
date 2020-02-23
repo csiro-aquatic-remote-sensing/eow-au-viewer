@@ -164,7 +164,7 @@ export class AppComponent implements OnInit {
     if (this.ready()) {
       // Maybe debug, maybe not.  Don't perform calculations when zoomed out too far
       console.warn(`Resolution: ${this.map.getView().getResolution()}`);
-      if (this.map.getView().getZoom() >= 12) {
+      if (this.map.getView().getZoom() >= 9) {
         console.log(`  *** -> calculateIntersectionsPlot loop -`);
         console.log(`    points#: ${this.points.features.length}, allPointsMap#: ${Object.keys(this.allPointsMap).length}, `
           + `sourceNErrorMarginPoints#: ${this.sourceNErrorMarginPoints.features.length}, waterBodyLayers#: ${this.waterBodiesLayers.length}`);

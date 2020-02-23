@@ -16,7 +16,7 @@ import {EowWaterBodyIntersection, SourcePointMarginsType} from '../eow-data-stru
 import {PieChartContainer} from './pie-chart-container';
 import {TimeSeriesChartContainer} from './time-series-chart-container';
 
-const theClass = `EOWDataPieChart`;
+const theClass = `EOWDataCharts`;
 
 type Coords = [number, number];
 
@@ -103,9 +103,12 @@ export default class EowDataCharts {
       }
     });
     if (validData.length > 0 && point[0] && point[1] && !isNaN(point[0]) && !isNaN(point[1])) {
-      this.log.verbose(theClass, `Draw pieChart at ${point[0]}, ${point[1]})}`);
-      new PieChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, point, map, this.createId('pieChart-'), validData).draw();
-      new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.offSet(point, 1), map, this.createId('timeSeriesChart-'), validData).draw();
+      const newPoint = [point[1], point[0]];
+      const idPie = this.createId('pieChart-');
+      const idTime =  this.createId('timeSeriesChart-');
+      this.log.verbose(theClass, `Draw pieChart ${idPie} at ${JSON.stringify(newPoint)}`);
+      new PieChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, point, map, idPie, validData).draw();
+      new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.offSet(point, 1), map, idTime, validData).draw();
     } else {
       this.log.info(theClass, `NOT Drawing pieChart at "${point[0]}", "${point[1]}")}`);
     }
