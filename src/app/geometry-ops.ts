@@ -6,7 +6,7 @@ import {
   Polygon,
   point as turfPoint,
   featureCollection,
-  featureCollection as turfFeatureCollection
+  featureCollection as turfFeatureCollection, Geometry
 } from '@turf/helpers';
 import centroid from '@turf/centroid';
 import pointsWithinPolygon from '@turf/points-within-polygon';
@@ -70,14 +70,16 @@ export default class GeometryOps {
    *          eowData: null
    */
   async calculateLayerIntersections(eowDataGeometry: FeatureCollection<Point>, errorMarginPoints: FeatureCollection<Point>,
-                                    allPointsMap: PointsMap, layerGeometries: LayerGeometries, layerName: string):
+                                    allPointsMap: PointsMap, waterBodyLayerPolygons: FeatureCollection<Polygon>, layerName: string ):
     Promise<EowWaterBodyIntersection[]> {
     return new Promise<EowWaterBodyIntersection[]>(resolve => {
-      const layerGeometry: Feature<Polygon>[] = layerGeometries.getLayer(layerName);
+      const layerGeometry: Feature<Polygon>[] = waterBodyLayerPolygons.features;
       const eowWaterBodyIntersections: EowWaterBodyIntersection[] = [];
       const pointsToUse = errorMarginPoints ? errorMarginPoints : eowDataGeometry;
 
       this.log.info(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
+      const details = layerGeometry.length > 0 ? layerGeometry[0].geometry.coordinates[0][0] : 'no polygons';
+      console.log(`layerPolygons - there are: ${layerGeometry.length} - coords of first is: ${details}`);
       for (const layerPolygon of layerGeometry) {
         const intersection: FeatureCollection<Point> = pointsWithinPolygon(pointsToUse, layerPolygon) as FeatureCollection<Point>;
         // TODO - now build a FeatureCollection<Point> from allPointsMapObs

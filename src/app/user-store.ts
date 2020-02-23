@@ -8,6 +8,8 @@ import {
 import Brolog from 'brolog';
 import {BehaviorSubject} from 'rxjs';
 import {MeasurementStore} from './measurement-store';
+import {EowDataLayer} from './eow-data-layer';
+import VectorLayer from 'ol/layer/Vector';
 
 const theClass = 'UserStore';
 
@@ -15,15 +17,18 @@ export class UserStore {
   // htmlDocument: Document;
   users: [];
   userById: {};
-  dataLayerObs: BehaviorSubject<any>;
   selectedUserId = '';
+  private dataLayer: VectorLayer;
 
   constructor(private htmlDocument: Document, private log: Brolog) {
   }
 
-  async init(dataLayerObs: BehaviorSubject<any>, measurementStore: MeasurementStore): Promise<UserStore> {
-    this.dataLayerObs = dataLayerObs;
+  async init(eowData: EowDataLayer, measurementStore: MeasurementStore): Promise<UserStore> {
     const USER_SERVICE = 'https://www.eyeonwater.org/api/users';
+
+    eowData.dataLayerObs.subscribe(dataLayer => {
+      this.dataLayer = dataLayer;
+    });
 
     async function loadUsers() {
       // TODO I'm curious as to if this is correct under Angular
@@ -52,13 +57,15 @@ export class UserStore {
   }
 
   setupEventHandlers(measurementStore: MeasurementStore) {
-    this.dataLayerObs.asObservable().subscribe(dataLayer => {
-      dataLayer.on('change', debounce(({target}) => {
+    // this.eowData.dataLayerObs.subscribe(dataLayer => {
+    if (this.dataLayer) {
+      this.dataLayer.on('change', debounce(({target}) => {
         // Populate datalayer
         const element = this.htmlDocument.querySelector('.sub-header-stats') as HTMLElement;
         element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), this);
       }, 200));
-    });
+    }
+    // });
 
     // User List
     document.querySelector('.user-list').addEventListener('click', (event) => {

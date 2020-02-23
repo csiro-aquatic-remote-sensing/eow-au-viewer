@@ -8,27 +8,37 @@ import keyBy from 'lodash/keyBy';
 import groupBy from 'lodash/groupBy';
 import {UserStore} from './user-store';
 import Brolog from 'brolog';
-import {BehaviorSubject} from 'rxjs';
 import {EowDataLayer} from './eow-data-layer';
 import {EOWMap} from './eow-map';
+import {Feature} from 'ol';
+import VectorLayer from 'ol/layer/Vector';
 
 let performOnce = true;
 
 export class MeasurementStore {
-  measurements: [];
+  measurements: Feature[];
   measurementsById: {};
   measurementsByOwner: {};
-  eowMap: EOWMap;
-  dataLayerObs: BehaviorSubject<any>;
-  allDataSourceObs: BehaviorSubject<any>;
+  eowData: EowDataLayer;
+  allDataSource: VectorSource;
+  dataLayer: VectorLayer;
+  map: Map;
 
   constructor(private log: Brolog) {
   }
 
   init(eowMap: EOWMap, eowData: EowDataLayer, userStore: UserStore) {
-    this.eowMap = eowMap;
-    this.allDataSourceObs = eowData.allDataSourceObs;
-    this.dataLayerObs = eowData.dataLayerObs;
+    // this.eowMap = eowMap;
+    // this.eowData = eowData;
+    eowData.allDataSourceObs.subscribe(allDataSource => {
+      this.allDataSource = allDataSource;
+    });
+    eowMap.getMap().subscribe(map => {
+      this.map = map;
+    });
+    eowData.dataLayerObs.subscribe(dataLayer => {
+      this.dataLayer = dataLayer;
+    });
     this.setupEventHandling(userStore);
 
     return this;
@@ -43,9 +53,9 @@ export class MeasurementStore {
   }
 
   setupEventHandling(userStore: UserStore) {
-    this.allDataSourceObs.asObservable().subscribe(allDataSource => {
+    if (this.allDataSource) {
       this.initialLoadMeasurements(userStore);
-    });
+    }
   }
 
   /**
@@ -54,22 +64,22 @@ export class MeasurementStore {
    */
   private initialLoadMeasurements(userStore) {
     if (performOnce && userStore.selectedUserId === '') {
-      this.allDataSourceObs.asObservable().subscribe(allDataSource => {
+      // this.eowData.allDataSourceObs.subscribe(allDataSource => {
+      if (this.allDataSource) {
         performOnce = false;
         // const source = event.target;
-        const features = allDataSource.getFeatures();
+        const features = this.allDataSource.getFeatures();
         // Store the measurements in easy to access data structure
         this.measurements = features;
         this.measurementsById = keyBy(features, f => f.get('n_code'));
         this.measurementsByOwner = groupBy(features, f => f.get('user_n_code'));
 
         this.recentMeasurements(this.measurements);
-        allDataSource.un('change', this.initialLoadMeasurements.bind(this, userStore));
-        allDataSource.removeEventListener('change', this.initialLoadMeasurements);
+        this.allDataSource.un('change', this.initialLoadMeasurements.bind(this, userStore));
         // console.log(`loadMeasurements (by Id): ${JSON.stringify(Object.keys(this.measurementsById))}`);
         // console.log(`loadMeasurements (by Owner): ${JSON.stringify(Object.keys(this.measurementsByOwner))}`);
         // }
-      });
+      }
     }
   }
 
@@ -98,18 +108,16 @@ export class MeasurementStore {
     }
     const newSource = new VectorSource();
     newSource.addFeatures(selection);
-    this.eowMap.mapObs.asObservable().subscribe(map => {
-      map.getView().fit(newSource.getExtent(), {
-        size: map.getSize(),
-        padding: [100, 100, 100, 100],
-        nearest: false,
-        duration: 1300
-      });
-      this.dataLayerObs.asObservable().subscribe(dataLayer => {
-        dataLayer.setSource(newSource);
-      });
-      this.recentMeasurements(selection);
+    this.map.getView().fit(newSource.getExtent(), {
+      size: this.map.getSize(),
+      padding: [100, 100, 100, 100],
+      nearest: false,
+      duration: 1300
     });
+    if (this.dataLayer) {
+      this.dataLayer.setSource(newSource);
+    }
+    this.recentMeasurements(selection);
     return true;
   }
 

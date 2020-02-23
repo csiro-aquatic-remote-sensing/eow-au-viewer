@@ -28,7 +28,7 @@ export class Popup {
    */
   init(eowMap: EOWMap) {
     if (!this.popup) {
-      eowMap.mapObs.asObservable().subscribe(map => {
+      eowMap.getMap().subscribe(map => {
         this.popup = new Overlay({
           element: this.htmlDocument.getElementById(this.elementId),
           position: [0, 0],

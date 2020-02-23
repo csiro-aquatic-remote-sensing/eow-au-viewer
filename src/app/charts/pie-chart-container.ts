@@ -45,16 +45,15 @@ export class PieChartContainer extends ChartContainer {
       };
       const format = new GeoJSON();
       const lineFeatures = allEOWDataPoints().map(p => {
-        this.log.info(theClass, `Draw chart to EOWData line: ${JSON.stringify(point)}, ${JSON.stringify(p)}`);
+        this.log.silly(theClass, `Draw chart to EOWData line: ${JSON.stringify(point)}, ${JSON.stringify(p)}`);
         const ls = turfLineString([point, p], {name: 'FUChart to EOWData line'});
-        this.log.silly(theClass, `  LineString: ${JSON.stringify(ls)}`);
         const lsFeature = format.readFeature(ls, {
           dataProjection: 'EPSG:4326',
           featureProjection: 'EPSG:3857'
         });
         return lsFeature;
       });
-      await this.layers.createLayerFromWFSFeatures(`Lines for  ${layerName}`, lineFeatures, {visible: false});
+      await this.layers.createLayerFromWFSFeatures(lineFeatures, {visible: false, layerDisplayName: `Lines for  ${layerName}`}, null);
     }
   }
 }

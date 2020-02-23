@@ -7,6 +7,7 @@ import {
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
+import WFS from 'ol/format/WFS';
 import Map from 'ol/Map';
 import TileLayer from 'ol/layer/Tile';
 import {HttpClient} from '@angular/common/http';
@@ -18,6 +19,8 @@ import {EOWMap} from './eow-map';
 import {BehaviorSubject} from 'rxjs';
 import Feature from 'ol/Feature';
 import Stroke from 'ol/style/Stroke';
+import {bbox as bboxStrategy} from 'ol/loadingstrategy';
+import {LayersInfoMangar, LayersSourceSetup} from './eow-layers';
 
 const theClass = 'Layers';
 
@@ -45,62 +48,176 @@ export interface Options {
   params?: any;
 }
 
-// Internally to the Map, layers are stored in an array but we need to get to them through the layer 'name'.
-// We need to have the ability to append to existing features in createLayerFromWFSFeatures
-type LayerNames = { [name: string]: number }; // tslint:disable-line
+type LayerNamesSchema = { [name: string]: number }; // tslint:disable-line
+
+/**
+ *
+ * Internally to the Map, layers are stored in an array but we need to get to them through the layer 'name'.
+ * We need to have the ability to append to existing features in createLayerFromWFSFeatures
+ * LayerNames maps names to index in the Map's layers array
+ */
+export class LayerNames {
+  private layerNames: LayerNamesSchema = {};
+
+  private fixeName(name: string) {
+    if (! name) {
+      throw new Error(`name is undefined`);
+    }
+    return name.replace('\s+', '_');
+  }
+
+  /**
+   * Add a value at 'name' index and return the 'name' (as it might have been altered for consistency reasons)
+   * @param name is the index
+   * @param value to add at name
+   * @return name as it was used as index since might have been altered for consistency reasons
+   */
+  public addName(name: string, value: any): string {
+    const fixed = this.fixeName(name);
+    if (this.layerNames.hasOwnProperty(fixed)) {
+      throw new Error(`Attempting to add an existing name: ${fixed}`);
+    }
+    this.layerNames[fixed] = value;
+    return fixed;
+  }
+
+  public getName(name: string) {
+    return this.layerNames[this.fixeName(name)];
+  }
+
+  public getAll(): string[] {
+    return Object.keys(this.layerNames);
+  }
+}
 
 export class Layers {
   private mapLayersObs: BehaviorSubject<any>;
-  private layerNames: LayerNames = {};
+  layerNames = new LayerNames();
+  private map: Map;
 
   constructor(private eowMap: EOWMap, private htmlDocument: Document, private http: HttpClient, private log: Brolog) {
+    this.eowMap.getMap().subscribe(async map => {
+      this.map = map;
+    });
+
     this.mapLayersObs = new BehaviorSubject(null);
     this.mapLayersObs.asObservable().subscribe(layer => {
       this.drawLayerInMenu(layer);
     });
   }
 
-  async createLayerFromWFSURL(title, url, options: Options = {}): Promise<any> {
-    return new Promise((resolve, reject) => {
-      this.eowMap.mapObs.asObservable().subscribe(async map => {
-        this.http.get(url).toPromise().then(d => {
-          this.log.info(theClass, `url exists: ${url}`);
-          const newLayer = new VectorLayer(Object.assign(options, {
-            title,
-            source: new VectorSource({
-              url,
-              format: new GeoJSON(),
-              // projection: 'EPSG:4326'
-            })
-          }));
-          newLayer.set('name', title);
-          this.addLayer(newLayer, title);
-          this.log.verbose(`map.add layer "${title} - there are now ${map.getLayers().getArray().length} layers`);
-          newLayer.setVisible(false); // options.hasOwnProperty('visible') ? options.visible : true);
-          resolve(newLayer);
-        }).catch(e => {
-          // reject() this?
-          this.log.warn(theClass, `URL DOES NOT EXIST: ${url}`);
-        });
-      });
+  /**
+   * Such as from a file.
+   *
+   * @param url to source that returns a geojson.
+   * @param options for creating the layer
+   * @param waterBodiesLayers class instance to update for the client
+   */
+  async createLayerFromGeoJSON(url, options: LayersSourceSetup, waterBodiesLayers: LayersInfoMangar): Promise<any> {
+    return new Promise(async (resolve, reject) => {
+      const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`createLayerFromWFSURL - Fetch Network response not ok for Name: "${name}", URL: ${url} - status: ${response.status}`);
+      }
+      const newLayer = new VectorLayer(Object.assign(options, {
+        source: new VectorSource({
+          url,
+          format: new GeoJSON(),
+          // projection: 'EPSG:4326'
+        })
+      }));
+      newLayer.set('name', name);
+      const index = this.addLayer(newLayer, name);
+      // This waterBodiesLayers.addInfo() needs to be done here in the promise
+      waterBodiesLayers.addInfo(name, index, url, options);
+      resolve(newLayer);
     });
   }
 
-  async createLayerFromWMSURL(title, url, options: Options = {}): Promise<any> {
-    return new Promise((resolve) => {
-      this.eowMap.mapObs.asObservable().subscribe(async map => {
-        const wms = new TileLayer({
-          opacity: 0.6,
-          source: new TileWMS({
-            url: 'https://ows.dea.ga.gov.au',
-            params: options.params,
-          })
-        });
-        wms.set('name', title);
-        this.addLayer(wms, title);
-        wms.setVisible(false);
-        resolve();
+  /**
+   * Such as from a geo service.
+   *
+   * @param url to source that returns a geojson.
+   * @param options for creating the layer
+   * @param waterBodiesLayers class instance to update for the client
+   */
+  async createLayerFromWFS(urlForWFS, options: LayersSourceSetup, waterBodiesLayers: LayersInfoMangar): Promise<any> {
+    return new Promise((resolve, reject) => {
+      if (!options.layerOrFeatureName) {
+        reject('options.featureName expected');
+      }
+      const vectorSource = new VectorSource({
+        format: new GeoJSON(),
+        loader: (extent, resolution, projection) => {
+          const proj = projection.getCode();
+          const feature = options.featurePrefix ? options.featurePrefix + ':' + options.layerOrFeatureName : options.layerOrFeatureName;
+          const url = `${urlForWFS}?service=WFS&version=1.1.0&request=GetFeature&typename=${feature}&` +
+            `outputFormat=application/json&srsname=${proj}&bbox=${extent.join(',')},${proj}`;
+          const xhr = new XMLHttpRequest();
+          xhr.open('GET', url);
+          const onError = () => {
+            vectorSource.removeLoadedExtent(extent);
+          };
+          xhr.onerror = onError;
+          xhr.onload = () => {
+            if (xhr.status === 200) {
+              const features = vectorSource.getFormat().readFeatures(xhr.responseText, {
+                dataProjection: proj,
+                featureProjection: 'EPSG:4326'
+              }) as Feature[];
+              vectorSource.addFeatures(features);
+            } else {
+              onError();
+            }
+          };
+          xhr.send();
+        },
+        strategy: bboxStrategy
       });
+
+      const newLayer = new VectorLayer(Object.assign(options, {
+        source: vectorSource,
+        // TODO pass in the style
+        style: new Style({
+          stroke: new Stroke({
+            color: 'rgba(0, 64, 128, 1.0)',
+            width: 2
+          })
+        })
+      }));
+      const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
+      newLayer.set('name', name);
+      const index = this.addLayer(newLayer, name);
+      // This waterBodiesLayers.addInfo() needs to be done here in the promise
+      waterBodiesLayers.addInfo(name, index, urlForWFS, options);
+      resolve(newLayer);
+    });
+  }
+
+  /**
+   * Such as from a geo service.
+   *
+   * @param url to source that returns a geojson.
+   * @param options for creating the layer
+   * @param waterBodiesLayers class instance to update for the client
+   */
+  async createLayerFromWMS(url, options: LayersSourceSetup, waterBodiesLayers: LayersInfoMangar): Promise<any> {
+    return new Promise((resolve) => {
+      options.opacity = options.opacity || 0.6;
+      const newLayer = new TileLayer(Object.assign(options, {
+        source: new TileWMS({
+          url,
+          params: Object.assign(options, {
+            LAYER: options.layerOrFeatureName
+          })
+        })
+      }));
+      const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
+      newLayer.set('name', name);
+      this.addLayer(newLayer, name);
+      newLayer.setVisible(false);
+      resolve(newLayer);
     });
   }
 
@@ -109,43 +226,48 @@ export class Layers {
    * @param title / name
    * @param features to set / append to layer
    * @param options when creating layer
+   * @param waterBodiesLayers class instance to update for the client
    */
-  async createLayerFromWFSFeatures(title, features: Feature[], options: Options = {}): Promise<any> {
+  async createLayerFromWFSFeatures(features: Feature[], options: LayersSourceSetup, waterBodiesLayers: LayersInfoMangar): Promise<any> {
     return new Promise((resolve) => {
-      this.eowMap.mapObs.asObservable().subscribe(async map => {
-
-        const existingLayerIndex = this.layerNames.hasOwnProperty(title) ? this.layerNames[title] : -1;
-        let newLayer;
-        if (existingLayerIndex > -1) {
-          newLayer = map.getLayers().getArray()[existingLayerIndex];
-          const source: VectorSource = newLayer.getSource();
-          source.addFeatures(features);
-        } else {
-          const featureSource = new VectorSource();
-          featureSource.addFeatures(features);
-          console.log(`Lines layer: ${name} - # lines added: ${features.length}`);
-          newLayer = new VectorLayer(Object.assign(options, {
-            name,
-            source: featureSource
-          }));
-          newLayer.set('name', title);
-          this.addLayer(newLayer, title);
-          newLayer.get('name');
-          newLayer.setVisible(options.hasOwnProperty('visible') ? options.visible : true);
-        }
-        resolve(newLayer);
-      });
+      const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
+      const existingLayerIndex = this.layerNames.getName(name) || -1; // hasOwnProperty(name) ? this.layerNames[name] : -1;
+      let newLayer;
+      if (existingLayerIndex > -1) {
+        newLayer = this.map.getLayers().getArray()[existingLayerIndex];
+        const source: VectorSource = newLayer.getSource();
+        source.addFeatures(features);
+      } else {
+        const featureSource = new VectorSource();
+        featureSource.addFeatures(features);
+        options.opacity = options.opacity || 0.6;
+        this.log.verbose(`Lines layer: ${name} - # lines added: ${features.length}`);
+        newLayer = new VectorLayer(Object.assign(options, {
+          source: featureSource
+        }));
+        newLayer.set('name', name);
+        this.addLayer(newLayer, name);
+        newLayer.get('name');
+      }
+      resolve(newLayer);
     });
   }
 
-  private addLayer(layer: any, layerName: string) {
-    this.eowMap.mapObs.asObservable().subscribe(async map => {
-      map.addLayer(layer);
-      this.layerNames[layerName] = map.getLayers().getArray().length - 1;
-      this.log.verbose(`map.add layer "${layer.get('name')} - there are now ${map.getLayers().getArray().length} layers`);
+  /**
+   * Add layer to map and keep information about it.
+   *
+   * @param layer to add
+   * @param layerName so can find it later (maps just use a numerically indexed array)
+   * @return index of layer in the map's array
+   */
+  private addLayer(layer: any, layerName: string): number {
+    this.map.addLayer(layer);
+    const index = this.map.getLayers().getLength() - 1;
+    const newName = this.layerNames.addName(layerName, index);
+    this.log.verbose(`map.add layer "${newName}" - there are now ${this.map.getLayers().getArray().length} layers`);
 
-      this.mapLayersObs.next(layer);
-    });
+    this.mapLayersObs.next(layer);
+    return index;
   }
 
   private drawLayerInMenu(layer: any) {

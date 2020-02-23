@@ -2,7 +2,8 @@ import {
   Feature,
   Point,
   lineString as turfLineString,
-  FeatureCollection} from '@turf/helpers';
+  FeatureCollection
+} from '@turf/helpers';
 import {featureEach} from '@turf/meta';
 import Brolog from 'brolog';
 import GeometryOps from '../geometry-ops';
@@ -15,13 +16,13 @@ import {EowWaterBodyIntersection, SourcePointMarginsType} from '../eow-data-stru
 import {PieChartContainer} from './pie-chart-container';
 import {TimeSeriesChartContainer} from './time-series-chart-container';
 
-const theClass = `EOWDataPieChart`;
+const theClass = `EOWDataCharts`;
 
 type Coords = [number, number];
 
 export default class EowDataCharts {
   pieChartMap: any;
-  eowMap: EOWMap;
+  map: Map;
   htmlDocument: Document;
   ids: { [id: string]: boolean } = {};
 
@@ -29,8 +30,10 @@ export default class EowDataCharts {
   }
 
   init(eowMap: EOWMap, htmlDocument) {
-    this.eowMap = eowMap;
     this.htmlDocument = htmlDocument;
+    eowMap.getMap().subscribe(map => {
+      this.map = map;
+    });
   }
 
   private setupEventHandlers() {
@@ -49,40 +52,38 @@ export default class EowDataCharts {
       4. Draw something at that point
      */
     let waterBodyIndex = 0;
-    this.eowMap.mapObs.asObservable().subscribe(map => {
-      for (const eowDataInWaterbody of eowDataInWaterbodies) {
-        // These EowWaterBodyIntersection are between the EOW Data Points and the polygons in the chosen layer (selected outside of here with
-        //  the result being passed in as EowWaterBodyIntersection[].
-        // Each Object is:
-        //  waterBody: <the polygon that represents the waterbody>
-        //  eowData: <the EOW Data points within that waterbody>
-        //
-        // If there is no EOWData points within the waterbody, the eowData field will be null
-        const points: Coords[] = [];
-        if (eowDataInWaterbody.eowData) {
-          this.log.silly(theClass + '.plot', `EowWaterBodyIntersection.waterBody: ${JSON.stringify(eowDataInWaterbody.eowData, null, 2)}`);
-          featureEach(eowDataInWaterbody.eowData, (feature: Feature<Point>) => {
-            if (feature.hasOwnProperty('geometry')) {
-              points.push(feature.geometry.coordinates as Coords);
-            }
-          });
-          let centroid;
-          if (points.length > 1) {
-            this.log.silly(theClass + '.plot', `EOWDatum points: ${JSON.stringify(points)}`);
-            centroid = this.geometryOps.calculateCentroidFromPoints(points).geometry.coordinates;
-          } else if (points.length === 1) {
-            centroid = points[0];
+    for (const eowDataInWaterbody of eowDataInWaterbodies) {
+      // These EowWaterBodyIntersection are between the EOW Data Points and the polygons in the chosen layer (selected outside of here with
+      //  the result being passed in as EowWaterBodyIntersection[].
+      // Each Object is:
+      //  waterBody: <the polygon that represents the waterbody>
+      //  eowData: <the EOW Data points within that waterbody>
+      //
+      // If there is no EOWData points within the waterbody, the eowData field will be null
+      const points: Coords[] = [];
+      if (eowDataInWaterbody.eowData) {
+        this.log.silly(theClass + '.plot', `EowWaterBodyIntersection.waterBody: ${JSON.stringify(eowDataInWaterbody.eowData, null, 2)}`);
+        featureEach(eowDataInWaterbody.eowData, (feature: Feature<Point>) => {
+          if (feature.hasOwnProperty('geometry')) {
+            points.push(feature.geometry.coordinates as Coords);
           }
-          if (centroid) {
-            this.log.info(theClass + '.plot', `Centroid: ${JSON.stringify(centroid)}`);
-            this.drawCharts(eowDataInWaterbody.eowData, centroid, map, waterBodyIndex++, layerName);
-          } else {
-            this.log.verbose(theClass + '.plot', 'No Centroid to draw at');
-          }
+        });
+        let centroid;
+        if (points.length > 1) {
+          this.log.silly(theClass + '.plot', `EOWDatum points: ${JSON.stringify(points)}`);
+          centroid = this.geometryOps.calculateCentroidFromPoints(points).geometry.coordinates;
+        } else if (points.length === 1) {
+          centroid = points[0];
+        }
+        if (centroid) {
+          this.log.verbose(theClass + '.plot', `Centroid: ${JSON.stringify(centroid)}`);
+          this.drawCharts(eowDataInWaterbody.eowData, centroid, this.map, waterBodyIndex++, layerName);
+        } else {
+          this.log.verbose(theClass + '.plot', 'No Centroid to draw at');
         }
       }
-      console.log(`finished going through waterbodies`);
-    });
+    }
+    console.log(`finished going through waterbodies`);
   }
 
   /**
@@ -102,9 +103,12 @@ export default class EowDataCharts {
       }
     });
     if (validData.length > 0 && point[0] && point[1] && !isNaN(point[0]) && !isNaN(point[1])) {
-      this.log.info(theClass, `Draw pieChart at ${point[0]}, ${point[1]})}`);
-      new PieChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, point, map, this.getId('pieChart-'), validData).draw();
-      new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.offSet(point, 1), map, this.getId('timeSeriesChart-'), validData).draw();
+      const newPoint = [point[1], point[0]];
+      const idPie = this.createId('pieChart-');
+      const idTime =  this.createId('timeSeriesChart-');
+      this.log.verbose(theClass, `Draw pieChart ${idPie} at ${JSON.stringify(newPoint)}`);
+      new PieChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, point, map, idPie, validData).draw();
+      new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.offSet(point, 1), map, idTime, validData).draw();
     } else {
       this.log.info(theClass, `NOT Drawing pieChart at "${point[0]}", "${point[1]}")}`);
     }
@@ -115,10 +119,10 @@ export default class EowDataCharts {
    * Create a unique id for each new HTML element
    * @param prefix in the id
    */
-  private getId(prefix: string) {
-    for (;;) {
+  private createId(prefix: string) {
+    for (; ;) {
       const id = prefix + Math.floor(Math.random() * 100000);
-      if (! this.ids.hasOwnProperty(id)) {
+      if (!this.ids.hasOwnProperty(id)) {
         this.ids[id] = true;
         return id;
       }
@@ -156,6 +160,10 @@ export default class EowDataCharts {
         errorMarginPoints.features.push(lsFeature);
       });
     });
-    await this.layers.createLayerFromWFSFeatures(`Error margin lines`, errorMarginPoints.features, {style: redLines, visible: false});
+    await this.layers.createLayerFromWFSFeatures(errorMarginPoints.features, {
+      style: redLines,
+      visible: false,
+      layerDisplayName: `Error margin lines`
+    }, null);
   }
 }

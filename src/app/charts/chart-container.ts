@@ -58,10 +58,9 @@ export abstract class ChartContainer {
     this.htmlDocument.getElementById(htmlElementId).appendChild(el);
     // PieChart.drawD3(this.data, this.id, this.map.getView().getZoom() * LOG2);
     this.drawChartOfType();
-    const epsg3587Point = fromLonLat(this.point);
     const chartMap = new Overlay({
       element: el,
-      position: epsg3587Point,
+      position: this.point, // Note that the view is EPSG:4326 (Lon, Lat)
       autoPan: true,
       autoPanMargin: 275,
       positioning: OverlayPositioning.CENTER_CENTER
