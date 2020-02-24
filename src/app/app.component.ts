@@ -52,6 +52,10 @@ export class AppComponent implements OnInit {
   allPointsMap: PointsMap;
   allDataSource: VectorSource;
   dataLayer: VectorLayer;
+  newPoints = false;
+  waterBodyFeatures: { [name: string]: Feature[] } = {};
+  totalNumberWaterBodyFeatures = 0;
+  newWaterbodiesData = false;
 
   constructor(@Inject(DOCUMENT) private htmlDocument: Document, private http: HttpClient, private log: Brolog) {
   }
@@ -90,6 +94,7 @@ export class AppComponent implements OnInit {
     this.eowDataGeometries = await new EowDataGeometries(this.log).init(this.eowData);  // TODO this seems to do similar to EowDataLayer - combine
     this.eowDataGeometries.getPoints().subscribe(async (points) => {
       this.points = points;
+      this.newPoints = true;
       const pointsLength = this.points ? this.points.features.length : 'null';
       console.log(`  pointsObs subscription updated - points#: ${pointsLength}`);
     });
@@ -105,6 +110,12 @@ export class AppComponent implements OnInit {
     });
     this.eowDataGeometries.getPointsErrorMargin().subscribe(pointsErrorMargins => {
       this.pointsErrorMargins = pointsErrorMargins;
+    });
+    this.map.on('moveend', () => {
+      // set waterBodyFeatures, totalNumberWaterBodyFeatures and newWaterbodiesData
+      this.collectWaterBodyFeatures();
+      console.log(`app - map moved - newWaterbodiesData?: ${this.newWaterbodiesData}`);
+      this.performRunWhenNewData();
     });
 
     this.layersGeometries = new LayerGeometries(this.eowLayers, this.log);
@@ -125,20 +136,52 @@ export class AppComponent implements OnInit {
   }
 
   /**
+   * Run this upon data changes
+   */
+  private async collectWaterBodyFeatures() {
+    let numberWaterBodyFeatures = 0;
+
+    for (const waterBodyLayer of this.waterBodiesLayers) {
+      const waterBodyFeatures: Feature[] = await this.eowMap.getWaterBodiesInView(waterBodyLayer);
+      numberWaterBodyFeatures += waterBodyFeatures.length;
+      this.waterBodyFeatures[waterBodyLayer.name] = waterBodyFeatures;
+    }
+
+    if (numberWaterBodyFeatures !== this.totalNumberWaterBodyFeatures) {
+      this.totalNumberWaterBodyFeatures = numberWaterBodyFeatures;
+      this.newWaterbodiesData = true;
+    }
+  }
+
+  private async performRunWhenNewData() {
+    console.log(`  *** -> performRunWhenNewData -`);
+    console.log(`    totalNumberWaterBodyFeatures: ${this.totalNumberWaterBodyFeatures}, points#: ${this.points && this.points.features.length}, allPointsMap#: ${this.allPointsMap && Object.keys(this.allPointsMap).length}, `
+      + `sourceNErrorMarginPoints#: ${this.sourceNErrorMarginPoints && this.sourceNErrorMarginPoints.features.length}, `
+      + `waterBodyLayers#: ${this.waterBodiesLayers && this.waterBodiesLayers.length}, newPoints: ${this.newPoints}, newWaterbodiesData: ${this.newWaterbodiesData}`);
+    if (this.newPoints || this.newWaterbodiesData) {
+      this.newPoints = false;
+      this.newWaterbodiesData = false;
+      await this.calculateIntersectionsPlot();
+    }
+  }
+
+  /**
    * We need to wait until all data is ready.
    */
-  private performFirstRunWhenReady() {
+  private async performFirstRunWhenReady() {
     let numberOfTest = 0;
     const maxNumberTests = 100;
+    await this.collectWaterBodyFeatures();
     const intervalId = setInterval(async () => {
       if (this.ready()) {
         clearInterval(intervalId);
-        await this.calculateIntersectionsPlot();  // First time - subsequent calls when map changes
+        this.calculateIntersectionsPlot();
       } else {
         if (numberOfTest++ > maxNumberTests) {
           clearInterval(intervalId);
           throw new Error(`Waiting for data to become available - Max number of tests exceeded: ${maxNumberTests}`);
         }
+        await this.collectWaterBodyFeatures();
       }
     }, 100);
   }
@@ -168,15 +211,15 @@ export class AppComponent implements OnInit {
         console.log(`  *** -> calculateIntersectionsPlot loop -`);
         console.log(`    points#: ${this.points.features.length}, allPointsMap#: ${Object.keys(this.allPointsMap).length}, `
           + `sourceNErrorMarginPoints#: ${this.sourceNErrorMarginPoints.features.length}, waterBodyLayers#: ${this.waterBodiesLayers.length}`);
-        for (const waterBodyLayer of this.waterBodiesLayers) {
+        for (const waterBodyLayerName of Object.keys(this.waterBodyFeatures)) {
           // Get the features in the view
-          const waterBodyFeatures: Feature[] = await this.eowMap.getWaterBodiesInView(waterBodyLayer);
-          console.log(`     waterBodyLayer loop for: ${waterBodyLayer.name} - Features in View#: ${waterBodyFeatures.length}`);
+          const waterBodyFeatures: Feature[] = this.waterBodyFeatures[waterBodyLayerName];
+          console.log(`     waterBodyLayer loop for: ${waterBodyLayerName} - Features in View#: ${waterBodyFeatures.length}`);
           // Convert to polygons
           const waterBodyFeatureCollection: FeatureCollection<Polygon> = this.layersGeometries.createFeatureCollection(waterBodyFeatures);
 
           // intersectAndDraw EOWData in polygons
-          this.intersectAndDraw(waterBodyLayer.name, waterBodyFeatureCollection, this.points, this.allPointsMap, this.sourceNErrorMarginPoints);
+          this.intersectAndDraw(waterBodyLayerName, waterBodyFeatureCollection, this.points, this.allPointsMap, this.sourceNErrorMarginPoints);
         }
       } else {
         console.warn(`Not performating calculations or drawing charts - zoomed too far out: ${this.map.getView().getZoom()}`);
