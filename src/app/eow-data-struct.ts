@@ -1,5 +1,6 @@
 import Brolog from 'brolog';
 import {Feature, feature as turfFeature, FeatureCollection, Point, point as turfPoint, Polygon} from '@turf/helpers';
+import {Position} from 'geojson';
 import moment from 'moment';
 
 const theClass = 'EowDataStruct';
@@ -197,14 +198,29 @@ export class EowDataStruct {
    *
    * @param point to create string version of required when the point used as an Object key
    */
-  static createPointString(point: Feature<Point>): string {
+  static createPointMapString(point: Feature<Point>): string {
     const c = point.geometry.coordinates;
+    return EowDataStruct.createPointSting(c);
+  }
+
+  static createPointSting(c: Position) {
     return '' + c[0] + '+' + c[1];
   }
 
   static recreatePointFromString(pointString: string): Feature<Point> {
     const parts = pointString.split('+');
     return turfPoint([parseInt(parts[0], 10), parseInt(parts[1], 10)]);
+  }
+
+  /**
+   * Given a point, return the same but to precision of 6 decimal places.
+   */
+  static pointToPrecision(p: Position): Position {
+    const precise = (x) => {
+      return Number.parseFloat(x.toPrecision(6));
+    };
+
+    return [precise(p[0]), precise(p[1])];
   }
 }
 

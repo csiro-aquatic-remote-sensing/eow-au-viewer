@@ -178,9 +178,9 @@ export default class EowDataGeometries {
       const pointsMap: PointsMap = {};
 
       errorMarginPoints.forEach(emp => {
-        pointsMap[EowDataStruct.createPointString(emp.sourcePoint)] = emp.sourcePoint;
+        pointsMap[EowDataStruct.createPointMapString(emp.sourcePoint)] = emp.sourcePoint;
         emp.margins.features.forEach(margin => {
-          pointsMap[EowDataStruct.createPointString(margin)] = emp.sourcePoint;
+          pointsMap[EowDataStruct.createPointMapString(margin)] = emp.sourcePoint;
         });
       });
 

@@ -12,7 +12,7 @@ import GeoJSON from 'ol/format/GeoJSON';
 
 import {EOWMap} from '../eow-map';
 import {Layers, redLines} from '../layers';
-import {EowWaterBodyIntersection, SourcePointMarginsType} from '../eow-data-struct';
+import {EowDataStruct, EowWaterBodyIntersection, SourcePointMarginsType} from '../eow-data-struct';
 import {PieChartContainer} from './pie-chart-container';
 import {TimeSeriesChartContainer} from './time-series-chart-container';
 
@@ -21,7 +21,10 @@ const theClass = `EOWDataCharts`;
 type Coords = [number, number];
 
 export default class EowDataCharts {
-  pieChartMap: any;
+  /**
+   * Only create pie charts once.
+   */
+  chartMap: {[name: string]: boolean} = {};
   map: Map;
   htmlDocument: Document;
   ids: { [id: string]: boolean } = {};
@@ -102,15 +105,21 @@ export default class EowDataCharts {
         validData.push(eowDataPoint.properties);
       }
     });
-    if (validData.length > 0 && point[0] && point[1] && !isNaN(point[0]) && !isNaN(point[1])) {
-      const newPoint = [point[1], point[0]];
-      const idPie = this.createId('pieChart-');
-      const idTime =  this.createId('timeSeriesChart-');
-      this.log.verbose(theClass, `Draw pieChart ${idPie} at ${JSON.stringify(newPoint)}`);
-      new PieChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, point, map, idPie, validData).draw();
-      new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.offSet(point, 1), map, idTime, validData).draw();
+    // Using pointToPrecision to make unique Id from 6 decimal places as sometimes the maths can be ~ .0000001 off
+    const uniqueChartIdForPosition = EowDataStruct.createPointSting(EowDataStruct.pointToPrecision(point));
+    if (! this.chartMap.hasOwnProperty(uniqueChartIdForPosition)) {
+      if (validData.length > 0 && point[0] && point[1] && !isNaN(point[0]) && !isNaN(point[1])) {
+        const idPie = this.createId('pieChart-');
+        const idTime = this.createId('timeSeriesChart-');
+        this.log.verbose(theClass, `Draw pieChart ${idPie} at ${JSON.stringify(point)}`);
+        new PieChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.offSet(point, Math.random()), map, idPie, validData).draw();
+        new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.offSet(point, 1 + Math.random()), map, idTime, validData).draw();
+        this.chartMap[uniqueChartIdForPosition] = true;
+      } else {
+        this.log.info(theClass, `NOT Drawing pieChart at ${JSON.stringify(point)})} - data not valid or complete`);
+      }
     } else {
-      this.log.info(theClass, `NOT Drawing pieChart at "${point[0]}", "${point[1]}")}`);
+      this.log.info(theClass, `NOT Drawing pieChart at ${JSON.stringify(point)})} - chart already exists`);
     }
   }
 
