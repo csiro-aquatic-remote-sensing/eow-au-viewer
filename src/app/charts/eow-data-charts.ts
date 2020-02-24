@@ -112,8 +112,8 @@ export default class EowDataCharts {
         const idPie = this.createId('pieChart-');
         const idTime = this.createId('timeSeriesChart-');
         this.log.verbose(theClass, `Draw pieChart ${idPie} at ${JSON.stringify(point)}`);
-        new PieChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.offSet(point, Math.random()), map, idPie, validData).draw();
-        new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.offSet(point, 1 + Math.random()), map, idTime, validData).draw();
+        new PieChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, point, map, idPie, validData).draw();
+        new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.offSet(point, 1), map, idTime, validData).draw();
         this.chartMap[uniqueChartIdForPosition] = true;
       } else {
         this.log.info(theClass, `NOT Drawing pieChart at ${JSON.stringify(point)})} - data not valid or complete`);
@@ -164,7 +164,7 @@ export default class EowDataCharts {
         const ls = turfLineString([source.geometry.coordinates, m.geometry.coordinates]);
         const lsFeature = format.readFeature(ls, {
           dataProjection: 'EPSG:4326',
-          featureProjection: 'EPSG:3857'
+          featureProjection: 'EPSG:4326'
         });
         errorMarginPoints.features.push(lsFeature);
       });

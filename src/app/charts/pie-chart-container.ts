@@ -49,7 +49,7 @@ export class PieChartContainer extends ChartContainer {
         const ls = turfLineString([point, p], {name: 'FUChart to EOWData line'});
         const lsFeature = format.readFeature(ls, {
           dataProjection: 'EPSG:4326',
-          featureProjection: 'EPSG:3857'
+          featureProjection: 'EPSG:4326'
         });
         return lsFeature;
       });
