@@ -191,7 +191,7 @@ export default class GeometryOps {
     const pointsAlreadyFiltered: PointsMap = {};
     allPointsIntersection.features.forEach(api => {
       const coords = api.geometry.coordinates;
-      const pointString = EowDataStruct.createPointString(turfPoint(api.geometry.coordinates));
+      const pointString = EowDataStruct.createPointMapString(turfPoint(api.geometry.coordinates));
       if (allPointsMap.hasOwnProperty(pointString) && ! pointsAlreadyFiltered.hasOwnProperty(pointString)) {
         pointsAlreadyFiltered[pointString] = null;
         filteredPoints.features.push(allPointsMap[pointString]);
