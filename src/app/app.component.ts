@@ -149,7 +149,7 @@ export class AppComponent implements OnInit {
       this.eowDataGeometries.getPointsErrorMargin(),
     ]);
     uberObserver.subscribe(async (value) => {
-      console.log(`uberObserver - value length: ${value.filter(v => v !== null).length}`);
+      this.log.verbose(theClass, `uberObserver - value length: ${value.filter(v => v !== null).length}`);
       const [points, allPoints, allPointsMap, errorMarginPoints] = value;
       if (points && allPoints && allPointsMap && errorMarginPoints) {
         handlePointsObserver(points);
@@ -162,18 +162,6 @@ export class AppComponent implements OnInit {
           await this.calculateIntersectionsPlot();
         }
       }
-    });
-    this.eowDataGeometries.getPoints().subscribe(value => {
-      console.log(`eowDataGeometries.getPoints value emitted`);
-    });
-    this.eowDataGeometries.getAllPoints().subscribe(value => {
-      console.log(`eowDataGeometries.getAllPoints value emitted`);
-    });
-    this.eowDataGeometries.getAllPointsMap().subscribe(value => {
-      console.log(`eowDataGeometries.getAllPointsMap value emitted`);
-    });
-    this.eowDataGeometries.getPointsErrorMargin().subscribe(value => {
-      console.log(`eowDataGeometries.getPointsErrorMargin value emitted`);
     });
     this.eowLayers.waterBodiesLayers.getLayersInfo().subscribe(layersInfo => {
       // I want to subscribe to layer's VectorSource observer and when triggers call calculateIntersectionsPlot()
@@ -206,24 +194,24 @@ export class AppComponent implements OnInit {
       this.points = points;
       this.newPoints = true;
       const pointsLength = this.points ? this.points.features.length : 'null';
-      console.log(`  pointsObs subscription updated - points#: ${pointsLength}`);
+      this.log.verbose(theClass, `  pointsObs subscription updated - points#: ${pointsLength}`);
     };
 
     const handleAllPointsObserver = (allPoints: FeatureCollection<Point>) => {
       this.sourceNErrorMarginPoints = allPoints;
       const theSourceNErrorMarginPointsLength = this.sourceNErrorMarginPoints ? this.sourceNErrorMarginPoints.features.length : 'null';
-      console.log(`  sourceNErrorMarginPoints subscription updated - points#: ${theSourceNErrorMarginPointsLength}`);
+      this.log.verbose(theClass, `  sourceNErrorMarginPoints subscription updated - points#: ${theSourceNErrorMarginPointsLength}`);
     };
 
     const handlePointsMapObserver = (allPointsMap: PointsMap) => {
       this.allPointsMap = allPointsMap;
       const theAllPointsMapObsLength = this.allPointsMap ? Object.keys(this.allPointsMap).length : 'null';
-      console.log(`  allPointsMap subscription updated - points#: ${theAllPointsMapObsLength}`);
+      this.log.verbose(theClass, `  allPointsMap subscription updated - points#: ${theAllPointsMapObsLength}`);
     };
 
     const handleErrorMarginPoints = (pointsErrorMargins: SourcePointMarginsType[]) => {
       this.pointsErrorMargins = pointsErrorMargins;
-      console.log(`  pointsErrorMargins subscription updated - points#: ${pointsErrorMargins.length}`);
+      this.log.verbose(theClass, `  pointsErrorMargins subscription updated - points#: ${pointsErrorMargins.length}`);
     };
 
   }
@@ -247,8 +235,8 @@ export class AppComponent implements OnInit {
   }
 
   private async performRunWhenNewData() {
-    console.log(`  *** -> performRunWhenNewData -`);
-    console.log(`    totalNumberWaterBodyFeatures: ${this.totalNumberWaterBodyFeatures}, points#: ${this.points && this.points.features.length},`
+    this.log.verbose(theClass, `  *** -> performRunWhenNewData -`);
+    this.log.verbose(theClass, `    totalNumberWaterBodyFeatures: ${this.totalNumberWaterBodyFeatures}, points#: ${this.points && this.points.features.length},`
       + `allPointsMap#: ${this.allPointsMap && Object.keys(this.allPointsMap).length}, `
       + `sourceNErrorMarginPoints#: ${this.sourceNErrorMarginPoints && this.sourceNErrorMarginPoints.features.length}, `
       + `waterBodyLayers#: ${this.waterBodiesLayers && this.waterBodiesLayers.length}, newPoints: ${this.newPoints}, newWaterbodiesData: ${this.newWaterbodiesData}`);
@@ -300,19 +288,19 @@ export class AppComponent implements OnInit {
    * means that no layer data has changed and to just apply the EOWData Points to all layers in this.waterBodyFeatures
    */
   async calculateIntersectionsPlot(givenWaterBodyFeatures: WaterBodyFeatures = null) {
-    console.log(`calculateIntersectionsPlot called`);
+    this.log.verbose(theClass, `calculateIntersectionsPlot called`);
     if (this.ready()) {
       const theFeatures = givenWaterBodyFeatures ? givenWaterBodyFeatures : this.waterBodyFeatures;   // choose argument or global data
       // Maybe debug, maybe not.  Don't perform calculations when zoomed out too far
       console.warn(`Resolution: ${this.map.getView().getResolution()}`);
       if (this.map.getView().getZoom() >= 9) {
-        console.log(`  *** -> calculateIntersectionsPlot loop -`);
-        console.log(`    points#: ${this.points.features.length}, allPointsMap#: ${Object.keys(this.allPointsMap).length}, `
+        this.log.verbose(theClass, `  *** -> calculateIntersectionsPlot loop -`);
+        this.log.verbose(theClass, `    points#: ${this.points.features.length}, allPointsMap#: ${Object.keys(this.allPointsMap).length}, `
           + `sourceNErrorMarginPoints#: ${this.sourceNErrorMarginPoints.features.length}, waterBodyLayers#: ${this.waterBodiesLayers.length}`);
         for (const waterBodyLayerName of Object.keys(theFeatures)) {
           // Get the features in the view
           const waterBodyFeatures: Feature[] = theFeatures[waterBodyLayerName];
-          console.log(`     waterBodyLayer loop for: ${waterBodyLayerName} - Features in View#: ${waterBodyFeatures.length}`);
+          this.log.verbose(theClass, `     waterBodyLayer loop for: ${waterBodyLayerName} - Features in View#: ${waterBodyFeatures.length}`);
           // Convert to polygons
           const waterBodyFeatureCollection: FeatureCollection<Polygon> = this.layersGeometries.createFeatureCollection(waterBodyFeatures);
 
@@ -322,8 +310,6 @@ export class AppComponent implements OnInit {
       } else {
         console.warn(`Not performating calculations or drawing charts - zoomed too far out: ${this.map.getView().getZoom()}`);
       }
-    } else {
-      console.log(`Data not ready`);
     }
   }
 
@@ -355,7 +341,7 @@ export class AppComponent implements OnInit {
     if (this.allDataSource) {
       const features = this.allDataSource.getFeatures();
       const point = features.length > 0 ? (features[0].getGeometry() as SimpleGeometry).getFirstCoordinate() : 'no data yet';
-      console.log(`First EOWData point: ${point}`);
+      this.log.verbose(theClass, `First EOWData point: ${point}`);
     }
   }
 
@@ -363,22 +349,22 @@ export class AppComponent implements OnInit {
     return; // don't want it currently
     // Delay so other allDataSource.on('change' that loads the data gets a chance to fire
     if (this.allDataSource) {
-      console.log('debug_compareUsersNMeasurements:');
+      this.log.verbose(theClass, 'debug_compareUsersNMeasurements:');
       Object.keys(this.userStore.userById).forEach(uid => {
         const user = this.userStore.userById[uid];
-        console.log(`  user - Id: ${user.id}, nickName: ${user.nickname}, photo_count: ${user.photo_count}`);
+        this.log.verbose(theClass, `  user - Id: ${user.id}, nickName: ${user.nickname}, photo_count: ${user.photo_count}`);
         const m = this.measurementStore.getByOwner(user.id);
         if (m && m.length > 0) {
           const images = m.map(m2 => m2.get('image'));
-          console.log(`    number of images: ${images.length} -> \n${JSON.stringify(images, null, 2)}`);
+          this.log.verbose(theClass, `    number of images: ${images.length} -> \n${JSON.stringify(images, null, 2)}`);
         }
       });
       // Now print Measurements info
-      console.log(`measurementsByOwner: ${
+      this.log.verbose(theClass, `measurementsByOwner: ${
         JSON.stringify(this.measurementStore.measurementSummary(true, this.userStore), null, 2)}`);
-      console.log(`measurementsById: ${
+      this.log.verbose(theClass, `measurementsById: ${
         JSON.stringify(this.measurementStore.measurementSummary(false, this.userStore), null, 2)}`);
-      console.log(`Number of measurements per user: ${
+      this.log.verbose(theClass, `Number of measurements per user: ${
         JSON.stringify(this.measurementStore.numberMeasurmentsPerUser(this.userStore), null, 2)}`);
     }
   }

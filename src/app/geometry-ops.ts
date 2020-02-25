@@ -70,7 +70,7 @@ export default class GeometryOps {
    *          eowData: null
    */
   async calculateLayerIntersections(eowDataGeometry: FeatureCollection<Point>, errorMarginPoints: FeatureCollection<Point>,
-                                    allPointsMap: PointsMap, waterBodyLayerPolygons: FeatureCollection<Polygon>, layerName: string ):
+                                    allPointsMap: PointsMap, waterBodyLayerPolygons: FeatureCollection<Polygon>, layerName: string):
     Promise<EowWaterBodyIntersection[]> {
     return new Promise<EowWaterBodyIntersection[]>(resolve => {
       const layerGeometry: Feature<Polygon>[] = waterBodyLayerPolygons.features;
@@ -79,7 +79,7 @@ export default class GeometryOps {
 
       this.log.info(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
       const details = layerGeometry.length > 0 ? layerGeometry[0].geometry.coordinates[0][0] : 'no polygons';
-      console.log(`layerPolygons - there are: ${layerGeometry.length} - coords of first is: ${details}`);
+      this.log.verbose(theClass, `layerPolygons - there are: ${layerGeometry.length} - coords of first is: ${details}`);
       for (const layerPolygon of layerGeometry) {
         const intersection: FeatureCollection<Point> = pointsWithinPolygon(pointsToUse, layerPolygon) as FeatureCollection<Point>;
         // TODO - now build a FeatureCollection<Point> from allPointsMapObs
@@ -185,14 +185,14 @@ export default class GeometryOps {
 
   private filterSourcePoints(allPointsIntersection: FeatureCollection<Point>, allPointsMap: PointsMap): FeatureCollection<Point> {
     const filteredPoints: FeatureCollection<Point> = {
-      features: [] ,  // Array<Feature<Point, Properties>>,
+      features: [],  // Array<Feature<Point, Properties>>,
       type: 'FeatureCollection'
     };
     const pointsAlreadyFiltered: PointsMap = {};
     allPointsIntersection.features.forEach(api => {
       const coords = api.geometry.coordinates;
       const pointString = EowDataStruct.createPointMapString(turfPoint(api.geometry.coordinates));
-      if (allPointsMap.hasOwnProperty(pointString) && ! pointsAlreadyFiltered.hasOwnProperty(pointString)) {
+      if (allPointsMap.hasOwnProperty(pointString) && !pointsAlreadyFiltered.hasOwnProperty(pointString)) {
         pointsAlreadyFiltered[pointString] = null;
         filteredPoints.features.push(allPointsMap[pointString]);
       }
