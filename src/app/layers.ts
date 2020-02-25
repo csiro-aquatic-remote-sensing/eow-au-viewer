@@ -153,8 +153,12 @@ export class Layers {
         loader: (extent, resolution, projection) => {
           const proj = projection.getCode();
           const feature = options.featurePrefix ? options.featurePrefix + ':' + options.layerOrFeatureName : options.layerOrFeatureName;
+          const normalBBox = `&bbox=${extent.join(',')},${proj}`;
+          const queryBBox = `BBOX(geom, ${extent.join(',')},'${proj}')`;
+          const bboxOrQuery = options.query ? `&cql_filter=${options.query}%20AND%20${queryBBox}` : normalBBox;
           const url = `${urlForWFS}?service=WFS&version=1.1.0&request=GetFeature&typename=${feature}&` +
-            `outputFormat=application/json&srsname=${proj}&bbox=${extent.join(',')},${proj}`;
+            `outputFormat=application/json&srsname=${proj}${bboxOrQuery}`;
+          this.log.warn(theClass, `createLayerFromWFS - URL: ${JSON.stringify(url.split('&'))}`);
           const xhr = new XMLHttpRequest();
           xhr.open('GET', url);
           const onError = () => {
