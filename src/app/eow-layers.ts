@@ -2,6 +2,8 @@ import {Brolog} from 'brolog';
 import {Layers} from './layers';
 import {BehaviorSubject} from 'rxjs';
 import VectorSource from 'ol/source/Vector';
+import { interval } from 'rxjs';
+import { debounce } from 'rxjs/operators';
 
 const theClass = 'Layers';
 
@@ -78,7 +80,7 @@ export class LayersInfoManager {
    * @Return observable of the layers information to subscribe to
    */
   public getLayersInfo() {
-    return this._layersInfo.asObservable();
+    return this._layersInfo.asObservable().pipe(debounce(() => interval(1000)));
   }
 
   /**
@@ -124,7 +126,7 @@ export class EowLayers {
     this.setupWFSLayer(layerPromises, 'http://hotspots.dea.ga.gov.au/geoserver/public/wfs',
       {
         createLayer: true, useAsWaterBodySource: true, layerOrFeatureName: 'DigitalEarthAustraliaWaterbodies', featurePrefix: 'public',
-        layerDisplayName: 'DEA Waterbodies Features', maxResolution: 0.00069, query: 'area>100000'
+        layerDisplayName: 'DEA Waterbodies Features', maxResolution: 0.05, query: 'area>100000'
       });
 
     this.setupWMSLayer(layerPromises, 'http://hotspots.dea.ga.gov.au/geoserver/public/wms',

@@ -135,7 +135,7 @@ export default class GeometryOps {
   }
 
   calculateCentroidFromPoints(points: number[][]): Feature<Point> {
-    this.log.verbose('calculateCentroidFromPoints', `  points: ${JSON.stringify(points)}`);
+    this.log.verbose('calculateCentroidFromPoints', `  points length: ${points.length}`);
     return this.calculateCentroidTurfVerUsingPoints(points);
 
     // I'm happy to let my code go and use the library version for now

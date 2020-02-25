@@ -292,7 +292,8 @@ export class AppComponent implements OnInit {
     if (this.ready()) {
       const theFeatures = givenWaterBodyFeatures ? givenWaterBodyFeatures : this.waterBodyFeatures;   // choose argument or global data
       // Maybe debug, maybe not.  Don't perform calculations when zoomed out too far
-      console.warn(`Resolution: ${this.map.getView().getResolution()}`);
+      const date = new Date();
+      console.warn(`Resolution: ${this.map.getView().getResolution()} - ${date.getSeconds()}:${date.getMilliseconds()}`);
       if (this.map.getView().getZoom() >= 9) {
         this.log.verbose(theClass, `  *** -> calculateIntersectionsPlot loop -`);
         this.log.verbose(theClass, `    points#: ${this.points.features.length}, allPointsMap#: ${Object.keys(this.allPointsMap).length}, `

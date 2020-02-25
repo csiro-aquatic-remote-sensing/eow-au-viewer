@@ -10,13 +10,14 @@ import {
   Brolog,
 } from 'brolog';
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
-import {BehaviorSubject} from 'rxjs';
+import {BehaviorSubject, interval} from 'rxjs';
 import {featureEach} from '@turf/meta';
 import circle from '@turf/circle';
 import {EowDataStruct, PointsMap, SourcePointMarginsType} from './eow-data-struct';
 import {LayersInfo} from './eow-layers';
 import {EowDataLayer} from './eow-data-layer';
 import VectorSource from 'ol/source/Vector';
+import {debounce} from 'rxjs/operators';
 
 const theClass = 'EowDataGeometries';
 
@@ -76,19 +77,19 @@ export default class EowDataGeometries {
   }
 
   public getPoints() {
-    return this._pointsObs.asObservable();
+    return this._pointsObs.asObservable().pipe(debounce(() => interval(1000)));
   }
 
   public getPointsErrorMargin() {
-    return this._pointsErrorMarginObs.asObservable();
+    return this._pointsErrorMarginObs.asObservable().pipe(debounce(() => interval(1000)));
   }
 
   public getAllPointsMap() {
-    return this._allPointsMapObs.asObservable();
+    return this._allPointsMapObs.asObservable().pipe(debounce(() => interval(1000)));
   }
 
   public getAllPoints() {
-    return this._allPointsObs.asObservable();
+    return this._allPointsObs.asObservable().pipe(debounce(() => interval(1000)));
   }
 
   /**

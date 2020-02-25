@@ -158,7 +158,6 @@ export class Layers {
           const bboxOrQuery = options.query ? `&cql_filter=${options.query}%20AND%20${queryBBox}` : normalBBox;
           const url = `${urlForWFS}?service=WFS&version=1.1.0&request=GetFeature&typename=${feature}&` +
             `outputFormat=application/json&srsname=${proj}${bboxOrQuery}`;
-          this.log.warn(theClass, `createLayerFromWFS - URL: ${JSON.stringify(url.split('&'))}`);
           const xhr = new XMLHttpRequest();
           xhr.open('GET', url);
           const onError = () => {
