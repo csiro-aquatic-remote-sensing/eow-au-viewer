@@ -1,6 +1,7 @@
 import {Brolog} from 'brolog';
 import {Layers} from './layers';
 import {BehaviorSubject} from 'rxjs';
+import VectorSource from 'ol/source/Vector';
 
 const theClass = 'Layers';
 
@@ -52,28 +53,41 @@ export interface LayersInfo {
   index: number;        // of the layer in the map's layers array
   url: string;
   options: LayersSourceSetup;
+  observable: BehaviorSubject<VectorSource>;  // so can watch for changes in the data that happens due to BBoxStrategy
 }
 
 /**
  * Class for the management of the LayersInfo.  Only WFS that define Waterbodies will be stored.
  */
-export class LayersInfoMangar {
+export class LayersInfoManager {
   private _layersInfo = new BehaviorSubject<LayersInfo[]>([]);
   private layersInfo: LayersInfo[] = [];
 
-  public addInfo(name, index, url, options) {
-    this.layersInfo.push({name, index, url, options});
+  public addInfo(name, index, url, options, observable?) {
+    this.layersInfo.push({name, index, url, options, observable});
     // subscribers will get the lot each time the subscription updates.  Using Object.assign to send a copy.
     this._layersInfo.next(Object.assign([], this.layersInfo));
   }
 
+  /**
+   * @Return observable of the layers information to subscribe to
+   */
   public getLayersInfo() {
     return this._layersInfo.asObservable();
+  }
+
+  /**
+   * @param layerName to lookup
+   * @return the layersInfo for the layer with the given name or null if it doesnt exist
+   */
+  public getLayerInfo(layerName: string): LayersInfo {
+    const layerInfo = this.layersInfo.filter(l => l.name === layerName);
+    return layerInfo.length > 0 ? layerInfo[0] : null;
   }
 }
 
 export class EowLayers {
-  waterBodiesLayers = new LayersInfoMangar();
+  waterBodiesLayers = new LayersInfoManager();
 
   constructor(private layers: Layers, private log: Brolog) {
   }
@@ -103,16 +117,22 @@ export class EowLayers {
     this.setupGeoJSONLayer(layerPromises, 'assets/waterbodies/Canberra/i5516_reservoirs.geojson',
       {createLayer: false, useAsWaterBodySource: false, layerDisplayName: 'i5516 reservoirs'});
     this.setupWFSLayer(layerPromises, 'http://hotspots.dea.ga.gov.au/geoserver/public/wfs',
-      {createLayer: true, useAsWaterBodySource: true, layerOrFeatureName: 'DigitalEarthAustraliaWaterbodies', featurePrefix: 'public',
-        layerDisplayName: 'DEA Waterbodies Features', maxResolution: 0.00069});
+      {
+        createLayer: true, useAsWaterBodySource: true, layerOrFeatureName: 'DigitalEarthAustraliaWaterbodies', featurePrefix: 'public',
+        layerDisplayName: 'DEA Waterbodies Features', maxResolution: 0.00069
+      });
 
-    this.setupWMSLayer(layerPromises,  'http://hotspots.dea.ga.gov.au/geoserver/public/wms',
-      {createLayer: true, useAsWaterBodySource: false, layerOrFeatureName: 'DigitalEarthAustraliaWaterbodies',
-        layerDisplayName: 'DEA Waterbodies Map', minResolution: 0.00069, tiled: true});
+    this.setupWMSLayer(layerPromises, 'http://hotspots.dea.ga.gov.au/geoserver/public/wms',
+      {
+        createLayer: true, useAsWaterBodySource: false, layerOrFeatureName: 'DigitalEarthAustraliaWaterbodies',
+        layerDisplayName: 'DEA Waterbodies Map', minResolution: 0.00069, tiled: true
+      });
 
-    this.setupWMSLayer(layerPromises,  'https://ows.dea.ga.gov.au',
-      {createLayer: true, useAsWaterBodySource: false, minResolution: 0.00069, tiled: true,
-        layerOrFeatureName: 'wofs_filtered_summary', layerDisplayName: 'WOFS'});
+    this.setupWMSLayer(layerPromises, 'https://ows.dea.ga.gov.au',
+      {
+        createLayer: true, useAsWaterBodySource: false, minResolution: 0.00069, tiled: true,
+        layerOrFeatureName: 'wofs_filtered_summary', layerDisplayName: 'WOFS'
+      });
 
     // layerPromises.push(this.layers.createLayerFromWFSURL('Digital Earth Australia Waterbodies', 'https://hotspots.dea.ga.gov.au/geoserver/public/wfs'));
 
@@ -124,6 +144,7 @@ export class EowLayers {
       layerPromises.push(this.layers.createLayerFromGeoJSON(url, options, this.waterBodiesLayers));
     }
   }
+
   // private setupWFSLayer(waterBodiesLayers: LayersInfo[], layerPromises: Promise<any>[], name: string, url: string, featurePrefix: string, options: LayersSetup) {
   private setupWFSLayer(layerPromises: Promise<any>[], url: string, options: LayersSourceSetup) {
     if (options.createLayer) {

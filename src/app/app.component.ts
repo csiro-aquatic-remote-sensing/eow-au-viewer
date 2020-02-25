@@ -22,8 +22,12 @@ import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import Map from 'ol/Map';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
+import {forkJoin, combineLatest} from 'rxjs';
+import {Feature as TurfFeature} from '@turf/helpers';
 
 const theClass = 'AppComponent';
+
+type WaterBodyFeatures = { [name: string]: Feature[] }; // tslint:disable-line
 
 // TODO - split this up!
 @Component({
@@ -53,7 +57,7 @@ export class AppComponent implements OnInit {
   allDataSource: VectorSource;
   dataLayer: VectorLayer;
   newPoints = false;
-  waterBodyFeatures: { [name: string]: Feature[] } = {};
+  waterBodyFeatures: WaterBodyFeatures = {};
   totalNumberWaterBodyFeatures = 0;
   newWaterbodiesData = false;
 
@@ -84,39 +88,39 @@ export class AppComponent implements OnInit {
 
     this.layers = new Layers(this.eowMap, this.htmlDocument, this.http, this.log);
     this.eowLayers = await new EowLayers(this.layers, this.log).init(); // this.eowMap);
-    this.eowLayers.waterBodiesLayers.getLayersInfo().subscribe(async waterBodiesLayers => {
-      this.waterBodiesLayers = waterBodiesLayers;
-      const theWaterBodyLayersLength = this.waterBodiesLayers ? this.waterBodiesLayers.length : 'null';
-      console.log(`  waterBodyLayers subscription updated - points#: ${theWaterBodyLayersLength}`);
-    });
+    // this.eowLayers.waterBodiesLayers.getLayersInfo().subscribe(async waterBodiesLayers => {
+    //   this.waterBodiesLayers = waterBodiesLayers;
+    //   const theWaterBodyLayersLength = this.waterBodiesLayers ? this.waterBodiesLayers.length : 'null';
+    //   console.log(`  waterBodyLayers subscription updated - points#: ${theWaterBodyLayersLength}`);
+    // });
 
     this.measurementStore = await new MeasurementStore(this.log);
     this.eowDataGeometries = await new EowDataGeometries(this.log).init(this.eowData);  // TODO this seems to do similar to EowDataLayer - combine
-    this.eowDataGeometries.getPoints().subscribe(async (points) => {
-      this.points = points;
-      this.newPoints = true;
-      const pointsLength = this.points ? this.points.features.length : 'null';
-      console.log(`  pointsObs subscription updated - points#: ${pointsLength}`);
-    });
-    this.eowDataGeometries.getAllPoints().subscribe(async sourceNErrorMarginPoints => {
-      this.sourceNErrorMarginPoints = sourceNErrorMarginPoints;
-      const theSourceNErrorMarginPointsLength = this.sourceNErrorMarginPoints ? this.sourceNErrorMarginPoints.features.length : 'null';
-      console.log(`  sourceNErrorMarginPoints subscription updated - points#: ${theSourceNErrorMarginPointsLength}`);
-    });
-    this.eowDataGeometries.getAllPointsMap().subscribe(async allPointsMap => {
-      this.allPointsMap = allPointsMap;
-      const theAllPointsMapObsLength = this.allPointsMap ? Object.keys(this.allPointsMap).length : 'null';
-      console.log(`  allPointsMap subscription updated - points#: ${theAllPointsMapObsLength}`);
-    });
-    this.eowDataGeometries.getPointsErrorMargin().subscribe(pointsErrorMargins => {
-      this.pointsErrorMargins = pointsErrorMargins;
-    });
-    this.map.on('moveend', () => {
-      // set waterBodyFeatures, totalNumberWaterBodyFeatures and newWaterbodiesData
-      this.collectWaterBodyFeatures();
-      console.log(`app - map moved - newWaterbodiesData?: ${this.newWaterbodiesData}`);
-      this.performRunWhenNewData();
-    });
+    // this.eowDataGeometries.getPoints().subscribe(async (points) => {
+    //   this.points = points;
+    //   this.newPoints = true;
+    //   const pointsLength = this.points ? this.points.features.length : 'null';
+    //   console.log(`  pointsObs subscription updated - points#: ${pointsLength}`);
+    // });
+    // this.eowDataGeometries.getAllPoints().subscribe(async sourceNErrorMarginPoints => {
+    //   this.sourceNErrorMarginPoints = sourceNErrorMarginPoints;
+    //   const theSourceNErrorMarginPointsLength = this.sourceNErrorMarginPoints ? this.sourceNErrorMarginPoints.features.length : 'null';
+    //   console.log(`  sourceNErrorMarginPoints subscription updated - points#: ${theSourceNErrorMarginPointsLength}`);
+    // });
+    // this.eowDataGeometries.getAllPointsMap().subscribe(async allPointsMap => {
+    //   this.allPointsMap = allPointsMap;
+    //   const theAllPointsMapObsLength = this.allPointsMap ? Object.keys(this.allPointsMap).length : 'null';
+    //   console.log(`  allPointsMap subscription updated - points#: ${theAllPointsMapObsLength}`);
+    // });
+    // this.eowDataGeometries.getPointsErrorMargin().subscribe(pointsErrorMargins => {
+    //   this.pointsErrorMargins = pointsErrorMargins;
+    // });
+    // this.map.on('moveend', () => {
+    //   // set waterBodyFeatures, totalNumberWaterBodyFeatures and newWaterbodiesData
+    //   this.collectWaterBodyFeatures();
+    //   console.log(`app - map moved - newWaterbodiesData?: ${this.newWaterbodiesData}`);
+    //   this.performRunWhenNewData();
+    // });
 
     this.layersGeometries = new LayerGeometries(this.eowLayers, this.log);
     this.geometryOps = new GeometryOps(this.log);
@@ -127,12 +131,101 @@ export class AppComponent implements OnInit {
     this.measurementStore.init(this.eowMap, this.eowData, this.userStore);
     await this.userStore.init(this.eowData, this.measurementStore);
 
+    this.setupObserversHandleNewData();
+
     this.setupEventHandlers();
 
     this.DEBUGinit();
 
-    this.performFirstRunWhenReady();
+    // this.performFirstRunWhenReady();
     // this.calculateWaterBodiesCentroidsPlot();  // DEBUG
+  }
+
+  private setupObserversHandleNewData() { // forkJoin
+    const uberObserver = combineLatest([
+      this.eowDataGeometries.getPoints(),
+      this.eowDataGeometries.getAllPoints(),
+      this.eowDataGeometries.getAllPointsMap(),
+      this.eowDataGeometries.getPointsErrorMargin(),
+    ]);
+    uberObserver.subscribe(async (value) => {
+      console.log(`uberObserver - value length: ${value.filter(v => v !== null).length}`);
+      const [points, allPoints, allPointsMap, errorMarginPoints] = value;
+      if (points && allPoints && allPointsMap && errorMarginPoints) {
+        handlePointsObserver(points);
+        handleAllPointsObserver(allPoints);
+        handlePointsMapObserver(allPointsMap);
+        handleErrorMarginPoints(errorMarginPoints);
+
+        if (this.ready()) {
+          this.log.verbose(theClass, 'userObserver subcribe complete - call main loop now');
+          await this.calculateIntersectionsPlot();
+        }
+      }
+    });
+    this.eowDataGeometries.getPoints().subscribe(value => {
+      console.log(`eowDataGeometries.getPoints value emitted`);
+    });
+    this.eowDataGeometries.getAllPoints().subscribe(value => {
+      console.log(`eowDataGeometries.getAllPoints value emitted`);
+    });
+    this.eowDataGeometries.getAllPointsMap().subscribe(value => {
+      console.log(`eowDataGeometries.getAllPointsMap value emitted`);
+    });
+    this.eowDataGeometries.getPointsErrorMargin().subscribe(value => {
+      console.log(`eowDataGeometries.getPointsErrorMargin value emitted`);
+    });
+    this.eowLayers.waterBodiesLayers.getLayersInfo().subscribe(layersInfo => {
+      // I want to subscribe to layer's VectorSource observer and when triggers call calculateIntersectionsPlot()
+      // with that new data.  When data points change, as per above subscription, it will call calculateIntersectionsPlot()
+      // with no arguments and that means 'apply new data to existing layers'.
+      // PERHAPS use collectWaterBodyFeatures()
+      this.waterBodiesLayers = layersInfo;
+      for (const layerInfo of layersInfo) {
+        layerInfo.observable.subscribe(async vectorSource => {
+          // New map vector data
+          const passedData = {};
+          passedData[layerInfo.name] = vectorSource.getFeatures();
+          // accumulate / update global data
+          this.waterBodyFeatures[layerInfo.name] = vectorSource.getFeatures();
+          await this.calculateIntersectionsPlot(passedData);
+        });
+      }
+
+      // const handleLayersInfo = (waterBodiesLayers: LayersInfo[]) => {
+      //   this.waterBodiesLayers = waterBodiesLayers;
+      //   const theWaterBodyLayersLength = this.waterBodiesLayers ? this.waterBodiesLayers.length : 'null';
+      //   // Setup observers on the layers.observer
+      //   // I think I could just build an array of layers that have changed and set a new field in  waterBodiesLayers to mark that
+      //   console.log(`  waterBodyLayers subscription updated - points#: ${theWaterBodyLayersLength}`);
+      // };
+
+    });
+
+    const handlePointsObserver = (points: FeatureCollection<Point>) => {
+      this.points = points;
+      this.newPoints = true;
+      const pointsLength = this.points ? this.points.features.length : 'null';
+      console.log(`  pointsObs subscription updated - points#: ${pointsLength}`);
+    };
+
+    const handleAllPointsObserver = (allPoints: FeatureCollection<Point>) => {
+      this.sourceNErrorMarginPoints = allPoints;
+      const theSourceNErrorMarginPointsLength = this.sourceNErrorMarginPoints ? this.sourceNErrorMarginPoints.features.length : 'null';
+      console.log(`  sourceNErrorMarginPoints subscription updated - points#: ${theSourceNErrorMarginPointsLength}`);
+    };
+
+    const handlePointsMapObserver = (allPointsMap: PointsMap) => {
+      this.allPointsMap = allPointsMap;
+      const theAllPointsMapObsLength = this.allPointsMap ? Object.keys(this.allPointsMap).length : 'null';
+      console.log(`  allPointsMap subscription updated - points#: ${theAllPointsMapObsLength}`);
+    };
+
+    const handleErrorMarginPoints = (pointsErrorMargins: SourcePointMarginsType[]) => {
+      this.pointsErrorMargins = pointsErrorMargins;
+      console.log(`  pointsErrorMargins subscription updated - points#: ${pointsErrorMargins.length}`);
+    };
+
   }
 
   /**
@@ -155,7 +248,8 @@ export class AppComponent implements OnInit {
 
   private async performRunWhenNewData() {
     console.log(`  *** -> performRunWhenNewData -`);
-    console.log(`    totalNumberWaterBodyFeatures: ${this.totalNumberWaterBodyFeatures}, points#: ${this.points && this.points.features.length}, allPointsMap#: ${this.allPointsMap && Object.keys(this.allPointsMap).length}, `
+    console.log(`    totalNumberWaterBodyFeatures: ${this.totalNumberWaterBodyFeatures}, points#: ${this.points && this.points.features.length},`
+      + `allPointsMap#: ${this.allPointsMap && Object.keys(this.allPointsMap).length}, `
       + `sourceNErrorMarginPoints#: ${this.sourceNErrorMarginPoints && this.sourceNErrorMarginPoints.features.length}, `
       + `waterBodyLayers#: ${this.waterBodiesLayers && this.waterBodiesLayers.length}, newPoints: ${this.newPoints}, newWaterbodiesData: ${this.newWaterbodiesData}`);
     if (this.newPoints || this.newWaterbodiesData) {
@@ -200,20 +294,24 @@ export class AppComponent implements OnInit {
    * creates polygons out of them and calculates the intersections with those.  And then does whatever, such as draw
    * Pie Charts of the FU values of the EOW Data points in the waterbodies.
    *
-   * This is called initially above and from map events.
+   * This is called initially above and from map events. ??????????????
+   *
+   * @param givenWaterBodyFeatures if given will be the features (that have changed) to apply the EOWData Points to.  If it is null, this
+   * means that no layer data has changed and to just apply the EOWData Points to all layers in this.waterBodyFeatures
    */
-  async calculateIntersectionsPlot() {
+  async calculateIntersectionsPlot(givenWaterBodyFeatures: WaterBodyFeatures = null) {
     console.log(`calculateIntersectionsPlot called`);
     if (this.ready()) {
+      const theFeatures = givenWaterBodyFeatures ? givenWaterBodyFeatures : this.waterBodyFeatures;   // choose argument or global data
       // Maybe debug, maybe not.  Don't perform calculations when zoomed out too far
       console.warn(`Resolution: ${this.map.getView().getResolution()}`);
       if (this.map.getView().getZoom() >= 9) {
         console.log(`  *** -> calculateIntersectionsPlot loop -`);
         console.log(`    points#: ${this.points.features.length}, allPointsMap#: ${Object.keys(this.allPointsMap).length}, `
           + `sourceNErrorMarginPoints#: ${this.sourceNErrorMarginPoints.features.length}, waterBodyLayers#: ${this.waterBodiesLayers.length}`);
-        for (const waterBodyLayerName of Object.keys(this.waterBodyFeatures)) {
+        for (const waterBodyLayerName of Object.keys(theFeatures)) {
           // Get the features in the view
-          const waterBodyFeatures: Feature[] = this.waterBodyFeatures[waterBodyLayerName];
+          const waterBodyFeatures: Feature[] = theFeatures[waterBodyLayerName];
           console.log(`     waterBodyLayer loop for: ${waterBodyLayerName} - Features in View#: ${waterBodyFeatures.length}`);
           // Convert to polygons
           const waterBodyFeatureCollection: FeatureCollection<Polygon> = this.layersGeometries.createFeatureCollection(waterBodyFeatures);
@@ -224,6 +322,8 @@ export class AppComponent implements OnInit {
       } else {
         console.warn(`Not performating calculations or drawing charts - zoomed too far out: ${this.map.getView().getZoom()}`);
       }
+    } else {
+      console.log(`Data not ready`);
     }
   }
 

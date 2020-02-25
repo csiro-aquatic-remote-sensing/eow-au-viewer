@@ -20,7 +20,7 @@ import {BehaviorSubject} from 'rxjs';
 import Feature from 'ol/Feature';
 import Stroke from 'ol/style/Stroke';
 import {bbox as bboxStrategy} from 'ol/loadingstrategy';
-import {LayersInfoMangar, LayersSourceSetup} from './eow-layers';
+import {LayersInfoManager, LayersSourceSetup} from './eow-layers';
 
 const theClass = 'Layers';
 
@@ -113,7 +113,7 @@ export class Layers {
    * @param options for creating the layer
    * @param waterBodiesLayers class instance to update for the client
    */
-  async createLayerFromGeoJSON(url, options: LayersSourceSetup, waterBodiesLayers: LayersInfoMangar): Promise<any> {
+  async createLayerFromGeoJSON(url, options: LayersSourceSetup, waterBodiesLayers: LayersInfoManager): Promise<any> {
     return new Promise(async (resolve, reject) => {
       const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
       const response = await fetch(url);
@@ -142,11 +142,12 @@ export class Layers {
    * @param options for creating the layer
    * @param waterBodiesLayers class instance to update for the client
    */
-  async createLayerFromWFS(urlForWFS, options: LayersSourceSetup, waterBodiesLayers: LayersInfoMangar): Promise<any> {
+  async createLayerFromWFS(urlForWFS, options: LayersSourceSetup, waterBodiesLayers: LayersInfoManager): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!options.layerOrFeatureName) {
         reject('options.featureName expected');
       }
+      const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
       const vectorSource = new VectorSource({
         format: new GeoJSON(),
         loader: (extent, resolution, projection) => {
@@ -167,6 +168,13 @@ export class Layers {
                 featureProjection: 'EPSG:4326'
               }) as Feature[];
               vectorSource.addFeatures(features);
+              // Due to the BBOXStrategy, this loader function will run every time the map is panned or zoomed.  Update the Observable
+              // with new data if the VectorLayer is already defined (ie. not the first time this runs).  The first time the Observable
+              // will be created in the VectorLayer code below.
+              const existingWaterBodiesLayer = waterBodiesLayers.getLayerInfo(name);
+              if (existingWaterBodiesLayer) {
+                existingWaterBodiesLayer.observable.next(vectorSource);
+              }
             } else {
               onError();
             }
@@ -175,6 +183,9 @@ export class Layers {
         },
         strategy: bboxStrategy
       });
+
+      // I want to subscribe to changes on the VectorSource so can use Observables to know when there are changes.  But this method may
+      // be used by lots of different layers
 
       const newLayer = new VectorLayer(Object.assign(options, {
         source: vectorSource,
@@ -186,11 +197,11 @@ export class Layers {
           })
         })
       }));
-      const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
       newLayer.set('name', name);
       const index = this.addLayer(newLayer, name);
       // This waterBodiesLayers.addInfo() needs to be done here in the promise
-      waterBodiesLayers.addInfo(name, index, urlForWFS, options);
+      const behaviourSubject = new BehaviorSubject<VectorSource>(vectorSource);
+      waterBodiesLayers.addInfo(name, index, urlForWFS, options, behaviourSubject);
       resolve(newLayer);
     });
   }
@@ -202,7 +213,7 @@ export class Layers {
    * @param options for creating the layer
    * @param waterBodiesLayers class instance to update for the client
    */
-  async createLayerFromWMS(url, options: LayersSourceSetup, waterBodiesLayers: LayersInfoMangar): Promise<any> {
+  async createLayerFromWMS(url, options: LayersSourceSetup, waterBodiesLayers: LayersInfoManager): Promise<any> {
     return new Promise((resolve) => {
       options.opacity = options.opacity || 0.6;
       const newLayer = new TileLayer(Object.assign(options, {
@@ -228,7 +239,7 @@ export class Layers {
    * @param options when creating layer
    * @param waterBodiesLayers class instance to update for the client
    */
-  async createLayerFromWFSFeatures(features: Feature[], options: LayersSourceSetup, waterBodiesLayers: LayersInfoMangar): Promise<any> {
+  async createLayerFromWFSFeatures(features: Feature[], options: LayersSourceSetup, waterBodiesLayers: LayersInfoManager): Promise<any> {
     return new Promise((resolve) => {
       const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
       const existingLayerIndex = this.layerNames.getName(name) || -1; // hasOwnProperty(name) ? this.layerNames[name] : -1;

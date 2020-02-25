@@ -92,7 +92,7 @@ export default class EowDataGeometries {
   }
 
   /**
-   * Read the EOW Data points from the WFS end point.  Saves in the
+   * Read the EOW Data points when the dataSource changes due to BBOXStrategy on the map
    *
    * This calculates the data and saves in pointsObs Behaviour Subject (an Observable).
    */
