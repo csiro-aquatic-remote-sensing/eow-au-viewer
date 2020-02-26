@@ -2,32 +2,19 @@ import colors from '../colors.json';
 import {
   Brolog,
 } from 'brolog';
-// import * as d3 from 'd3';
-import { select } from 'd3-selection';
-import { scaleLinear } from 'd3-scale';
-import { extent } from 'd3-array';
-import { pie, arc } from 'd3-shape';
-import {PieItem, PieItemObject, PieItems} from '../eow-data-struct';
+import {select} from 'd3-selection';
+import {pie, arc} from 'd3-shape';
+import {PieItem, PieItems} from '../eow-data-struct';
+import {brologLevel} from '../globals';
 
+const log = Brolog.instance(brologLevel);  // InjectorInstance.get<Brolog>(Brolog);
 const theClass = 'PieChart';
 
 const widthFactor = 9;
 const pieWidth = 1.0;
 const opaqueness = 0.7;
 
-const brologLevel = 'verbose';
-const log = new Brolog();
-
-const STATIC_INIT = Symbol();
-
 export class PieChart {
-  /**
-   * Static Constructor (called at end of file)
-   */
-  public static[STATIC_INIT] = () => {
-    log.level(brologLevel);
-  }
-
   /**
    * Draw pie chart of features (FU Values) at elementId
    *
@@ -65,13 +52,13 @@ export class PieChart {
     // 3. Draw canvas
 
     const wrapper = select('#' + elementId)
-    // .attr('class', 'svg-container')
+      // .attr('class', 'svg-container')
       .append('svg')
       .attr('width', '' + dimensions.width)
       .attr('height', '' + dimensions.height);
 
     const bounds = wrapper.append('g');
-      // .style('transform', `translate(${dimensions.margin.left}px, ${dimensions.margin.top}px)`);
+    // .style('transform', `translate(${dimensions.margin.left}px, ${dimensions.margin.top}px)`);
 
     // 4. Create scales
 
@@ -158,6 +145,3 @@ export class PieChart {
     return html.replace('class="pieChart"', 'id="pieChart"');
   }
 }
-
-// Call the init once
-PieChart[STATIC_INIT]();

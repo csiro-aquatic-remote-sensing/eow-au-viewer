@@ -1,27 +1,32 @@
 import Brolog from 'brolog';
-import {Feature, feature as turfFeature, FeatureCollection, Point, point as turfPoint, Polygon} from '@turf/helpers';
+import {Feature, FeatureCollection, Point, point as turfPoint, Polygon} from '@turf/helpers';
 import {Position} from 'geojson';
 import moment from 'moment';
+import {brologLevel} from './globals';
 
 const theClass = 'EowDataStruct';
-const brologLevel = 'verbose';
-const log = new Brolog();
+const log = Brolog.instance(brologLevel);  // InjectorInstance.get<Brolog>(Brolog);
 
 export type Coords = [number, number];
+
 export interface TimeSeriesItem {
   fu: string;
   date: string;
   index: number;
 }
+
 export type TimeSeriesItems = TimeSeriesItem[];
+
 export interface PieItemObject {
   count: number;
   points: Coords[];
 }
+
 export interface PieItem {
   name: string;
   y: PieItemObject;
 }
+
 export type PieItems = PieItem[];
 
 /**
@@ -50,16 +55,7 @@ export interface SourcePointMarginsType {
 
 export type PointsMap = { [pointString: string]: Feature<Point> };  // tslint:disable-line
 
-const STATIC_INIT = Symbol();
-
 export class EowDataStruct {
-  /**
-   * Static Constructor (called at end of file)
-   */
-  public static[STATIC_INIT] = () => {
-    log.level(brologLevel);
-  }
-
   /**
    * @Return Aggregated FU data as an array of objects:
    * [
@@ -223,6 +219,3 @@ export class EowDataStruct {
     return [precise(p[0]), precise(p[1])];
   }
 }
-
-// Call the init once
-EowDataStruct[STATIC_INIT]();

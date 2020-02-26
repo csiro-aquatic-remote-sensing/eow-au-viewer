@@ -12,13 +12,12 @@ import centroid from '@turf/centroid';
 import pointsWithinPolygon from '@turf/points-within-polygon';
 import {Brolog} from 'brolog';
 import {EowDataStruct, EowWaterBodyIntersection, PointsMap} from './eow-data-struct';
+import {brologLevel} from './globals';
 
 const theClass = 'GeometryOps';
+const log = Brolog.instance(brologLevel);  // InjectorInstance.get<Brolog>(Brolog);
 
 export default class GeometryOps {
-  constructor(private log: Brolog) {
-  }
-
   /**
    * Calculate the intersection between the polygons from layerName and the EOW Data Points
    * @param eowDataGeometry - EOW Data Points object -

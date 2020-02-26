@@ -2,8 +2,9 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
-import {HttpClient, HttpClientModule} from '@angular/common/http';
+import {HttpClientModule} from '@angular/common/http';
 import {Brolog} from 'brolog';
+import {brologLevel} from './globals';
 
 @NgModule({
   declarations: [
@@ -16,9 +17,9 @@ import {Brolog} from 'brolog';
     {
       provide: Brolog,
       // 'silent' | 'error' | 'warn' | 'info' | 'verbose' | 'silly'
-      useFactory: function brologFactory() { return Brolog.instance('warn'); }
+      useFactory: function brologFactory() { return Brolog.instance(brologLevel); }
     }
   ],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {}

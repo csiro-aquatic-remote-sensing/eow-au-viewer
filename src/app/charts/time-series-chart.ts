@@ -1,13 +1,14 @@
 import {
   Brolog,
 } from 'brolog';
-// import d3 from 'd3';
 import { select } from 'd3-selection';
 import { scaleTime } from 'd3-scale';
 import { extent } from 'd3-array';
 import colors from '../colors.json';
-import {PieChart} from './pie-chart';
 import {TimeSeriesItem, TimeSeriesItems} from '../eow-data-struct';
+import {brologLevel} from '../globals';
+
+const log = Brolog.instance(brologLevel);  // InjectorInstance.get<Brolog>(Brolog);
 
 const theClass = 'TimeSeriesChart';
 
@@ -15,20 +16,7 @@ const widthFactor = 10;
 const pieWidth = 1.0;
 const opaqueness = 0.7;
 
-// TODO - need to use common application level
-const brologLevel = 'verbose';
-const log = new Brolog();
-
-const STATIC_INIT = Symbol();
-
 export class TimeSeriesChart {
-  /**
-   * Static Constructor (called at end of file)
-   */
-  public static [STATIC_INIT] = () => {
-    log.level(brologLevel);
-  }
-
   /**
    * Draw pie chart of features (FU Values) at elementId
    *
@@ -117,6 +105,3 @@ export class TimeSeriesChart {
   }
 
 }
-
-// Call the init once
-TimeSeriesChart[STATIC_INIT]();
