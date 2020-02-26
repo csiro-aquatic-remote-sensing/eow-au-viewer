@@ -68,42 +68,42 @@ export default class GeometryOps {
    *          waterBody: null,
    *          eowData: null
    */
-  async calculateLayerIntersections(eowDataGeometry: FeatureCollection<Point>, errorMarginPoints: FeatureCollection<Point>,
-                                    allPointsMap: PointsMap, waterBodyLayerPolygons: FeatureCollection<Polygon>, layerName: string):
+  static async calculateLayerIntersections(eowDataGeometry: FeatureCollection<Point>, errorMarginPoints: FeatureCollection<Point>,
+                                           allPointsMap: PointsMap, waterBodyLayerPolygons: FeatureCollection<Polygon>, layerName: string):
     Promise<EowWaterBodyIntersection[]> {
     return new Promise<EowWaterBodyIntersection[]>(resolve => {
       const layerGeometry: Feature<Polygon>[] = waterBodyLayerPolygons.features;
       const eowWaterBodyIntersections: EowWaterBodyIntersection[] = [];
       const pointsToUse = errorMarginPoints ? errorMarginPoints : eowDataGeometry;
 
-      this.log.info(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
+      log.info(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
       const details = layerGeometry.length > 0 ? layerGeometry[0].geometry.coordinates[0][0] : 'no polygons';
-      this.log.verbose(theClass, `layerPolygons - there are: ${layerGeometry.length} - coords of first is: ${details}`);
+      log.verbose(theClass, `layerPolygons - there are: ${layerGeometry.length} - coords of first is: ${details}`);
       for (const layerPolygon of layerGeometry) {
         const intersection: FeatureCollection<Point> = pointsWithinPolygon(pointsToUse, layerPolygon) as FeatureCollection<Point>;
         // TODO - now build a FeatureCollection<Point> from allPointsMapObs
-        const intersectionSourcePoints = this.filterSourcePoints(intersection, allPointsMap);
+        const intersectionSourcePoints = GeometryOps.filterSourcePoints(intersection, allPointsMap);
         eowWaterBodyIntersections.push(EowDataStruct.createEoWFormat(intersectionSourcePoints, layerPolygon));
       }
-      this.log.silly(theClass, `intersections: ${JSON.stringify(eowWaterBodyIntersections, null, 2)}`);
+      log.silly(theClass, `intersections: ${JSON.stringify(eowWaterBodyIntersections, null, 2)}`);
       resolve(eowWaterBodyIntersections);
     });
   }
 
   // Mainly for debug purposes so I can see something happening!  I don't think the EOW Data is intersecting the polygons and want to know more.
-  async convertLayerToDataFormat(layerGeometries: LayerGeometries, layerName: string):
+  static async convertLayerToDataFormat(layerGeometries: LayerGeometries, layerName: string):
     Promise<EowWaterBodyIntersection[]> {
     return new Promise<EowWaterBodyIntersection[]>(resolve => {
       const layerGeometry: Feature<Polygon>[] = layerGeometries.getLayer(layerName);
       const eowWaterBodyPoints: EowWaterBodyIntersection[] = [];
 
-      this.log.verbose(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
+      log.verbose(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
       for (const layerPolygon of layerGeometry) {
         const thePoints: Feature<Point>[] = layerPolygon.geometry.coordinates[0].map(c => turfPoint(c));
         const theFeatureCollection = featureCollection(thePoints);
         eowWaterBodyPoints.push(EowDataStruct.createEoWFormat(theFeatureCollection, layerPolygon));
       }
-      this.log.silly(theClass, `convertLayerToDataForamt: ${JSON.stringify(eowWaterBodyPoints, null, 2)}`);
+      log.silly(theClass, `convertLayerToDataForamt: ${JSON.stringify(eowWaterBodyPoints, null, 2)}`);
       resolve(eowWaterBodyPoints);
     });
   }
@@ -114,11 +114,11 @@ export default class GeometryOps {
    *
    * @param featurePoints that makes a polygon to get he centroid for
    */
-  calculateCentroidTurfVer(featurePoints: FeatureCollection<Point>): Feature<Point> {
+  static calculateCentroidTurfVer(featurePoints: FeatureCollection<Point>): Feature<Point> {
     return centroid(featurePoints);
   }
 
-  calculateCentroidTurfVerUsingPoints(points: number[][]): Feature<Point> {
+  static calculateCentroidTurfVerUsingPoints(points: number[][]): Feature<Point> {
     const featurePoints = turfFeatureCollection(points.map(c => turfPoint(c)));
     return centroid(featurePoints);
   }
@@ -127,15 +127,15 @@ export default class GeometryOps {
    * https://en.wikipedia.org/wiki/Centroid#Of_a_polygon
    * @param featurePoints of points forming a polygon to return the centroid for
    */
-  calculateCentroidFromFeatureCollection(featurePoints: FeatureCollection<Point>): Feature<Point> {
-    this.log.silly(`calculateCentroidFromFeatureCollection - featurePoints: FeatureCollection<Point>: ${JSON.stringify(featurePoints)}`);
+  static calculateCentroidFromFeatureCollection(featurePoints: FeatureCollection<Point>): Feature<Point> {
+    log.silly(`calculateCentroidFromFeatureCollection - featurePoints: FeatureCollection<Point>: ${JSON.stringify(featurePoints)}`);
     const points = featurePoints.features.map(f => f.geometry.coordinates);
-    return this.calculateCentroidFromPoints(points);
+    return GeometryOps.calculateCentroidFromPoints(points);
   }
 
-  calculateCentroidFromPoints(points: number[][]): Feature<Point> {
-    this.log.verbose('calculateCentroidFromPoints', `  points length: ${points.length}`);
-    return this.calculateCentroidTurfVerUsingPoints(points);
+  static calculateCentroidFromPoints(points: number[][]): Feature<Point> {
+    log.verbose('calculateCentroidFromPoints', `  points length: ${points.length}`);
+    return GeometryOps.calculateCentroidTurfVerUsingPoints(points);
 
     // I'm happy to let my code go and use the library version for now
 
@@ -160,17 +160,17 @@ export default class GeometryOps {
       area += currentArea;
       cx += (xI + xIp1) * currentArea;
       cy += (yI + yIp1) * currentArea;
-      this.log.silly('calculateCentroidFromPoints', `iteration: ${i} - area: ${area}, cx: ${cx}, cy: ${cy}`);
+      log.silly('calculateCentroidFromPoints', `iteration: ${i} - area: ${area}, cx: ${cx}, cy: ${cy}`);
     }
     area *= 1 / 2;
     cx = Math.round(cx / (6 * area));
     cy = Math.round(cy / (6 * area));
-    this.log.verbose('calculateCentroidFromPoints', `finished - area: ${area}, (centroid) cx: ${cx}, cy: ${cy}`);
+    log.verbose('calculateCentroidFromPoints', `finished - area: ${area}, (centroid) cx: ${cx}, cy: ${cy}`);
     return turfPoint([cx, cy]);
   }
 
 
-  private appendFeatureFeatureCollection(f1: FeatureCollection<Point>, f2: Feature<Point>): FeatureCollection<Point> {
+  private static appendFeatureFeatureCollection(f1: FeatureCollection<Point>, f2: Feature<Point>): FeatureCollection<Point> {
     if (f1) {
       if (f2) {
         f1.features.push(f2);
@@ -182,7 +182,7 @@ export default class GeometryOps {
   }
 
 
-  private filterSourcePoints(allPointsIntersection: FeatureCollection<Point>, allPointsMap: PointsMap): FeatureCollection<Point> {
+  private static filterSourcePoints(allPointsIntersection: FeatureCollection<Point>, allPointsMap: PointsMap): FeatureCollection<Point> {
     const filteredPoints: FeatureCollection<Point> = {
       features: [],  // Array<Feature<Point, Properties>>,
       type: 'FeatureCollection'

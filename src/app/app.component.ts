@@ -22,9 +22,10 @@ import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import Map from 'ol/Map';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
-import {forkJoin, combineLatest} from 'rxjs';
-import {Feature as TurfFeature} from '@turf/helpers';
+import {combineLatest} from 'rxjs';
 import moment from 'moment';
+import bboxClip from '@turf/bbox-clip';
+import {GisOps} from './gis-ops';
 
 const theClass = 'AppComponent';
 
@@ -94,43 +95,13 @@ export class AppComponent implements OnInit {
 
     this.layers = new Layers(this.eowMap, this.htmlDocument, this.http, this.log);
     this.eowLayers = await new EowLayers(this.layers, this.log).init(); // this.eowMap);
-    // this.eowLayers.waterBodiesLayers.getLayersInfo().subscribe(async waterBodiesLayers => {
-    //   this.waterBodiesLayers = waterBodiesLayers;
-    //   const theWaterBodyLayersLength = this.waterBodiesLayers ? this.waterBodiesLayers.length : 'null';
-    //   console.log(`  waterBodyLayers subscription updated - points#: ${theWaterBodyLayersLength}`);
-    // });
 
     this.measurementStore = await new MeasurementStore(this.log);
     this.eowDataGeometries = await new EowDataGeometries(this.log).init(this.eowData);  // TODO this seems to do similar to EowDataLayer - combine
-    // this.eowDataGeometries.getPoints().subscribe(async (points) => {
-    //   this.points = points;
-    //   this.newPoints = true;
-    //   const pointsLength = this.points ? this.points.features.length : 'null';
-    //   console.log(`  pointsObs subscription updated - points#: ${pointsLength}`);
-    // });
-    // this.eowDataGeometries.getAllPoints().subscribe(async sourceNErrorMarginPoints => {
-    //   this.sourceNErrorMarginPoints = sourceNErrorMarginPoints;
-    //   const theSourceNErrorMarginPointsLength = this.sourceNErrorMarginPoints ? this.sourceNErrorMarginPoints.features.length : 'null';
-    //   console.log(`  sourceNErrorMarginPoints subscription updated - points#: ${theSourceNErrorMarginPointsLength}`);
-    // });
-    // this.eowDataGeometries.getAllPointsMap().subscribe(async allPointsMap => {
-    //   this.allPointsMap = allPointsMap;
-    //   const theAllPointsMapObsLength = this.allPointsMap ? Object.keys(this.allPointsMap).length : 'null';
-    //   console.log(`  allPointsMap subscription updated - points#: ${theAllPointsMapObsLength}`);
-    // });
-    // this.eowDataGeometries.getPointsErrorMargin().subscribe(pointsErrorMargins => {
-    //   this.pointsErrorMargins = pointsErrorMargins;
-    // });
-    // this.map.on('moveend', () => {
-    //   // set waterBodyFeatures, totalNumberWaterBodyFeatures and newWaterbodiesData
-    //   this.collectWaterBodyFeatures();
-    //   console.log(`app - map moved - newWaterbodiesData?: ${this.newWaterbodiesData}`);
-    //   this.performRunWhenNewData();
-    // });
 
     this.layersGeometries = new LayerGeometries(this.eowLayers, this.log);
-    this.geometryOps = new GeometryOps(this.log);
-    this.eowDataCharts = new EowDataCharts(this.geometryOps, this.layers, this.log);
+    // GeometryOps = new GeometryOps(this.log);
+    this.eowDataCharts = new EowDataCharts(this.layers, this.log);
 
     this.popupObject.init(this.eowMap);
     this.eowDataCharts.init(this.eowMap, this.htmlDocument);
@@ -143,11 +114,10 @@ export class AppComponent implements OnInit {
 
     this.DEBUGinit();
 
-    // this.performFirstRunWhenReady();
     // this.calculateWaterBodiesCentroidsPlot();  // DEBUG
   }
 
-  private setupObserversHandleNewData() { // forkJoin
+  private setupObserversHandleNewData() {
     const uberObserver = combineLatest([
       this.eowDataGeometries.getPoints(),
       this.eowDataGeometries.getAllPoints(),
@@ -185,16 +155,7 @@ export class AppComponent implements OnInit {
           await this.calculateIntersectionsPlot(passedData);
         });
       }
-
-      // const handleLayersInfo = (waterBodiesLayers: LayersInfo[]) => {
-      //   this.waterBodiesLayers = waterBodiesLayers;
-      //   const theWaterBodyLayersLength = this.waterBodiesLayers ? this.waterBodiesLayers.length : 'null';
-      //   // Setup observers on the layers.observer
-      //   // I think I could just build an array of layers that have changed and set a new field in  waterBodiesLayers to mark that
-      //   console.log(`  waterBodyLayers subscription updated - points#: ${theWaterBodyLayersLength}`);
-      // };
-
-    });
+     });
 
     const handlePointsObserver = (points: FeatureCollection<Point>) => {
       this.points = points;
@@ -219,59 +180,6 @@ export class AppComponent implements OnInit {
       this.pointsErrorMargins = pointsErrorMargins;
       this.log.verbose(theClass, `  pointsErrorMargins subscription updated - points#: ${pointsErrorMargins.length}`);
     };
-
-  }
-
-  /**
-   * Run this upon data changes
-   */
-  private async collectWaterBodyFeatures() {
-    let numberWaterBodyFeatures = 0;
-
-    for (const waterBodyLayer of this.waterBodiesLayers) {
-      const waterBodyFeatures: Feature[] = await this.eowMap.getWaterBodiesInView(waterBodyLayer);
-      numberWaterBodyFeatures += waterBodyFeatures.length;
-      this.waterBodyFeatures[waterBodyLayer.name] = waterBodyFeatures;
-    }
-
-    if (numberWaterBodyFeatures !== this.totalNumberWaterBodyFeatures) {
-      this.totalNumberWaterBodyFeatures = numberWaterBodyFeatures;
-      this.newWaterbodiesData = true;
-    }
-  }
-
-  private async performRunWhenNewData() {
-    this.log.verbose(theClass, `  *** -> performRunWhenNewData -`);
-    this.log.verbose(theClass, `    totalNumberWaterBodyFeatures: ${this.totalNumberWaterBodyFeatures}, points#: ${this.points && this.points.features.length},`
-      + `allPointsMap#: ${this.allPointsMap && Object.keys(this.allPointsMap).length}, `
-      + `sourceNErrorMarginPoints#: ${this.sourceNErrorMarginPoints && this.sourceNErrorMarginPoints.features.length}, `
-      + `waterBodyLayers#: ${this.waterBodiesLayers && this.waterBodiesLayers.length}, newPoints: ${this.newPoints}, newWaterbodiesData: ${this.newWaterbodiesData}`);
-    if (this.newPoints || this.newWaterbodiesData) {
-      this.newPoints = false;
-      this.newWaterbodiesData = false;
-      await this.calculateIntersectionsPlot();
-    }
-  }
-
-  /**
-   * We need to wait until all data is ready.
-   */
-  private async performFirstRunWhenReady() {
-    let numberOfTest = 0;
-    const maxNumberTests = 100;
-    await this.collectWaterBodyFeatures();
-    const intervalId = setInterval(async () => {
-      if (this.ready()) {
-        clearInterval(intervalId);
-        this.calculateIntersectionsPlot();
-      } else {
-        if (numberOfTest++ > maxNumberTests) {
-          clearInterval(intervalId);
-          throw new Error(`Waiting for data to become available - Max number of tests exceeded: ${maxNumberTests}`);
-        }
-        await this.collectWaterBodyFeatures();
-      }
-    }, 100);
   }
 
   // todo - add ENV VAR to setup debug stuff
@@ -302,9 +210,9 @@ export class AppComponent implements OnInit {
       console.log(`calculateIntersectionsPlot called and ready`);
       if (theMS - this.loopLastCalled > this.loopCallIntervalMS) {
         const theFeatures = givenWaterBodyFeatures ? givenWaterBodyFeatures : this.waterBodyFeatures;   // choose argument or global data
-        // Maybe debug, maybe not.  Don't perform calculations when zoomed out too far
         const date = new Date();
         console.warn(`Resolution: ${this.map.getView().getResolution()} - ${date.getSeconds()}:${date.getMilliseconds()}, diff since last: ${theMS - this.loopLastCalled}`);
+        // Maybe debug, maybe not.  Don't perform calculations when zoomed out too far
         if (this.map.getView().getZoom() >= 9) {
           this.log.verbose(theClass, `  *** -> calculateIntersectionsPlot loop -`);
           this.log.verbose(theClass, `    points#: ${this.points.features.length}, allPointsMap#: ${Object.keys(this.allPointsMap).length}, `
@@ -312,9 +220,10 @@ export class AppComponent implements OnInit {
           for (const waterBodyLayerName of Object.keys(theFeatures)) {
             // Get the features in the view
             const waterBodyFeatures: Feature[] = theFeatures[waterBodyLayerName];
+            // const clippedFeatures = bboxClip(waterBodyFeatures, this.map.getView().calculateExtent(this.map.getSize()));
             this.log.verbose(theClass, `     waterBodyLayer loop for: ${waterBodyLayerName} - Features in View#: ${waterBodyFeatures.length}`);
             // Convert to polygons
-            const waterBodyFeatureCollection: FeatureCollection<Polygon> = this.layersGeometries.createFeatureCollection(waterBodyFeatures);
+            const waterBodyFeatureCollection: FeatureCollection<Polygon> = GisOps.createFeatureCollection(waterBodyFeatures);
 
             // intersectAndDraw EOWData in polygons
             this.intersectAndDraw(waterBodyLayerName, waterBodyFeatureCollection, this.points, this.allPointsMap, this.sourceNErrorMarginPoints);
@@ -343,7 +252,7 @@ export class AppComponent implements OnInit {
   // TODO - no need to pass the class args to this any more
   private async intersectAndDraw(layerName: string, waterBodyPolygons: FeatureCollection<Polygon>, points: FeatureCollection<Point>,
                                  allPointsMap: PointsMap, sourceNErrorMarginPoints: FeatureCollection<Point>) {
-    const eowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, sourceNErrorMarginPoints, allPointsMap, waterBodyPolygons, layerName);
+    const eowWaterBodyIntersections = await GeometryOps.calculateLayerIntersections(points, sourceNErrorMarginPoints, allPointsMap, waterBodyPolygons, layerName);
     this.eowDataCharts.plotCharts(eowWaterBodyIntersections, layerName);
     this.eowDataCharts.debugDrawErrorMarginPoints(this.pointsErrorMargins);
   }
@@ -353,7 +262,7 @@ export class AppComponent implements OnInit {
    */
   private async calculateWaterBodiesCentroidsPlot() {
     const layerName = 'i5516 reservoirs';
-    const eowWaterbodyPoints: EowWaterBodyIntersection[] = await this.geometryOps.convertLayerToDataFormat(this.layersGeometries, layerName);
+    const eowWaterbodyPoints: EowWaterBodyIntersection[] = await GeometryOps.convertLayerToDataFormat(this.layersGeometries, layerName);
     this.eowDataCharts.plotCharts(eowWaterbodyPoints, layerName);
   }
 
