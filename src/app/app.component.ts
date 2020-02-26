@@ -24,6 +24,7 @@ import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
 import {forkJoin, combineLatest} from 'rxjs';
 import {Feature as TurfFeature} from '@turf/helpers';
+import moment from 'moment';
 
 const theClass = 'AppComponent';
 
@@ -60,11 +61,16 @@ export class AppComponent implements OnInit {
   waterBodyFeatures: WaterBodyFeatures = {};
   totalNumberWaterBodyFeatures = 0;
   newWaterbodiesData = false;
+  // Prevent main processing loop being called too often
+  loopCallIntervalMS = 1400;
+  loopLastCalled = -(this.loopCallIntervalMS + 1);
 
   constructor(@Inject(DOCUMENT) private htmlDocument: Document, private http: HttpClient, private log: Brolog) {
   }
 
   async ngOnInit() {
+    // this.loopLastCalled = -(this.loopCallIntervalMS + 1);
+    console.log(`Set this.loopLastCalled: ${this.loopLastCalled}`);
     this.userStore = new UserStore(this.htmlDocument, this.log);
     this.popupObject = new Popup(this.htmlDocument, this.userStore);
     this.eowMap = new EOWMap(this, this.log).init(this.popupObject);
@@ -288,30 +294,43 @@ export class AppComponent implements OnInit {
    * means that no layer data has changed and to just apply the EOWData Points to all layers in this.waterBodyFeatures
    */
   async calculateIntersectionsPlot(givenWaterBodyFeatures: WaterBodyFeatures = null) {
+    const dateStart = moment();
+    const theMS = new Date().getTime();
+
     this.log.verbose(theClass, `calculateIntersectionsPlot called`);
     if (this.ready()) {
-      const theFeatures = givenWaterBodyFeatures ? givenWaterBodyFeatures : this.waterBodyFeatures;   // choose argument or global data
-      // Maybe debug, maybe not.  Don't perform calculations when zoomed out too far
-      const date = new Date();
-      console.warn(`Resolution: ${this.map.getView().getResolution()} - ${date.getSeconds()}:${date.getMilliseconds()}`);
-      if (this.map.getView().getZoom() >= 9) {
-        this.log.verbose(theClass, `  *** -> calculateIntersectionsPlot loop -`);
-        this.log.verbose(theClass, `    points#: ${this.points.features.length}, allPointsMap#: ${Object.keys(this.allPointsMap).length}, `
-          + `sourceNErrorMarginPoints#: ${this.sourceNErrorMarginPoints.features.length}, waterBodyLayers#: ${this.waterBodiesLayers.length}`);
-        for (const waterBodyLayerName of Object.keys(theFeatures)) {
-          // Get the features in the view
-          const waterBodyFeatures: Feature[] = theFeatures[waterBodyLayerName];
-          this.log.verbose(theClass, `     waterBodyLayer loop for: ${waterBodyLayerName} - Features in View#: ${waterBodyFeatures.length}`);
-          // Convert to polygons
-          const waterBodyFeatureCollection: FeatureCollection<Polygon> = this.layersGeometries.createFeatureCollection(waterBodyFeatures);
+      console.log(`calculateIntersectionsPlot called and ready`);
+      if (theMS - this.loopLastCalled > this.loopCallIntervalMS) {
+        const theFeatures = givenWaterBodyFeatures ? givenWaterBodyFeatures : this.waterBodyFeatures;   // choose argument or global data
+        // Maybe debug, maybe not.  Don't perform calculations when zoomed out too far
+        const date = new Date();
+        console.warn(`Resolution: ${this.map.getView().getResolution()} - ${date.getSeconds()}:${date.getMilliseconds()}, diff since last: ${theMS - this.loopLastCalled}`);
+        if (this.map.getView().getZoom() >= 9) {
+          this.log.verbose(theClass, `  *** -> calculateIntersectionsPlot loop -`);
+          this.log.verbose(theClass, `    points#: ${this.points.features.length}, allPointsMap#: ${Object.keys(this.allPointsMap).length}, `
+            + `sourceNErrorMarginPoints#: ${this.sourceNErrorMarginPoints.features.length}, waterBodyLayers#: ${this.waterBodiesLayers.length}`);
+          for (const waterBodyLayerName of Object.keys(theFeatures)) {
+            // Get the features in the view
+            const waterBodyFeatures: Feature[] = theFeatures[waterBodyLayerName];
+            this.log.verbose(theClass, `     waterBodyLayer loop for: ${waterBodyLayerName} - Features in View#: ${waterBodyFeatures.length}`);
+            // Convert to polygons
+            const waterBodyFeatureCollection: FeatureCollection<Polygon> = this.layersGeometries.createFeatureCollection(waterBodyFeatures);
 
-          // intersectAndDraw EOWData in polygons
-          this.intersectAndDraw(waterBodyLayerName, waterBodyFeatureCollection, this.points, this.allPointsMap, this.sourceNErrorMarginPoints);
+            // intersectAndDraw EOWData in polygons
+            this.intersectAndDraw(waterBodyLayerName, waterBodyFeatureCollection, this.points, this.allPointsMap, this.sourceNErrorMarginPoints);
+            this.loopLastCalled = theMS;
+          }
+        } else {
+          console.warn(`Not performating calculations or drawing charts - zoomed too far out: ${this.map.getView().getZoom()}`);
         }
       } else {
-        console.warn(`Not performating calculations or drawing charts - zoomed too far out: ${this.map.getView().getZoom()}`);
+        console.log(`Not calling loop as too often - theMS: ${theMS}, loopLastCalled: ${this.loopLastCalled}, interval: ${this.loopCallIntervalMS}`);
       }
+    } else {
+      console.log(`not ready`);
     }
+    const dateEnd = moment();
+    console.log(`Time to calculateIntersectionsPlot: ${dateEnd.diff(dateStart)} - loopLastCalled: ${this.loopLastCalled}`);
   }
 
   private ready(): boolean {
@@ -400,6 +419,11 @@ export class AppComponent implements OnInit {
 
     this.htmlDocument.getElementById('clearFilterButton').addEventListener('click', (event) => {
       this.clearFilter();
+    });
+
+    this.map.on('moveEnd', () => {
+      // make sure the map is drawn
+      this.loopLastCalled -= this.loopCallIntervalMS;
     });
   }
 
