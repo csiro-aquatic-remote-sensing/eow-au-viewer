@@ -10,13 +10,14 @@ import {
   Brolog,
 } from 'brolog';
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
-import {BehaviorSubject} from 'rxjs';
+import {BehaviorSubject, interval} from 'rxjs';
 import {featureEach} from '@turf/meta';
 import circle from '@turf/circle';
 import {EowDataStruct, PointsMap, SourcePointMarginsType} from './eow-data-struct';
 import {LayersInfo} from './eow-layers';
 import {EowDataLayer} from './eow-data-layer';
 import VectorSource from 'ol/source/Vector';
+import {debounce} from 'rxjs/operators';
 
 const theClass = 'EowDataGeometries';
 
@@ -76,23 +77,23 @@ export default class EowDataGeometries {
   }
 
   public getPoints() {
-    return this._pointsObs.asObservable();
+    return this._pointsObs.asObservable().pipe(debounce(() => interval(1000)));
   }
 
   public getPointsErrorMargin() {
-    return this._pointsErrorMarginObs.asObservable();
+    return this._pointsErrorMarginObs.asObservable().pipe(debounce(() => interval(1000)));
   }
 
   public getAllPointsMap() {
-    return this._allPointsMapObs.asObservable();
+    return this._allPointsMapObs.asObservable().pipe(debounce(() => interval(1000)));
   }
 
   public getAllPoints() {
-    return this._allPointsObs.asObservable();
+    return this._allPointsObs.asObservable().pipe(debounce(() => interval(1000)));
   }
 
   /**
-   * Read the EOW Data points from the WFS end point.  Saves in the
+   * Read the EOW Data points when the dataSource changes due to BBOXStrategy on the map
    *
    * This calculates the data and saves in pointsObs Behaviour Subject (an Observable).
    */
@@ -109,7 +110,7 @@ export default class EowDataGeometries {
       const points = turfFeatureCollection(features);
       if (points.features.length !== this.pointsNumber) {
         this.points = points;
-        console.log(`update pointsObs - items#: ${this.points.features.length}`);
+        this.log.verbose(theClass, `update pointsObs - items#: ${this.points.features.length}`);
         this.pointsNumber = this.points.features.length;
         this._pointsObs.next(this.points);
       }
@@ -150,14 +151,14 @@ export default class EowDataGeometries {
 
       if (errorMarginPoints.length !== this.pointsErrorMarginNumber) {
         this.pointsErrorMargin = errorMarginPoints;
-        console.log(`update pointsErrorMarginObs - items#: ${errorMarginPoints.length}`);
+        this.log.verbose(theClass, `update pointsErrorMarginObs - items#: ${errorMarginPoints.length}`);
         this.pointsErrorMarginNumber = errorMarginPoints.length;
         this._pointsErrorMarginObs.next(errorMarginPoints);
       }
 
       if (allPoints.features.length !== this.allPointsNumber) {
         this.allPoints = allPoints;
-        console.log(`update allPointsObs - items#: ${allPoints.features.length}`);
+        this.log.verbose(theClass, `update allPointsObs - items#: ${allPoints.features.length}`);
         this.allPointsNumber = allPoints.features.length;
         this._allPointsObs.next(allPoints);
       }
@@ -185,7 +186,7 @@ export default class EowDataGeometries {
       });
 
       if (Object.keys(pointsMap).length !== this.pointsErrorMarginNumber) {
-        console.log(`update allPointsMapObs - items#: ${Object.keys(pointsMap).length}`);
+        this.log.verbose(theClass, `update allPointsMapObs - items#: ${Object.keys(pointsMap).length}`);
         this.pointsErrorMarginNumber = Object.keys(pointsMap).length;
         this._allPointsMapObs.next(pointsMap);
       }

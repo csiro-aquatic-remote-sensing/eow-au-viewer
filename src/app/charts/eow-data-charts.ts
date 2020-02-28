@@ -29,7 +29,7 @@ export default class EowDataCharts {
   htmlDocument: Document;
   ids: { [id: string]: boolean } = {};
 
-  constructor(private geometryOps: GeometryOps, private layers: Layers, private log: Brolog) {
+  constructor(private layers: Layers, private log: Brolog) {
   }
 
   init(eowMap: EOWMap, htmlDocument) {
@@ -74,7 +74,7 @@ export default class EowDataCharts {
         let centroid;
         if (points.length > 1) {
           this.log.silly(theClass + '.plot', `EOWDatum points: ${JSON.stringify(points)}`);
-          centroid = this.geometryOps.calculateCentroidFromPoints(points).geometry.coordinates;
+          centroid = GeometryOps.calculateCentroidFromPoints(points).geometry.coordinates;
         } else if (points.length === 1) {
           centroid = points[0];
         }

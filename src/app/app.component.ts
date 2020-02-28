@@ -22,8 +22,14 @@ import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import Map from 'ol/Map';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
+import {combineLatest} from 'rxjs';
+import moment from 'moment';
+import bboxClip from '@turf/bbox-clip';
+import {GisOps} from './gis-ops';
 
 const theClass = 'AppComponent';
+
+type WaterBodyFeatures = { [name: string]: Feature[] }; // tslint:disable-line
 
 // TODO - split this up!
 @Component({
@@ -52,11 +58,17 @@ export class AppComponent implements OnInit {
   allPointsMap: PointsMap;
   allDataSource: VectorSource;
   dataLayer: VectorLayer;
+  newPoints = false;
+  waterBodyFeatures: WaterBodyFeatures = {};
+  totalNumberWaterBodyFeatures = 0;
+  newWaterbodiesData = false;
+  mapIsMovingState = false;
 
   constructor(@Inject(DOCUMENT) private htmlDocument: Document, private http: HttpClient, private log: Brolog) {
   }
 
   async ngOnInit() {
+    // this.loopLastCalled = -(this.loopCallIntervalMS + 1);
     this.userStore = new UserStore(this.htmlDocument, this.log);
     this.popupObject = new Popup(this.htmlDocument, this.userStore);
     this.eowMap = new EOWMap(this, this.log).init(this.popupObject);
@@ -80,67 +92,91 @@ export class AppComponent implements OnInit {
 
     this.layers = new Layers(this.eowMap, this.htmlDocument, this.http, this.log);
     this.eowLayers = await new EowLayers(this.layers, this.log).init(); // this.eowMap);
-    this.eowLayers.waterBodiesLayers.getLayersInfo().subscribe(async waterBodiesLayers => {
-      this.waterBodiesLayers = waterBodiesLayers;
-      const theWaterBodyLayersLength = this.waterBodiesLayers ? this.waterBodiesLayers.length : 'null';
-      console.log(`  waterBodyLayers subscription updated - points#: ${theWaterBodyLayersLength}`);
-    });
 
     this.measurementStore = await new MeasurementStore(this.log);
     this.eowDataGeometries = await new EowDataGeometries(this.log).init(this.eowData);  // TODO this seems to do similar to EowDataLayer - combine
-    this.eowDataGeometries.getPoints().subscribe(async (points) => {
-      this.points = points;
-      const pointsLength = this.points ? this.points.features.length : 'null';
-      console.log(`  pointsObs subscription updated - points#: ${pointsLength}`);
-    });
-    this.eowDataGeometries.getAllPoints().subscribe(async sourceNErrorMarginPoints => {
-      this.sourceNErrorMarginPoints = sourceNErrorMarginPoints;
-      const theSourceNErrorMarginPointsLength = this.sourceNErrorMarginPoints ? this.sourceNErrorMarginPoints.features.length : 'null';
-      console.log(`  sourceNErrorMarginPoints subscription updated - points#: ${theSourceNErrorMarginPointsLength}`);
-    });
-    this.eowDataGeometries.getAllPointsMap().subscribe(async allPointsMap => {
-      this.allPointsMap = allPointsMap;
-      const theAllPointsMapObsLength = this.allPointsMap ? Object.keys(this.allPointsMap).length : 'null';
-      console.log(`  allPointsMap subscription updated - points#: ${theAllPointsMapObsLength}`);
-    });
-    this.eowDataGeometries.getPointsErrorMargin().subscribe(pointsErrorMargins => {
-      this.pointsErrorMargins = pointsErrorMargins;
-    });
 
     this.layersGeometries = new LayerGeometries(this.eowLayers, this.log);
-    this.geometryOps = new GeometryOps(this.log);
-    this.eowDataCharts = new EowDataCharts(this.geometryOps, this.layers, this.log);
+    // GeometryOps = new GeometryOps(this.log);
+    this.eowDataCharts = new EowDataCharts(this.layers, this.log);
 
     this.popupObject.init(this.eowMap);
     this.eowDataCharts.init(this.eowMap, this.htmlDocument);
     this.measurementStore.init(this.eowMap, this.eowData, this.userStore);
     await this.userStore.init(this.eowData, this.measurementStore);
 
+    this.setupObserversHandleNewData();
+
     this.setupEventHandlers();
 
     this.DEBUGinit();
 
-    this.performFirstRunWhenReady();
     // this.calculateWaterBodiesCentroidsPlot();  // DEBUG
   }
 
-  /**
-   * We need to wait until all data is ready.
-   */
-  private performFirstRunWhenReady() {
-    let numberOfTest = 0;
-    const maxNumberTests = 100;
-    const intervalId = setInterval(async () => {
-      if (this.ready()) {
-        clearInterval(intervalId);
-        await this.calculateIntersectionsPlot();  // First time - subsequent calls when map changes
-      } else {
-        if (numberOfTest++ > maxNumberTests) {
-          clearInterval(intervalId);
-          throw new Error(`Waiting for data to become available - Max number of tests exceeded: ${maxNumberTests}`);
+  private setupObserversHandleNewData() {
+    const uberObserver = combineLatest([
+      this.eowDataGeometries.getPoints(),
+      this.eowDataGeometries.getAllPoints(),
+      this.eowDataGeometries.getAllPointsMap(),
+      this.eowDataGeometries.getPointsErrorMargin(),
+    ]);
+    uberObserver.subscribe(async (value) => {
+      this.log.verbose(theClass, `uberObserver - value length: ${value.filter(v => v !== null).length}`);
+      const [points, allPoints, allPointsMap, errorMarginPoints] = value;
+      if (points && allPoints && allPointsMap && errorMarginPoints) {
+        handlePointsObserver(points);
+        handleAllPointsObserver(allPoints);
+        handlePointsMapObserver(allPointsMap);
+        handleErrorMarginPoints(errorMarginPoints);
+
+        if (this.ready()) {
+          this.log.verbose(theClass, 'userObserver subcribe complete - call main loop now');
+          await this.calculateIntersectionsPlot();
         }
       }
-    }, 100);
+    });
+    this.eowLayers.waterBodiesLayers.getLayersInfo().subscribe(layersInfo => {
+      // I want to subscribe to layer's VectorSource observer and when triggers call calculateIntersectionsPlot()
+      // with that new data.  When data points change, as per above subscription, it will call calculateIntersectionsPlot()
+      // with no arguments and that means 'apply new data to existing layers'.
+      // PERHAPS use collectWaterBodyFeatures()
+      this.waterBodiesLayers = layersInfo;
+      for (const layerInfo of layersInfo) {
+        layerInfo.observable.subscribe(async vectorSource => {
+          // New map vector data
+          const passedData = {};
+          passedData[layerInfo.name] = vectorSource.getFeatures();
+          // accumulate / update global data
+          this.waterBodyFeatures[layerInfo.name] = vectorSource.getFeatures();
+          await this.calculateIntersectionsPlot(passedData);
+        });
+      }
+    });
+
+    const handlePointsObserver = (points: FeatureCollection<Point>) => {
+      this.points = points;
+      this.newPoints = true;
+      const pointsLength = this.points ? this.points.features.length : 'null';
+      this.log.verbose(theClass, `  pointsObs subscription updated - points#: ${pointsLength}`);
+    };
+
+    const handleAllPointsObserver = (allPoints: FeatureCollection<Point>) => {
+      this.sourceNErrorMarginPoints = allPoints;
+      const theSourceNErrorMarginPointsLength = this.sourceNErrorMarginPoints ? this.sourceNErrorMarginPoints.features.length : 'null';
+      this.log.verbose(theClass, `  sourceNErrorMarginPoints subscription updated - points#: ${theSourceNErrorMarginPointsLength}`);
+    };
+
+    const handlePointsMapObserver = (allPointsMap: PointsMap) => {
+      this.allPointsMap = allPointsMap;
+      const theAllPointsMapObsLength = this.allPointsMap ? Object.keys(this.allPointsMap).length : 'null';
+      this.log.verbose(theClass, `  allPointsMap subscription updated - points#: ${theAllPointsMapObsLength}`);
+    };
+
+    const handleErrorMarginPoints = (pointsErrorMargins: SourcePointMarginsType[]) => {
+      this.pointsErrorMargins = pointsErrorMargins;
+      this.log.verbose(theClass, `  pointsErrorMargins subscription updated - points#: ${pointsErrorMargins.length}`);
+    };
   }
 
   // todo - add ENV VAR to setup debug stuff
@@ -157,35 +193,47 @@ export class AppComponent implements OnInit {
    * creates polygons out of them and calculates the intersections with those.  And then does whatever, such as draw
    * Pie Charts of the FU values of the EOW Data points in the waterbodies.
    *
-   * This is called initially above and from map events.
+   * This is called initially above and from map events. ??????????????
+   *
+   * @param givenWaterBodyFeatures if given will be the features (that have changed) to apply the EOWData Points to.  If it is null, this
+   * means that no layer data has changed and to just apply the EOWData Points to all layers in this.waterBodyFeatures
    */
-  async calculateIntersectionsPlot() {
-    console.log(`calculateIntersectionsPlot called`);
+  async calculateIntersectionsPlot(givenWaterBodyFeatures: WaterBodyFeatures = null) {
+    const dateStart = moment();
+    const theMS = new Date().getTime();
+
+    this.log.verbose(theClass, `calculateIntersectionsPlot called`);
     if (this.ready()) {
+      console.log(`calculateIntersectionsPlot called and ready`);
+      const theFeatures = givenWaterBodyFeatures ? givenWaterBodyFeatures : this.waterBodyFeatures;   // choose argument or global data
+      const date = new Date();
+      console.warn(`Resolution: ${this.map.getView().getResolution()} - ${date.getSeconds()}:${date.getMilliseconds()}`);
       // Maybe debug, maybe not.  Don't perform calculations when zoomed out too far
-      console.warn(`Resolution: ${this.map.getView().getResolution()}`);
       if (this.map.getView().getZoom() >= 9) {
-        console.log(`  *** -> calculateIntersectionsPlot loop -`);
-        console.log(`    points#: ${this.points.features.length}, allPointsMap#: ${Object.keys(this.allPointsMap).length}, `
+        this.log.verbose(theClass, `  *** -> calculateIntersectionsPlot loop -`);
+        this.log.verbose(theClass, `    points#: ${this.points.features.length}, allPointsMap#: ${Object.keys(this.allPointsMap).length}, `
           + `sourceNErrorMarginPoints#: ${this.sourceNErrorMarginPoints.features.length}, waterBodyLayers#: ${this.waterBodiesLayers.length}`);
-        for (const waterBodyLayer of this.waterBodiesLayers) {
+        for (const waterBodyLayerName of Object.keys(theFeatures)) {
           // Get the features in the view
-          const waterBodyFeatures: Feature[] = await this.eowMap.getWaterBodiesInView(waterBodyLayer);
-          console.log(`     waterBodyLayer loop for: ${waterBodyLayer.name} - Features in View#: ${waterBodyFeatures.length}`);
+          const waterBodyFeatures: Feature[] = theFeatures[waterBodyLayerName];
+          // const clippedFeatures = bboxClip(waterBodyFeatures, this.map.getView().calculateExtent(this.map.getSize()));
+          this.log.verbose(theClass, `     waterBodyLayer loop for: ${waterBodyLayerName} - Features in View#: ${waterBodyFeatures.length}`);
           // Convert to polygons
-          const waterBodyFeatureCollection: FeatureCollection<Polygon> = this.layersGeometries.createFeatureCollection(waterBodyFeatures);
+          const waterBodyFeatureCollection: FeatureCollection<Polygon> = GisOps.createFeatureCollection(waterBodyFeatures);
 
           // intersectAndDraw EOWData in polygons
-          this.intersectAndDraw(waterBodyLayer.name, waterBodyFeatureCollection, this.points, this.allPointsMap, this.sourceNErrorMarginPoints);
+          this.intersectAndDraw(waterBodyLayerName, waterBodyFeatureCollection, this.points, this.allPointsMap, this.sourceNErrorMarginPoints);
         }
       } else {
         console.warn(`Not performating calculations or drawing charts - zoomed too far out: ${this.map.getView().getZoom()}`);
       }
+    } else {
+      console.log(`not ready for calculating and drawing charts`);
     }
   }
 
   private ready(): boolean {
-    return (this.points && this.points.features.length > 0
+    return (!this.mapIsMovingState && this.points && this.points.features.length > 0
       && this.sourceNErrorMarginPoints && this.sourceNErrorMarginPoints.features.length > 0
       && this.allPointsMap && Object.keys(this.allPointsMap).length > 0
       && this.waterBodiesLayers && this.waterBodiesLayers.length > 0);
@@ -194,7 +242,7 @@ export class AppComponent implements OnInit {
   // TODO - no need to pass the class args to this any more
   private async intersectAndDraw(layerName: string, waterBodyPolygons: FeatureCollection<Polygon>, points: FeatureCollection<Point>,
                                  allPointsMap: PointsMap, sourceNErrorMarginPoints: FeatureCollection<Point>) {
-    const eowWaterBodyIntersections = await this.geometryOps.calculateLayerIntersections(points, sourceNErrorMarginPoints, allPointsMap, waterBodyPolygons, layerName);
+    const eowWaterBodyIntersections = await GeometryOps.calculateLayerIntersections(points, sourceNErrorMarginPoints, allPointsMap, waterBodyPolygons, layerName);
     this.eowDataCharts.plotCharts(eowWaterBodyIntersections, layerName);
     this.eowDataCharts.debugDrawErrorMarginPoints(this.pointsErrorMargins);
   }
@@ -203,16 +251,18 @@ export class AppComponent implements OnInit {
    * DEBUG - find centroids for ALL water bodies and plot something - eg. my avatar
    */
   private async calculateWaterBodiesCentroidsPlot() {
-    const layerName = 'i5516 reservoirs';
-    const eowWaterbodyPoints: EowWaterBodyIntersection[] = await this.geometryOps.convertLayerToDataFormat(this.layersGeometries, layerName);
-    this.eowDataCharts.plotCharts(eowWaterbodyPoints, layerName);
+    const layerName = 'DigitalEarthAustraliaWaterbodies';
+    if (this.waterBodyFeatures.hasOwnProperty(layerName)) {
+      const eowWaterbodyPoints: EowWaterBodyIntersection[] = await GeometryOps.convertLayerToDataFormat(this.waterBodyFeatures[layerName]);
+      this.eowDataCharts.plotCharts(eowWaterbodyPoints, layerName);
+    }
   }
 
   private debug_printFirstEOWData() {
     if (this.allDataSource) {
       const features = this.allDataSource.getFeatures();
       const point = features.length > 0 ? (features[0].getGeometry() as SimpleGeometry).getFirstCoordinate() : 'no data yet';
-      console.log(`First EOWData point: ${point}`);
+      this.log.verbose(theClass, `First EOWData point: ${point}`);
     }
   }
 
@@ -220,22 +270,22 @@ export class AppComponent implements OnInit {
     return; // don't want it currently
     // Delay so other allDataSource.on('change' that loads the data gets a chance to fire
     if (this.allDataSource) {
-      console.log('debug_compareUsersNMeasurements:');
+      this.log.verbose(theClass, 'debug_compareUsersNMeasurements:');
       Object.keys(this.userStore.userById).forEach(uid => {
         const user = this.userStore.userById[uid];
-        console.log(`  user - Id: ${user.id}, nickName: ${user.nickname}, photo_count: ${user.photo_count}`);
+        this.log.verbose(theClass, `  user - Id: ${user.id}, nickName: ${user.nickname}, photo_count: ${user.photo_count}`);
         const m = this.measurementStore.getByOwner(user.id);
         if (m && m.length > 0) {
           const images = m.map(m2 => m2.get('image'));
-          console.log(`    number of images: ${images.length} -> \n${JSON.stringify(images, null, 2)}`);
+          this.log.verbose(theClass, `    number of images: ${images.length} -> \n${JSON.stringify(images, null, 2)}`);
         }
       });
       // Now print Measurements info
-      console.log(`measurementsByOwner: ${
+      this.log.verbose(theClass, `measurementsByOwner: ${
         JSON.stringify(this.measurementStore.measurementSummary(true, this.userStore), null, 2)}`);
-      console.log(`measurementsById: ${
+      this.log.verbose(theClass, `measurementsById: ${
         JSON.stringify(this.measurementStore.measurementSummary(false, this.userStore), null, 2)}`);
-      console.log(`Number of measurements per user: ${
+      this.log.verbose(theClass, `Number of measurements per user: ${
         JSON.stringify(this.measurementStore.numberMeasurmentsPerUser(this.userStore), null, 2)}`);
     }
   }
@@ -270,6 +320,14 @@ export class AppComponent implements OnInit {
 
     this.htmlDocument.getElementById('clearFilterButton').addEventListener('click', (event) => {
       this.clearFilter();
+    });
+
+    this.map.on('moveStart', () => {
+      this.mapIsMovingState = true;
+    });
+
+    this.map.on('moveEnd', () => {
+      this.mapIsMovingState = false;
     });
   }
 
