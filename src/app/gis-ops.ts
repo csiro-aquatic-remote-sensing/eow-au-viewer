@@ -1,31 +1,34 @@
 import Feature from 'ol/Feature';
 import {
-  featureCollection as turfFeatureCollection,
+  BBox,
+  featureCollection as TurfFeatureCollection,
   FeatureCollection,
   lineString,
   multiLineString,
-  multiPolygon,
+  multiPolygon, Point,
   polygon,
   Polygon
 } from '@turf/helpers';
-import {Feature as turfFeature} from '@turf/helpers/lib/geojson';
+import {Feature as TurfFeature} from '@turf/helpers/lib/geojson';
+import bbox from '@turf/bbox';
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import lineToPolygon from '@turf/line-to-polygon';
 import {brologLevel} from './globals';
 import Brolog from 'brolog';
+import bboxClip from '@turf/bbox-clip';
 
 const theClass = 'GisOps';
 const log = Brolog.instance(brologLevel);
 
 export class GisOps {
   public static createFeatureCollection(features: Feature[]): FeatureCollection<Polygon> {
-    const theTurfFeatures: turfFeature<Polygon>[] = GisOps.createFeatures(features);
-    const featureCollection: FeatureCollection<Polygon> = turfFeatureCollection<Polygon>(theTurfFeatures);
+    const theTurfFeatures: TurfFeature<Polygon>[] = GisOps.createFeatures(features);
+    const featureCollection: FeatureCollection<Polygon> = TurfFeatureCollection<Polygon>(theTurfFeatures);
     return featureCollection;
   }
 
-  public static createFeatures(features: Feature[]): turfFeature<Polygon>[] {
-    const theTurfFeatures: turfFeature<Polygon>[] = [];
+  public static createFeatures(features: Feature[]): TurfFeature<Polygon>[] {
+    const theTurfFeatures: TurfFeature<Polygon>[] = [];
 
     features.forEach(feature => {
       const simpleGeometry = feature.getGeometry() as SimpleGeometry;
@@ -85,5 +88,17 @@ export class GisOps {
     const coordinates = simpleGeometry.getCoordinates();
     const multiPolygon1 = multiPolygon(coordinates);
     dataDestination.push(multiPolygon1);
+  }
+
+  /**
+   * Limit the number of waterbody polygons that need to be searched by filtering those given to be in a bounding box around the given points.
+   * @param waterBodyFeatureCollection waterbody polygons that for are most likely those in the map view extent
+   * @param points are the EOWData points that are most likely those in the map view extent
+   * @return waterBodyFeatureCollection filtered to be those in the bbox created around the given points
+   */
+  static filterFromEOWDataBbox(waterBodyFeatureCollection: FeatureCollection<Polygon>, points: FeatureCollection<Point>): FeatureCollection<Polygon> {
+    const features: TurfFeature[] = [];
+    const pointsBbox: BBox = bbox(points);
+    return bboxClip<Polygon>(waterBodyFeatureCollection, pointsBbox);
   }
 }

@@ -217,12 +217,14 @@ export class AppComponent implements OnInit {
           const waterBodyFeatures: Feature[] = theFeatures[waterBodyLayerName];
           // const clippedFeatures = bboxClip(waterBodyFeatures, this.map.getView().calculateExtent(this.map.getSize()));
           this.log.verbose(theClass, `     waterBodyLayer loop for: ${waterBodyLayerName} - Features in View#: ${waterBodyFeatures.length}`);
+          console.log(theClass, `     waterBodyLayer loop for: ${waterBodyLayerName} - # Features in View: ${waterBodyFeatures.length}`);
           // Convert to polygons
           const waterBodyFeatureCollection: FeatureCollection<Polygon> = GisOps.createFeatureCollection(waterBodyFeatures);
+          const waterBodyFeatureFiltered: FeatureCollection<Polygon> = GisOps.filterFromEOWDataBbox(waterBodyFeatureCollection, this.points);
 
 
           // intersectAndDraw EOWData in polygons
-          this.intersectAndDraw(waterBodyLayerName, waterBodyFeatureCollection, this.points, this.allPointsMap, this.sourceNErrorMarginPoints);
+          this.intersectAndDraw(waterBodyLayerName, waterBodyFeatureFiltered, this.points, this.allPointsMap, this.sourceNErrorMarginPoints);
         }
       } else {
         console.warn(`Not performating calculations or drawing charts - zoomed too far out: ${this.map.getView().getZoom()}`);
