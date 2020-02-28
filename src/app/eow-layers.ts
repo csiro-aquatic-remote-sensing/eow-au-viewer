@@ -41,6 +41,10 @@ export interface LayersSourceSetup {
    */
   tiled?: boolean;
   /**
+   * If to delete any existing features first
+   */
+  clear?: boolean;
+  /**
    * Query string to pass in with requests.  It is appended to the GET request with `cql_filter=<the query> AND BBOX(geom, <extent>, 'EPSG:4326')`.
    * This query is used to filter at the server eg. `area>100000` (meters square)
    */
@@ -126,7 +130,7 @@ export class EowLayers {
     this.setupWFSLayer(layerPromises, 'http://hotspots.dea.ga.gov.au/geoserver/public/wfs',
       {
         createLayer: true, useAsWaterBodySource: true, layerOrFeatureName: 'DigitalEarthAustraliaWaterbodies', featurePrefix: 'public',
-        layerDisplayName: 'DEA Waterbodies Features', maxResolution: 0.05, query: 'area>100000'
+        layerDisplayName: 'DEA Waterbodies Features', maxResolution: 0.05, query: 'area>500000'
       });
 
     this.setupWMSLayer(layerPromises, 'http://hotspots.dea.ga.gov.au/geoserver/public/wms',

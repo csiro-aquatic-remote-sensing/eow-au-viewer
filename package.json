@@ -25,6 +25,7 @@
     "@angular/router": "~8.2.11",
     "@turf/bbox": "^6.0.1",
     "@turf/bbox-clip": "^6.0.3",
+    "@turf/bbox-polygon": "^6.0.1",
     "@turf/centroid": "^6.0.2",
     "@turf/circle": "^6.0.1",
     "@turf/clusters-kmeans": "^6.0.1",

@@ -252,6 +252,9 @@ export class Layers {
       if (existingLayerIndex > -1) {
         newLayer = this.map.getLayers().getArray()[existingLayerIndex];
         const source: VectorSource = newLayer.getSource();
+        if (options.clear) {
+          source.clear(true);
+        }
         source.addFeatures(features);
       } else {
         const featureSource = new VectorSource();

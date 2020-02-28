@@ -220,7 +220,7 @@ export class AppComponent implements OnInit {
           console.log(theClass, `     waterBodyLayer loop for: ${waterBodyLayerName} - # Features in View unfiltered: ${waterBodyFeatures.length}`);
           // Convert to polygons
           const waterBodyFeatureCollection: FeatureCollection<Polygon> = GisOps.createFeatureCollection(waterBodyFeatures);
-          const waterBodyFeatureFiltered: FeatureCollection<Polygon> = GisOps.filterFromEOWDataBbox(waterBodyFeatureCollection, this.points);
+          const waterBodyFeatureFiltered: FeatureCollection<Polygon> = GisOps.filterFromEOWDataBbox(waterBodyFeatureCollection, this.points, this.layers);
           console.log(theClass, `     waterBodyLayer loop for: ${waterBodyLayerName} - # Features in View FILTERED: ${waterBodyFeatureFiltered.features.length}`);
 
 

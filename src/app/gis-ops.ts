@@ -8,7 +8,7 @@ import {
   multiPolygon, point as turfPoint, Point,
   polygon,
   Polygon,
-  Feature as TurfFeature
+  Feature as TurfFeature, lineString as turfLineString
 } from '@turf/helpers';
 import {Feature as GeoJsonFeature, Polygon as GeoJSONPolygon} from '@turf/helpers/lib/geojson';
 import bbox from '@turf/bbox';
@@ -19,6 +19,11 @@ import {brologLevel} from './globals';
 import Brolog from 'brolog';
 import bboxClip from '@turf/bbox-clip';
 import {EowDataStruct, PointsMap} from './eow-data-struct';
+import {fillStyle, Layers, redLines} from './layers';
+import GeoJSON from 'ol/format/GeoJSON';
+import {Style} from 'ol/style';
+import Stroke from 'ol/style/Stroke';
+import bboxPolygon from '@turf/bbox-polygon';
 
 const theClass = 'GisOps';
 const log = Brolog.instance(brologLevel);
@@ -28,6 +33,18 @@ export class GisOps {
     const theTurfFeatures: GeoJsonFeature<Polygon>[] = GisOps.createTurfFeatures(features);
     const featureCollection: FeatureCollection<Polygon> = turfFeatureCollection<Polygon>(theTurfFeatures);
     return featureCollection;
+  }
+
+  public static turfFeaturesToOlFeatures(features: TurfFeature<Polygon>[]): Feature[] {
+    const format = new GeoJSON();
+    return features.map(f => {
+      const p = polygon(f.geometry.coordinates);
+      const lsFeature = format.readFeature(p, {
+        dataProjection: 'EPSG:4326',
+        featureProjection: 'EPSG:4326'
+      });
+      return lsFeature;
+    });
   }
 
   public static createTurfFeatures(features: Feature[]): GeoJsonFeature<Polygon>[] {
@@ -124,10 +141,11 @@ export class GisOps {
    * @param points are the EOWData points that are most likely those in the map view extent
    * @return waterBodyFeatureCollection filtered to be those in the bbox created around the given points
    */
-  static filterFromEOWDataBbox(waterBodyFeatureCollection: FeatureCollection<Polygon>, points: FeatureCollection<Point>): FeatureCollection<Polygon> {
+  static filterFromEOWDataBbox(waterBodyFeatureCollection: FeatureCollection<Polygon>, points: FeatureCollection<Point>, layers: Layers): FeatureCollection<Polygon> {
     const pointsBbox: BBox = bbox(points);
+    GisOps.drawBox(bboxPolygon(pointsBbox), layers);
     const features: TurfFeature<Polygon>[] = [];
-    featureEach<Polygon>(waterBodyFeatureCollection, f => {
+    featureEach<Polygon>(waterBodyFeatureCollection, async f => {
       const bboxClipped = bboxClip<Polygon>(f, pointsBbox) as TurfFeature<Polygon>;
       // filter out zero-sized polygons
       if (bboxClipped.geometry.coordinates.length > 0) {
@@ -135,5 +153,17 @@ export class GisOps {
       }
     });
     return turfFeatureCollection<Polygon>(features);
+  }
+
+  private static async drawBox(bboxClipped: TurfFeature<Polygon>, layers: Layers) {
+    const olFeatures = GisOps.turfFeaturesToOlFeatures([bboxClipped]);
+    await layers.createLayerFromWFSFeatures(olFeatures, {
+      clear: true,
+      style: new Style({
+        stroke: new Stroke({color: 'rgba(255, 25, 125, 1)', width: 1.5, lineCap: 'butt'})
+      }),
+      visible: true,
+      layerDisplayName: `EOW Points box`
+    }, null);
   }
 }

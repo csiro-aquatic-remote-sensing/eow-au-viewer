@@ -53,6 +53,7 @@ export class PieChartContainer extends ChartContainer {
         });
         return lsFeature;
       });
+      // console.log(`drawDebugLines - ${JSON.stringify(lineFeatures, null, 2)}`);
       await this.layers.createLayerFromWFSFeatures(lineFeatures, {visible: false, layerDisplayName: `Lines for  ${layerName}`}, null);
     }
   }
