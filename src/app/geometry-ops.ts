@@ -1,6 +1,6 @@
 import LayerGeometries from './layers-geometries';
 import {
-  Feature,
+  Feature as TurfFeature,
   FeatureCollection,
   Point,
   Polygon,
@@ -10,9 +10,11 @@ import {
 } from '@turf/helpers';
 import centroid from '@turf/centroid';
 import pointsWithinPolygon from '@turf/points-within-polygon';
+import Feature from 'ol/Feature';
 import {Brolog} from 'brolog';
 import {EowDataStruct, EowWaterBodyIntersection, PointsMap} from './eow-data-struct';
 import {brologLevel} from './globals';
+import {GisOps} from './gis-ops';
 
 const theClass = 'GeometryOps';
 const log = Brolog.instance(brologLevel);  // InjectorInstance.get<Brolog>(Brolog);
@@ -72,7 +74,7 @@ export default class GeometryOps {
                                            allPointsMap: PointsMap, waterBodyLayerPolygons: FeatureCollection<Polygon>, layerName: string):
     Promise<EowWaterBodyIntersection[]> {
     return new Promise<EowWaterBodyIntersection[]>(resolve => {
-      const layerGeometry: Feature<Polygon>[] = waterBodyLayerPolygons.features;
+      const layerGeometry: TurfFeature<Polygon>[] = waterBodyLayerPolygons.features;
       const eowWaterBodyIntersections: EowWaterBodyIntersection[] = [];
       const pointsToUse = errorMarginPoints ? errorMarginPoints : eowDataGeometry;
 
@@ -91,15 +93,14 @@ export default class GeometryOps {
   }
 
   // Mainly for debug purposes so I can see something happening!  I don't think the EOW Data is intersecting the polygons and want to know more.
-  static async convertLayerToDataFormat(layerGeometries: LayerGeometries, layerName: string):
+  static async convertLayerToDataFormat(waterBodiesPolygons: Feature[]):
     Promise<EowWaterBodyIntersection[]> {
     return new Promise<EowWaterBodyIntersection[]>(resolve => {
-      const layerGeometry: Feature<Polygon>[] = layerGeometries.getLayer(layerName);
       const eowWaterBodyPoints: EowWaterBodyIntersection[] = [];
 
-      log.verbose(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
-      for (const layerPolygon of layerGeometry) {
-        const thePoints: Feature<Point>[] = layerPolygon.geometry.coordinates[0].map(c => turfPoint(c));
+      // log.verbose(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
+      for (const layerPolygon of GisOps.createFeatures(waterBodiesPolygons)) {
+        const thePoints: TurfFeature<Point>[] = layerPolygon.geometry.coordinates[0].map(c => turfPoint(c));
         const theFeatureCollection = featureCollection(thePoints);
         eowWaterBodyPoints.push(EowDataStruct.createEoWFormat(theFeatureCollection, layerPolygon));
       }
@@ -114,11 +115,11 @@ export default class GeometryOps {
    *
    * @param featurePoints that makes a polygon to get he centroid for
    */
-  static calculateCentroidTurfVer(featurePoints: FeatureCollection<Point>): Feature<Point> {
+  static calculateCentroidTurfVer(featurePoints: FeatureCollection<Point>): TurfFeature<Point> {
     return centroid(featurePoints);
   }
 
-  static calculateCentroidTurfVerUsingPoints(points: number[][]): Feature<Point> {
+  static calculateCentroidTurfVerUsingPoints(points: number[][]): TurfFeature<Point> {
     const featurePoints = turfFeatureCollection(points.map(c => turfPoint(c)));
     return centroid(featurePoints);
   }
@@ -127,13 +128,13 @@ export default class GeometryOps {
    * https://en.wikipedia.org/wiki/Centroid#Of_a_polygon
    * @param featurePoints of points forming a polygon to return the centroid for
    */
-  static calculateCentroidFromFeatureCollection(featurePoints: FeatureCollection<Point>): Feature<Point> {
+  static calculateCentroidFromFeatureCollection(featurePoints: FeatureCollection<Point>): TurfFeature<Point> {
     log.silly(`calculateCentroidFromFeatureCollection - featurePoints: FeatureCollection<Point>: ${JSON.stringify(featurePoints)}`);
     const points = featurePoints.features.map(f => f.geometry.coordinates);
     return GeometryOps.calculateCentroidFromPoints(points);
   }
 
-  static calculateCentroidFromPoints(points: number[][]): Feature<Point> {
+  static calculateCentroidFromPoints(points: number[][]): TurfFeature<Point> {
     log.verbose('calculateCentroidFromPoints', `  points length: ${points.length}`);
     return GeometryOps.calculateCentroidTurfVerUsingPoints(points);
 
@@ -170,7 +171,7 @@ export default class GeometryOps {
   }
 
 
-  private static appendFeatureFeatureCollection(f1: FeatureCollection<Point>, f2: Feature<Point>): FeatureCollection<Point> {
+  private static appendFeatureFeatureCollection(f1: FeatureCollection<Point>, f2: TurfFeature<Point>): FeatureCollection<Point> {
     if (f1) {
       if (f2) {
         f1.features.push(f2);

@@ -261,9 +261,11 @@ export class AppComponent implements OnInit {
    * DEBUG - find centroids for ALL water bodies and plot something - eg. my avatar
    */
   private async calculateWaterBodiesCentroidsPlot() {
-    const layerName = 'i5516 reservoirs';
-    const eowWaterbodyPoints: EowWaterBodyIntersection[] = await GeometryOps.convertLayerToDataFormat(this.layersGeometries, layerName);
-    this.eowDataCharts.plotCharts(eowWaterbodyPoints, layerName);
+    const layerName = 'DigitalEarthAustraliaWaterbodies';
+    if (this.waterBodyFeatures.hasOwnProperty(layerName)) {
+      const eowWaterbodyPoints: EowWaterBodyIntersection[] = await GeometryOps.convertLayerToDataFormat(this.waterBodyFeatures[layerName]);
+      this.eowDataCharts.plotCharts(eowWaterbodyPoints, layerName);
+    }
   }
 
   private debug_printFirstEOWData() {
