@@ -200,7 +200,6 @@ export class AppComponent implements OnInit {
    */
   async calculateIntersectionsPlot(givenWaterBodyFeatures: WaterBodyFeatures = null) {
     const dateStart = moment();
-    const theMS = new Date().getTime();
 
     this.log.verbose(theClass, `calculateIntersectionsPlot called`);
     if (this.ready()) {
@@ -221,6 +220,7 @@ export class AppComponent implements OnInit {
           // Convert to polygons
           const waterBodyFeatureCollection: FeatureCollection<Polygon> = GisOps.createFeatureCollection(waterBodyFeatures);
 
+
           // intersectAndDraw EOWData in polygons
           this.intersectAndDraw(waterBodyLayerName, waterBodyFeatureCollection, this.points, this.allPointsMap, this.sourceNErrorMarginPoints);
         }
@@ -230,6 +230,8 @@ export class AppComponent implements OnInit {
     } else {
       console.log(`not ready for calculating and drawing charts`);
     }
+    const dateEnd = moment();
+    console.log(`calculateIntersectionsPlot - Loop Time: ${dateEnd.diff(dateStart)}`);
   }
 
   private ready(): boolean {
