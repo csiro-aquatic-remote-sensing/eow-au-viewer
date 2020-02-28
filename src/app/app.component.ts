@@ -62,16 +62,13 @@ export class AppComponent implements OnInit {
   waterBodyFeatures: WaterBodyFeatures = {};
   totalNumberWaterBodyFeatures = 0;
   newWaterbodiesData = false;
-  // Prevent main processing loop being called too often
-  loopCallIntervalMS = 1400;
-  loopLastCalled = -(this.loopCallIntervalMS + 1);
+  mapIsMovingState = false;
 
   constructor(@Inject(DOCUMENT) private htmlDocument: Document, private http: HttpClient, private log: Brolog) {
   }
 
   async ngOnInit() {
     // this.loopLastCalled = -(this.loopCallIntervalMS + 1);
-    console.log(`Set this.loopLastCalled: ${this.loopLastCalled}`);
     this.userStore = new UserStore(this.htmlDocument, this.log);
     this.popupObject = new Popup(this.htmlDocument, this.userStore);
     this.eowMap = new EOWMap(this, this.log).init(this.popupObject);
@@ -155,7 +152,7 @@ export class AppComponent implements OnInit {
           await this.calculateIntersectionsPlot(passedData);
         });
       }
-     });
+    });
 
     const handlePointsObserver = (points: FeatureCollection<Point>) => {
       this.points = points;
@@ -208,42 +205,35 @@ export class AppComponent implements OnInit {
     this.log.verbose(theClass, `calculateIntersectionsPlot called`);
     if (this.ready()) {
       console.log(`calculateIntersectionsPlot called and ready`);
-      if (theMS - this.loopLastCalled > this.loopCallIntervalMS) {
-        const theFeatures = givenWaterBodyFeatures ? givenWaterBodyFeatures : this.waterBodyFeatures;   // choose argument or global data
-        const date = new Date();
-        console.warn(`Resolution: ${this.map.getView().getResolution()} - ${date.getSeconds()}:${date.getMilliseconds()}, diff since last: ${theMS - this.loopLastCalled}`);
-        // Maybe debug, maybe not.  Don't perform calculations when zoomed out too far
-        if (this.map.getView().getZoom() >= 9) {
-          this.log.verbose(theClass, `  *** -> calculateIntersectionsPlot loop -`);
-          this.log.verbose(theClass, `    points#: ${this.points.features.length}, allPointsMap#: ${Object.keys(this.allPointsMap).length}, `
-            + `sourceNErrorMarginPoints#: ${this.sourceNErrorMarginPoints.features.length}, waterBodyLayers#: ${this.waterBodiesLayers.length}`);
-          for (const waterBodyLayerName of Object.keys(theFeatures)) {
-            // Get the features in the view
-            const waterBodyFeatures: Feature[] = theFeatures[waterBodyLayerName];
-            // const clippedFeatures = bboxClip(waterBodyFeatures, this.map.getView().calculateExtent(this.map.getSize()));
-            this.log.verbose(theClass, `     waterBodyLayer loop for: ${waterBodyLayerName} - Features in View#: ${waterBodyFeatures.length}`);
-            // Convert to polygons
-            const waterBodyFeatureCollection: FeatureCollection<Polygon> = GisOps.createFeatureCollection(waterBodyFeatures);
+      const theFeatures = givenWaterBodyFeatures ? givenWaterBodyFeatures : this.waterBodyFeatures;   // choose argument or global data
+      const date = new Date();
+      console.warn(`Resolution: ${this.map.getView().getResolution()} - ${date.getSeconds()}:${date.getMilliseconds()}`);
+      // Maybe debug, maybe not.  Don't perform calculations when zoomed out too far
+      if (this.map.getView().getZoom() >= 9) {
+        this.log.verbose(theClass, `  *** -> calculateIntersectionsPlot loop -`);
+        this.log.verbose(theClass, `    points#: ${this.points.features.length}, allPointsMap#: ${Object.keys(this.allPointsMap).length}, `
+          + `sourceNErrorMarginPoints#: ${this.sourceNErrorMarginPoints.features.length}, waterBodyLayers#: ${this.waterBodiesLayers.length}`);
+        for (const waterBodyLayerName of Object.keys(theFeatures)) {
+          // Get the features in the view
+          const waterBodyFeatures: Feature[] = theFeatures[waterBodyLayerName];
+          // const clippedFeatures = bboxClip(waterBodyFeatures, this.map.getView().calculateExtent(this.map.getSize()));
+          this.log.verbose(theClass, `     waterBodyLayer loop for: ${waterBodyLayerName} - Features in View#: ${waterBodyFeatures.length}`);
+          // Convert to polygons
+          const waterBodyFeatureCollection: FeatureCollection<Polygon> = GisOps.createFeatureCollection(waterBodyFeatures);
 
-            // intersectAndDraw EOWData in polygons
-            this.intersectAndDraw(waterBodyLayerName, waterBodyFeatureCollection, this.points, this.allPointsMap, this.sourceNErrorMarginPoints);
-            this.loopLastCalled = theMS;
-          }
-        } else {
-          console.warn(`Not performating calculations or drawing charts - zoomed too far out: ${this.map.getView().getZoom()}`);
+          // intersectAndDraw EOWData in polygons
+          this.intersectAndDraw(waterBodyLayerName, waterBodyFeatureCollection, this.points, this.allPointsMap, this.sourceNErrorMarginPoints);
         }
       } else {
-        console.log(`Not calling loop as too often - theMS: ${theMS}, loopLastCalled: ${this.loopLastCalled}, interval: ${this.loopCallIntervalMS}`);
+        console.warn(`Not performating calculations or drawing charts - zoomed too far out: ${this.map.getView().getZoom()}`);
       }
     } else {
-      console.log(`not ready`);
+      console.log(`not ready for calculating and drawing charts`);
     }
-    const dateEnd = moment();
-    console.log(`Time to calculateIntersectionsPlot: ${dateEnd.diff(dateStart)} - loopLastCalled: ${this.loopLastCalled}`);
   }
 
   private ready(): boolean {
-    return (this.points && this.points.features.length > 0
+    return (!this.mapIsMovingState && this.points && this.points.features.length > 0
       && this.sourceNErrorMarginPoints && this.sourceNErrorMarginPoints.features.length > 0
       && this.allPointsMap && Object.keys(this.allPointsMap).length > 0
       && this.waterBodiesLayers && this.waterBodiesLayers.length > 0);
@@ -332,9 +322,12 @@ export class AppComponent implements OnInit {
       this.clearFilter();
     });
 
+    this.map.on('moveStart', () => {
+      this.mapIsMovingState = true;
+    });
+
     this.map.on('moveEnd', () => {
-      // make sure the map is drawn
-      this.loopLastCalled -= this.loopCallIntervalMS;
+      this.mapIsMovingState = false;
     });
   }
 
