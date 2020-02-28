@@ -77,19 +77,19 @@ export default class EowDataGeometries {
   }
 
   public getPoints() {
-    return this._pointsObs.asObservable().pipe(debounce(() => interval(1000)));
+    return this._pointsObs.asObservable().pipe(debounce(() => interval(10)));
   }
 
   public getPointsErrorMargin() {
-    return this._pointsErrorMarginObs.asObservable().pipe(debounce(() => interval(1000)));
+    return this._pointsErrorMarginObs.asObservable().pipe(debounce(() => interval(10)));
   }
 
   public getAllPointsMap() {
-    return this._allPointsMapObs.asObservable().pipe(debounce(() => interval(1000)));
+    return this._allPointsMapObs.asObservable().pipe(debounce(() => interval(10)));
   }
 
   public getAllPoints() {
-    return this._allPointsObs.asObservable().pipe(debounce(() => interval(1000)));
+    return this._allPointsObs.asObservable().pipe(debounce(() => interval(10)));
   }
 
   /**

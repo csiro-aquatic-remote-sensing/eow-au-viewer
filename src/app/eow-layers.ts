@@ -80,7 +80,7 @@ export class LayersInfoManager {
    * @Return observable of the layers information to subscribe to
    */
   public getLayersInfo() {
-    return this._layersInfo.asObservable().pipe(debounce(() => interval(1000)));
+    return this._layersInfo.asObservable().pipe(debounce(() => interval(10)));
   }
 
   /**
