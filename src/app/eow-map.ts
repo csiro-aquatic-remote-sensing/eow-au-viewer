@@ -91,6 +91,7 @@ export class EOWMap {
    * @param waterBodyLayer has the name and index of layer in the Map's layers
    * @return somethign ....
    */
+  // TODO - I don't think this is used (all the way through)
   async getWaterBodiesInView(waterBodyLayer: LayersInfo): Promise<Feature[]> {
     return new Promise(resolve => {
       const format = new GeoJSON();

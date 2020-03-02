@@ -225,14 +225,13 @@ export class Layers {
         source: new TileWMS({
           url,
           params: Object.assign(options, {
-            LAYER: options.layerOrFeatureName
+            LAYERS: options.layerOrFeatureName
           })
         })
       }));
       const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
       newLayer.set('name', name);
       this.addLayer(newLayer, name);
-      newLayer.setVisible(false);
       resolve(newLayer);
     });
   }

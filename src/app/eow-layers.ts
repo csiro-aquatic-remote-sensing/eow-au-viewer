@@ -39,7 +39,7 @@ export interface LayersSourceSetup {
   /**
    * Tiled for WMS layers - if to request TILES or not
    */
-  tiled?: boolean;
+  TILED?: boolean;
   /**
    * If to delete any existing features first
    */
@@ -114,38 +114,26 @@ export class EowLayers {
 
     this.setupGeoJSONLayer(layerPromises, 'assets/waterbodies/Australia/aus25wgd_l.geojson',
       {createLayer: false, useAsWaterBodySource: false, layerDisplayName: 'Waterbodies shape'});
-    // layerPromises.push(this.layers.createLayerFromWFSURL('Waterbodies shape', 'assets/waterbodies/Australia/aus25wgd_l.geojson'));
-    // layerPromises.push(this.layers.createLayerFromWFSURL('Waterbodies fill', 'assets/waterbodies/Australia/aus25wgd_r.geojson', {style: fillStyle}));
-    // layerPromises.push(this.layers.createLayerFromWFSURL('Waterbodies name', 'assets/waterbodies/Australia/aus25wgd_p.geojson', {style: iconStyle, minZoom: 8}));
-    //
-    // // new data but that only covers ACT + ~ 100kms square
-    // layerPromises.push(this.layers.createLayerFromWFSURL('i5516 flats', 'assets/waterbodies/Canberra/i5516_flats.geojson'));
-    // layerPromises.push(this.layers.createLayerFromWFSURL('i5516 pondages', 'assets/waterbodies/Canberra/i5516_pondageareas.geojson'));
-    // layerPromises.push(this.layers.createLayerFromWFSURL('i5516 waterCourseLines', 'assets/waterbodies/Canberra/i5516_watercourselines.geojson', {visible: false}));
-    // layerPromises.push(this.layers.createLayerFromWFSURL('i5516 waterCourseAreas', 'assets/waterbodies/Canberra/i5516_watercourseareas.geojson'));
-    // layerPromises.push(this.layers.createLayerFromWFSURL('i5516 lakes', 'assets/waterbodies/Canberra/i5516_waterholes.geojson'));
-    // layerPromises.push(this.layers.createLayerFromWFSURL('i5516 reservoirs', 'assets/waterbodies/Canberra/i5516_reservoirs.geojson'));
+
     this.setupGeoJSONLayer(layerPromises, 'assets/waterbodies/Canberra/i5516_reservoirs.geojson',
       {createLayer: false, useAsWaterBodySource: false, layerDisplayName: 'i5516 reservoirs'});
     this.setupWFSLayer(layerPromises, 'http://hotspots.dea.ga.gov.au/geoserver/public/wfs',
       {
         createLayer: true, useAsWaterBodySource: true, layerOrFeatureName: 'DigitalEarthAustraliaWaterbodies', featurePrefix: 'public',
-        layerDisplayName: 'DEA Waterbodies Features', maxResolution: 0.05, query: 'area>500000'
+        layerDisplayName: 'Waterbodies Features', maxResolution: 0.05, query: 'area>500000'
       });
 
     this.setupWMSLayer(layerPromises, 'http://hotspots.dea.ga.gov.au/geoserver/public/wms',
       {
         createLayer: true, useAsWaterBodySource: false, layerOrFeatureName: 'DigitalEarthAustraliaWaterbodies',
-        layerDisplayName: 'DEA Waterbodies Map', minResolution: 0.00069, tiled: true
+        TILED: true, layerDisplayName: 'Waterbodies Map'
       });
 
-    this.setupWMSLayer(layerPromises, 'https://ows.dea.ga.gov.au',
+    this.setupWMSLayer(layerPromises, 'https://ows.services.dea.ga.gov.au/wms?',  // https://ows.dea.ga.gov.au',
       {
-        createLayer: true, useAsWaterBodySource: false, minResolution: 0.00069, tiled: true,
-        layerOrFeatureName: 'wofs_filtered_summary', layerDisplayName: 'WOFS'
-      });
-
-    // layerPromises.push(this.layers.createLayerFromWFSURL('Digital Earth Australia Waterbodies', 'https://hotspots.dea.ga.gov.au/geoserver/public/wfs'));
+        createLayer: true, useAsWaterBodySource: false,  TILED: true,
+        layerOrFeatureName: 'wofs_filtered_summary', layerDisplayName: 'WOFS', visible: true
+      }); // minResolution: 0.00069,
 
     return Promise.all(layerPromises);
   }
@@ -156,7 +144,6 @@ export class EowLayers {
     }
   }
 
-  // private setupWFSLayer(waterBodiesLayers: LayersInfo[], layerPromises: Promise<any>[], name: string, url: string, featurePrefix: string, options: LayersSetup) {
   private setupWFSLayer(layerPromises: Promise<any>[], url: string, options: LayersSourceSetup) {
     if (options.createLayer) {
       // layerPromises.push(this.layers.createLayerFromWFS(name, url, featurePrefix, options));
@@ -164,7 +151,6 @@ export class EowLayers {
     }
   }
 
-  // private setupWMSLayer(waterBodiesLayers: LayersInfo[], layerPromises: Promise<any>[], name: string, url: string, options: LayersSetup) {
   private setupWMSLayer(layerPromises: Promise<any>[], url: string, options: LayersSourceSetup) {
     if (options.createLayer) {
       layerPromises.push(this.layers.createLayerFromWMS(url, options, this.waterBodiesLayers));
