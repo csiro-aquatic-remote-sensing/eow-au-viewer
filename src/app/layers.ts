@@ -273,6 +273,21 @@ export class Layers {
   }
 
   /**
+   * Remove all features from a layer with the given name.  NoOp if layer with name doesn't exist
+   *
+   * @param layerName to clear
+   */
+  public clearLayerOfWFSFeatures(layerName: string) {
+    const existingLayerIndex = this.layerNames.getName(layerName) || -1; // hasOwnProperty(name) ? this.layerNames[name] : -1;
+    let layer;
+    if (existingLayerIndex > -1) {
+      layer = this.map.getLayers().getArray()[existingLayerIndex];
+      const source: VectorSource = layer.getSource();
+      source.clear(true);
+    }
+  }
+
+  /**
    * Add layer to map and keep information about it.
    *
    * @param layer to add

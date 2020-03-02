@@ -24,6 +24,8 @@ import GeoJSON from 'ol/format/GeoJSON';
 import {Style} from 'ol/style';
 import Stroke from 'ol/style/Stroke';
 import bboxPolygon from '@turf/bbox-polygon';
+import clustersKmeans from '@turf/clusters-kmeans';
+import {clusterEach} from '@turf/clusters';
 
 const theClass = 'GisOps';
 const log = Brolog.instance(brologLevel);
@@ -141,9 +143,10 @@ export class GisOps {
    * @param points are the EOWData points that are most likely those in the map view extent
    * @return waterBodyFeatureCollection filtered to be those in the bbox created around the given points
    */
-  static filterFromEOWDataBbox(waterBodyFeatureCollection: FeatureCollection<Polygon>, points: FeatureCollection<Point>, layers: Layers): FeatureCollection<Polygon> {
+  static filterFromEOWDataBbox(waterBodyFeatureCollection: FeatureCollection<Polygon>, points: FeatureCollection<Point>,
+                               layers: Layers, layerName: string): FeatureCollection<Polygon> {
     const pointsBbox: BBox = bbox(points);
-    GisOps.drawBox(bboxPolygon(pointsBbox), layers);
+    GisOps.drawBox(bboxPolygon(pointsBbox), layers, layerName);
     const features: TurfFeature<Polygon>[] = [];
     featureEach<Polygon>(waterBodyFeatureCollection, async f => {
       const bboxClipped = bboxClip<Polygon>(f, pointsBbox) as TurfFeature<Polygon>;
@@ -155,15 +158,55 @@ export class GisOps {
     return turfFeatureCollection<Polygon>(features);
   }
 
-  private static async drawBox(bboxClipped: TurfFeature<Polygon>, layers: Layers) {
+  /**
+   * Limit the number of waterbody polygons that need to be searched by filtering those given to be in a bounding box around the given EOWData points.
+   * Cluster the EOData points.
+   *
+   * @param waterBodyFeatureCollection waterbody polygons that for are most likely those in the map view extent
+   * @param points are the EOWData points that are most likely those in the map view extent
+   * @return waterBodyFeatureCollection filtered to be those in the bbox created around the given points
+   */
+  static filterFromClusteredEOWDataBbox(waterBodyFeatureCollection: FeatureCollection<Polygon>, points: FeatureCollection<Point>,
+                                        layers: Layers, layerName: string): FeatureCollection<Polygon> {
+    // Get clusters of EOWPoints, bbox each one and filter on these
+    const clusteredPoints: FeatureCollection<Point> = clustersKmeans(points);
+    const features: TurfFeature<Polygon>[] = [];
+    layers.clearLayerOfWFSFeatures(layerName);
+    clusterEach(clusteredPoints, 'cluster', (cluster, clusterValue, index) => {
+      const pointsBbox: BBox = bbox(cluster);
+      GisOps.drawBox(bboxPolygon(pointsBbox), layers, layerName);
+      featureEach<Polygon>(waterBodyFeatureCollection, async f => {
+        const bboxClipped = bboxClip<Polygon>(f, pointsBbox) as TurfFeature<Polygon>;
+        // filter out zero-sized polygons
+        if (bboxClipped.geometry.coordinates.length > 0) {
+          features.push(bboxClipped);
+        }
+      });
+    });
+    return turfFeatureCollection<Polygon>(features);
+  }
+
+  private static async drawBox(bboxClipped: TurfFeature<Polygon>, layers: Layers, layerName: string) {
     const olFeatures = GisOps.turfFeaturesToOlFeatures([bboxClipped]);
     await layers.createLayerFromWFSFeatures(olFeatures, {
-      clear: true,
+      clear: false,
       style: new Style({
         stroke: new Stroke({color: 'rgba(255, 25, 125, 1)', width: 1.5, lineCap: 'butt'})
       }),
       visible: true,
-      layerDisplayName: `EOW Points box`
+      layerDisplayName: layerName
     }, null);
   }
+
+  /**
+   * The clustering algorithms return a flat set of points with a property 'cluster' with some numerical value indicating the cluster it
+   * is in.  This breaks each of those up in to items in an array with each entry being a cluster.
+   * @param clusterPoints
+   */
+  // private static breakupIntoClusters(clusterPoints: FeatureCollection<Point>): FeatureCollection<Point>[] {
+  //   const clusters: FeatureCollection<Point>[] = [];
+  //
+  //   featureEach(clusterPoints, ())
+  //
+  // }
 }
