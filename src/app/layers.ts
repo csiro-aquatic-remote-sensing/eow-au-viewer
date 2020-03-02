@@ -170,7 +170,9 @@ export class Layers {
                 dataProjection: proj,
                 featureProjection: 'EPSG:4326'
               }) as Feature[];
+              vectorSource.clear(true);
               vectorSource.addFeatures(features);
+              console.log(`Layers / createLayerFromWFS - # features: ${vectorSource.getFeatures().length}`);
               // Due to the BBOXStrategy, this loader function will run every time the map is panned or zoomed.  Update the Observable
               // with new data if the VectorLayer is already defined (ie. not the first time this runs).  The first time the Observable
               // will be created in the VectorLayer code below.
@@ -250,6 +252,9 @@ export class Layers {
       if (existingLayerIndex > -1) {
         newLayer = this.map.getLayers().getArray()[existingLayerIndex];
         const source: VectorSource = newLayer.getSource();
+        if (options.clear) {
+          source.clear(true);
+        }
         source.addFeatures(features);
       } else {
         const featureSource = new VectorSource();
@@ -265,6 +270,21 @@ export class Layers {
       }
       resolve(newLayer);
     });
+  }
+
+  /**
+   * Remove all features from a layer with the given name.  NoOp if layer with name doesn't exist
+   *
+   * @param layerName to clear
+   */
+  public clearLayerOfWFSFeatures(layerName: string) {
+    const existingLayerIndex = this.layerNames.getName(layerName) || -1; // hasOwnProperty(name) ? this.layerNames[name] : -1;
+    let layer;
+    if (existingLayerIndex > -1) {
+      layer = this.map.getLayers().getArray()[existingLayerIndex];
+      const source: VectorSource = layer.getSource();
+      source.clear(true);
+    }
   }
 
   /**

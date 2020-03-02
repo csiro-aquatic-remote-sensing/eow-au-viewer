@@ -61,7 +61,9 @@ export class EowDataLayer {
               dataProjection: proj,
               featureProjection: 'EPSG:4326'
             }) as Feature[];
+            allDataSource.clear(true);
             allDataSource.addFeatures(features);
+            console.log(`EowDataLayer - allDataSource # features: ${allDataSource.getFeatures().length}`);
           } else {
             onError();
           }

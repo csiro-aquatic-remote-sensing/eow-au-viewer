@@ -74,17 +74,18 @@ export default class GeometryOps {
                                            allPointsMap: PointsMap, waterBodyLayerPolygons: FeatureCollection<Polygon>, layerName: string):
     Promise<EowWaterBodyIntersection[]> {
     return new Promise<EowWaterBodyIntersection[]>(resolve => {
-      const layerGeometry: TurfFeature<Polygon>[] = waterBodyLayerPolygons.features;
+      const waterBodyPolygonsFeatures: TurfFeature<Polygon>[] = waterBodyLayerPolygons.features;
       const eowWaterBodyIntersections: EowWaterBodyIntersection[] = [];
       const pointsToUse = errorMarginPoints ? errorMarginPoints : eowDataGeometry;
 
       log.info(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
-      const details = layerGeometry.length > 0 ? layerGeometry[0].geometry.coordinates[0][0] : 'no polygons';
-      log.verbose(theClass, `layerPolygons - there are: ${layerGeometry.length} - coords of first is: ${details}`);
-      for (const layerPolygon of layerGeometry) {
+      const details = waterBodyPolygonsFeatures.length > 0 ? waterBodyPolygonsFeatures[0].geometry.coordinates[0][0] : 'no polygons';
+      log.verbose(theClass, `layerPolygons - there are: ${waterBodyPolygonsFeatures.length} - coords of first is: ${details}`);
+      for (const layerPolygon of waterBodyPolygonsFeatures) {
+        // Find the EOWPoints that intersect the polygons in the waterbody layer
         const intersection: FeatureCollection<Point> = pointsWithinPolygon(pointsToUse, layerPolygon) as FeatureCollection<Point>;
         // TODO - now build a FeatureCollection<Point> from allPointsMapObs
-        const intersectionSourcePoints = GeometryOps.filterSourcePoints(intersection, allPointsMap);
+        const intersectionSourcePoints = GisOps.filterSourcePoints(intersection, allPointsMap);
         eowWaterBodyIntersections.push(EowDataStruct.createEoWFormat(intersectionSourcePoints, layerPolygon));
       }
       log.silly(theClass, `intersections: ${JSON.stringify(eowWaterBodyIntersections, null, 2)}`);
@@ -99,7 +100,7 @@ export default class GeometryOps {
       const eowWaterBodyPoints: EowWaterBodyIntersection[] = [];
 
       // log.verbose(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
-      for (const layerPolygon of GisOps.createFeatures(waterBodiesPolygons)) {
+      for (const layerPolygon of GisOps.createTurfFeatures(waterBodiesPolygons)) {
         const thePoints: TurfFeature<Point>[] = layerPolygon.geometry.coordinates[0].map(c => turfPoint(c));
         const theFeatureCollection = featureCollection(thePoints);
         eowWaterBodyPoints.push(EowDataStruct.createEoWFormat(theFeatureCollection, layerPolygon));
@@ -180,23 +181,5 @@ export default class GeometryOps {
       throw new Error(`Can't append to a null FeatureCollection`);
     }
     return f1;
-  }
-
-
-  private static filterSourcePoints(allPointsIntersection: FeatureCollection<Point>, allPointsMap: PointsMap): FeatureCollection<Point> {
-    const filteredPoints: FeatureCollection<Point> = {
-      features: [],  // Array<Feature<Point, Properties>>,
-      type: 'FeatureCollection'
-    };
-    const pointsAlreadyFiltered: PointsMap = {};
-    allPointsIntersection.features.forEach(api => {
-      const coords = api.geometry.coordinates;
-      const pointString = EowDataStruct.createPointMapString(turfPoint(api.geometry.coordinates));
-      if (allPointsMap.hasOwnProperty(pointString) && !pointsAlreadyFiltered.hasOwnProperty(pointString)) {
-        pointsAlreadyFiltered[pointString] = null;
-        filteredPoints.features.push(allPointsMap[pointString]);
-      }
-    });
-    return filteredPoints;
   }
 }
