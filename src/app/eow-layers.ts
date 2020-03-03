@@ -50,6 +50,10 @@ export interface LayersSourceSetup {
    */
   query?: string;
   /**
+   * Use this query to substitute values in so as to make it dynamic.  Only one placeholder - $
+   */
+  dynamicQuery?: ({options, extent, resolution, projection}) => string | null;
+  /**
    * Zoom and resolution.  The resolution values are more accurate but if not given the zoom ones (coarser) will be used
    */
   minZoom?: number;
@@ -118,11 +122,35 @@ export class EowLayers {
     this.setupGeoJSONLayer(layerPromises, 'assets/waterbodies/Canberra/i5516_reservoirs.geojson',
       {createLayer: false, useAsWaterBodySource: false, layerDisplayName: 'i5516 reservoirs'});
 
+    // Build a query to send to WFS service - choose the minimum area of waterbodies based on the resolution of the view
+    const dynamicQuery = ({options, extent, resolution, projection}): string | null => {
+      const buildAreaSizeFilterVariable = (): string => {
+        if (resolution >= 0.02) {
+          return '8000000'; // 2,000,000
+        } else if (resolution < 0.02 && resolution >= 0.01099) {
+          return '4000000'; // 1,000,000
+        } else if (resolution < 0.01099 && resolution >= 0.002746582) {
+          return '2000000';  // 500,000
+        } else if (resolution < 0.002746582 && resolution >= 0.000686646) {
+          return '250000';  // 250,000
+        } else if (resolution < 0.000686646 && resolution >= 0.000343323){
+          return '20000'; // 20,000
+        } else {
+          return '2000'; // 2,000
+        }
+      };
+      const buildQuery = (): string | null => {
+          const areaSizeFilterVariable = buildAreaSizeFilterVariable();
+          return areaSizeFilterVariable ? `area>${areaSizeFilterVariable}` : null;
+      };
+      return buildQuery();
+    };
+
     this.setupWFSLayer(layerPromises, 'https://hotspots.dea.ga.gov.au/geoserver/public/wfs',
       {
         createLayer: true, useAsWaterBodySource: true, layerOrFeatureName: 'DigitalEarthAustraliaWaterbodies', featurePrefix: 'public',
-        layerDisplayName: 'Waterbodies Features', maxResolution: 0.05, query: 'area>500000'
-      });
+        layerDisplayName: 'Waterbodies Features', dynamicQuery
+      }); // maxResolution: 0.05,
 
     this.setupWMSLayer(layerPromises, 'https://hotspots.dea.ga.gov.au/geoserver/public/wms',
       {
@@ -130,7 +158,7 @@ export class EowLayers {
         TILED: true, layerDisplayName: 'Waterbodies Map'
       });
 
-    this.setupWMSLayer(layerPromises, 'https://ows.services.dea.ga.gov.au/wms?',  // https://ows.dea.ga.gov.au',
+    this.setupWMSLayer(layerPromises, 'https://ows.services.dea.ga.gov.au/wms?',
       {
         createLayer: true, useAsWaterBodySource: false,  TILED: true,
         layerOrFeatureName: 'wofs_filtered_summary', layerDisplayName: 'WOFS', visible: true
