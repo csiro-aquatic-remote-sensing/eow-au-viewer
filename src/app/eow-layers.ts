@@ -117,13 +117,14 @@ export class EowLayers {
 
     this.setupGeoJSONLayer(layerPromises, 'assets/waterbodies/Canberra/i5516_reservoirs.geojson',
       {createLayer: false, useAsWaterBodySource: false, layerDisplayName: 'i5516 reservoirs'});
-    this.setupWFSLayer(layerPromises, 'http://hotspots.dea.ga.gov.au/geoserver/public/wfs',
+
+    this.setupWFSLayer(layerPromises, 'https://hotspots.dea.ga.gov.au/geoserver/public/wfs',
       {
         createLayer: true, useAsWaterBodySource: true, layerOrFeatureName: 'DigitalEarthAustraliaWaterbodies', featurePrefix: 'public',
         layerDisplayName: 'Waterbodies Features', maxResolution: 0.05, query: 'area>500000'
       });
 
-    this.setupWMSLayer(layerPromises, 'http://hotspots.dea.ga.gov.au/geoserver/public/wms',
+    this.setupWMSLayer(layerPromises, 'https://hotspots.dea.ga.gov.au/geoserver/public/wms',
       {
         createLayer: true, useAsWaterBodySource: false, layerOrFeatureName: 'DigitalEarthAustraliaWaterbodies',
         TILED: true, layerDisplayName: 'Waterbodies Map'
