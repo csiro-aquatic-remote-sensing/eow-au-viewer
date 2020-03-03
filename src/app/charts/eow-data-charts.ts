@@ -86,7 +86,7 @@ export default class EowDataCharts {
         }
       }
     }
-    console.log(`finished going through waterbodies`);
+    this.log.verbose(theClass, `finished going through waterbodies`);
   }
 
   /**
@@ -152,7 +152,7 @@ export default class EowDataCharts {
    *
    * @param errorMarginPoints to draw
    */
-  async debugDrawErrorMarginPoints(pointsMap: SourcePointMarginsType[]) {
+  async drawErrorMarginPoints(pointsMap: SourcePointMarginsType[]) {
     const format = new GeoJSON();
     const errorMarginPoints = {
       features: [],  // Array<Feature<Point, Properties>>,

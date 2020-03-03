@@ -63,7 +63,6 @@ export class EowDataLayer {
             }) as Feature[];
             allDataSource.clear(true);
             allDataSource.addFeatures(features);
-            console.log(`EowDataLayer - allDataSource # features: ${allDataSource.getFeatures().length}`);
           } else {
             onError();
           }
@@ -76,7 +75,6 @@ export class EowDataLayer {
     allDataSource.on('addfeature', (evt) => {
       setTimeout(() => {  // TODO get rid of the timeout
         if (this._allDataSourceNumber !== allDataSource.getFeatures().length) {
-          console.log(`update allDataSourceObs - items#: ${allDataSource.getFeatures().length}`);
           this._allDataSourceNumber = allDataSource.getFeatures().length;
           this._allDataSourceObs.next(allDataSource);
         }
@@ -112,7 +110,6 @@ export class EowDataLayer {
         style: basicStyle
       });
       dataLayer.set('name', 'EOW Data');
-      console.log(`update dataLayerObs`);
       this._dataLayerObs.next(dataLayer);
       map.addLayer(dataLayer);
     });
