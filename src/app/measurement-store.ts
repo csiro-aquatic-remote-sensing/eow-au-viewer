@@ -32,6 +32,7 @@ export class MeasurementStore {
     // this.eowData = eowData;
     eowData.allDataSourceObs.subscribe(allDataSource => {
       this.allDataSource = allDataSource;
+      this.setupEventHandling(userStore);
     });
     eowMap.getMap().subscribe(map => {
       this.map = map;
@@ -39,7 +40,6 @@ export class MeasurementStore {
     eowData.dataLayerObs.subscribe(dataLayer => {
       this.dataLayer = dataLayer;
     });
-    this.setupEventHandling(userStore);
 
     return this;
   }
