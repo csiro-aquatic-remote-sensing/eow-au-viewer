@@ -116,10 +116,10 @@ export default class EowDataCharts {
         new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.offSet(point, 1), map, idTime, validData).draw();
         this.chartMap[uniqueChartIdForPosition] = true;
       } else {
-        this.log.info(theClass, `NOT Drawing pieChart at ${JSON.stringify(point)})} - data not valid or complete`);
+        this.log.verbose(theClass, `NOT Drawing pieChart at ${JSON.stringify(point)})} - data not valid or complete`);
       }
     } else {
-      this.log.info(theClass, `NOT Drawing pieChart at ${JSON.stringify(point)})} - chart already exists`);
+      this.log.verbose(theClass, `NOT Drawing pieChart at ${JSON.stringify(point)})} - chart already exists`);
     }
   }
 

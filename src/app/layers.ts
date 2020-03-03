@@ -136,7 +136,8 @@ export class Layers {
   }
 
   /**
-   * Such as from a geo service.
+   * Such as from a geo service.  Allows for a query to be passed in the options, or dynamicQuery to programatically set the value of $
+   * in the string.
    *
    * @param url to source that returns a geojson.
    * @param options for creating the layer
@@ -148,14 +149,35 @@ export class Layers {
         reject('options.featureName expected');
       }
       const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
+      const buildQuery = ({extent, resolution, projection}): string | null => {
+        if (options.dynamicQuery) {
+          return options.dynamicQuery({options, extent, resolution, projection});
+        } else if (options.query) {
+          return options.query;
+        } else {
+          return null;
+        }
+      };
+      const buildQueryNbbox = ({extent, resolution, projection}): string | null => {
+        const proj = projection.getCode();
+        const normalBBox = `&bbox=${extent.join(',')},${proj}`;
+        const queryBBox = `BBOX(geom, ${extent.join(',')},'${proj}')`;
+        const theQuery = buildQuery({extent, resolution, projection});
+        const bboxOrQuery = theQuery ? `&cql_filter=${theQuery}%20AND%20${queryBBox}` : normalBBox;
+        if (theQuery) {
+          this.log.verbose(theClass, `Dynamic query: ${theQuery}`);
+        }
+        return bboxOrQuery;
+      };
       const vectorSource = new VectorSource({
         format: new GeoJSON(),
         loader: (extent, resolution, projection) => {
           const proj = projection.getCode();
           const feature = options.featurePrefix ? options.featurePrefix + ':' + options.layerOrFeatureName : options.layerOrFeatureName;
-          const normalBBox = `&bbox=${extent.join(',')},${proj}`;
-          const queryBBox = `BBOX(geom, ${extent.join(',')},'${proj}')`;
-          const bboxOrQuery = options.query ? `&cql_filter=${options.query}%20AND%20${queryBBox}` : normalBBox;
+          // const normalBBox = `&bbox=${extent.join(',')},${proj}`;
+          // const queryBBox = `BBOX(geom, ${extent.join(',')},'${proj}')`;
+          const bboxOrQuery = buildQueryNbbox({extent, resolution, projection});
+            // options.query ? `&cql_filter=${options.query}%20AND%20${queryBBox}` : normalBBox;
           const url = `${urlForWFS}?service=WFS&version=1.1.0&request=GetFeature&typename=${feature}&` +
             `outputFormat=application/json&srsname=${proj}${bboxOrQuery}`;
           const xhr = new XMLHttpRequest();
