@@ -172,7 +172,6 @@ export class Layers {
               }) as Feature[];
               vectorSource.clear(true);
               vectorSource.addFeatures(features);
-              console.log(`Layers / createLayerFromWFS - # features: ${vectorSource.getFeatures().length}`);
               // Due to the BBOXStrategy, this loader function will run every time the map is panned or zoomed.  Update the Observable
               // with new data if the VectorLayer is already defined (ie. not the first time this runs).  The first time the Observable
               // will be created in the VectorLayer code below.
