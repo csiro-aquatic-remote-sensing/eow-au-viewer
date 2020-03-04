@@ -290,12 +290,11 @@ export class AppComponent implements OnInit {
   }
 
   private setupEventHandlers() {
-    return; // TODO - this temp whilst get new website working.  Such data needs to go in sidebar
     // Pull tabs of Most Active Users and Recent Measurements
-    this.htmlDocument.querySelectorAll('.pull-tab').forEach(i => i.addEventListener('click', (event: Event) => {
-      const element = (event.target as HTMLElement).closest('.panel');
-      element.classList.toggle('pulled');
-    }));
+    // this.htmlDocument.querySelectorAll('.pull-tab').forEach(i => i.addEventListener('click', (event: Event) => {
+    //   const element = (event.target as HTMLElement).closest('.panel');
+    //   element.classList.toggle('pulled');
+    // }));
 
     // Measurement List
     document.querySelector('.measurement-list').addEventListener('click', (event) => {

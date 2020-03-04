@@ -1,6 +1,5 @@
 <div class="application">
   <div class="main-container">
-    maincontainer
 <!--    <div class="header">-->
 <!--      <h1><a href="https://research.csiro.au/eyeonwater/">Eye On Water: Australia</a> - WFS Viewer</h1>-->
 <!--      <div class="sub-header box-shadow">-->
@@ -19,7 +18,25 @@
     </div>
 
   </div>
-  <div class="sidebar">sidebar</div>
+  <div class="sidebar">
+    <div class="panel-body">
+      <h3>Recent measurements</h3>
+      <hr>
+      <div class="measurement-list">
+        <ul class="item-container">
+        </ul>
+      </div>
+    </div>
+    <div class="panel-body">
+      <button id="clearFilterButton" class="hidden"> Clear</button>
+      <h3>Most Active Users</h3>
+      <hr>
+      <div class="user-list">
+        <ul class="item-container">
+        </ul>
+      </div>
+    </div>
+  </div>
   <div id="waterbody"></div>
 
   <div class="layersSwitch"></div>

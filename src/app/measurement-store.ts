@@ -98,7 +98,6 @@ export class MeasurementStore {
       return itemTemplate;
     });
 
-    return; // TODO - this temp whilst get new website working.  Such data needs to go in sidebar
     document.querySelector('.measurement-list ul').innerHTML = userList.join('\n');
   }
 
