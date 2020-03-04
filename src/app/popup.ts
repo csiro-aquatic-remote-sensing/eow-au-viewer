@@ -77,7 +77,7 @@ export class Popup {
 
     if (features.length) {
       content.innerHTML = features.map(f => this.printDetails(f)).join('');
-      stats.innerHTML = this.pieChart.fixForThisPieChart(printStats(calculateStats(features), this.userStore));
+      stats.innerHTML = PieChart.fixForThisPieChart(printStats(calculateStats(features), this.userStore));
       element.classList.add('active');
       this.popup.setPosition(coordinate); // [28468637.79432749, 5368841.526355445]);  //
       this.popup.setVisible(true);

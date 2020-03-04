@@ -141,7 +141,7 @@ export class PieChart {
    *  Change the class to id in this one place.
    * @param html that contains 'class="pieChart"'
    */
-  fixForThisPieChart(html: string) {
+  static fixForThisPieChart(html: string) {
     return html.replace('class="pieChart"', 'id="pieChart"');
   }
 }
