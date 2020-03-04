@@ -57,6 +57,7 @@ export class UserStore {
   }
 
   setupEventHandlers(measurementStore: MeasurementStore) {
+    return; // TODO - this temp whilst get new website working.  Such data needs to go in sidebar
     // this.eowData.dataLayerObs.subscribe(dataLayer => {
     if (this.dataLayer) {
       this.dataLayer.on('change', debounce(({target}) => {
@@ -94,6 +95,7 @@ export class UserStore {
 
   renderUsers(users, n = 10) {
     // Atleast temporarily filter so only users with photos show
+    return; // TODO - this temp whilst get new website working.  Such data needs to go in sidebar
     const userList = orderBy(users, ['photo_count', 'points'], ['desc', 'desc']).slice(0, n)
       .filter(user => this.getUserById(user.id).photos.length > 0) // user => user.photo_count && user.photo_count > 0)
       .map(user => {
