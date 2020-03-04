@@ -22,6 +22,7 @@ import {EOWMap} from './eow-map';
 import Feature from 'ol/Feature';
 import {bbox as bboxStrategy} from 'ol/loadingstrategy';
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
+import {writeAllEOWDataImageUrls} from './globals';
 
 const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia'; // ?service=WFS';
 // + '&version=1.0.0&request=GetFeature&typeName=eow_australia&maxFeatures=5000&outputFormat=application%2Fjson&srsName=epsg:3587';
@@ -61,6 +62,12 @@ export class EowDataLayer {
               dataProjection: proj,
               featureProjection: 'EPSG:4326'
             }) as Feature[];
+            // debug (for Corp Affairs)
+            if (writeAllEOWDataImageUrls) {
+              console.log(`EOWData images (before): #${features.length}`);
+              features.forEach(f => console.log(f.getProperties().image));
+              console.log(`EOWData images (after): #${features.length}`);
+            }
             allDataSource.clear(true);
             allDataSource.addFeatures(features);
           } else {
