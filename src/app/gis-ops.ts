@@ -171,6 +171,7 @@ export class GisOps {
     // Get clusters of EOWPoints, bbox each one and filter on these
     const clusteredPoints: FeatureCollection<Point> = clustersKmeans(points);
     const features: TurfFeature<Polygon>[] = [];
+    const seenPolygons: { [name: string]: boolean } = {};
     layers.clearLayerOfWFSFeatures(layerName);
     clusterEach(clusteredPoints, 'cluster', (cluster, clusterValue, index) => {
       const pointsBbox: BBox = bbox(cluster);
@@ -179,7 +180,12 @@ export class GisOps {
         const bboxClipped = bboxClip<Polygon>(f, pointsBbox) as TurfFeature<Polygon>;
         // filter out zero-sized polygons
         if (bboxClipped.geometry.coordinates.length > 0) {
-          features.push(bboxClipped);
+          if (!seenPolygons.hasOwnProperty(f.id)) {
+            features.push(f);
+            seenPolygons[f.id] = true;
+          } else {
+            // TODO - need to accumulate the points and use these in the 1 polygon that has been selected
+          }
         }
       });
     });
