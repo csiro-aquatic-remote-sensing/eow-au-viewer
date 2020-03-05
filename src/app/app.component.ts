@@ -238,7 +238,6 @@ export class AppComponent implements OnInit {
       && this.waterBodiesLayers && this.waterBodiesLayers.length > 0);
   }
 
-  // TODO - no need to pass the class args to this any more
   private async intersectAndDraw(layerName: string, waterBodyPolygons: FeatureCollection<Polygon>, points: FeatureCollection<Point>,
                                  allPointsMap: PointsMap, sourceNErrorMarginPoints: FeatureCollection<Point>) {
     const eowWaterBodyIntersections = await GeometryOps.calculateLayerIntersections(points, sourceNErrorMarginPoints, allPointsMap, waterBodyPolygons, layerName);

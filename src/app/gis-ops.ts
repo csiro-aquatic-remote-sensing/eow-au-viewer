@@ -26,6 +26,7 @@ import Stroke from 'ol/style/Stroke';
 import bboxPolygon from '@turf/bbox-polygon';
 import clustersKmeans from '@turf/clusters-kmeans';
 import {clusterEach} from '@turf/clusters';
+import {Md5} from 'ts-md5/dist/md5';
 
 const theClass = 'GisOps';
 const log = Brolog.instance(brologLevel);
@@ -166,12 +167,14 @@ export class GisOps {
    * @param points are the EOWData points that are most likely those in the map view extent
    * @return waterBodyFeatureCollection filtered to be those in the bbox created around the given points
    */
-  static filterFromClusteredEOWDataBbox(waterBodyFeatureCollection: FeatureCollection<Polygon>, points: FeatureCollection<Point>,
+  static filterFromClusteredEOWDataBbox(waterBodyFeatures: Feature[], points: FeatureCollection<Point>,
                                         layers: Layers, layerName: string): FeatureCollection<Polygon> {
     // Get clusters of EOWPoints, bbox each one and filter on these
+    const waterBodyFeatureCollection: FeatureCollection<Polygon> = GisOps.createFeatureCollection(waterBodyFeatures);
     const clusteredPoints: FeatureCollection<Point> = clustersKmeans(points);
     const features: TurfFeature<Polygon>[] = [];
     const seenPolygons: { [name: string]: boolean } = {};
+
     layers.clearLayerOfWFSFeatures(layerName);
     clusterEach(clusteredPoints, 'cluster', (cluster, clusterValue, index) => {
       const pointsBbox: BBox = bbox(cluster);
@@ -180,12 +183,17 @@ export class GisOps {
         const bboxClipped = bboxClip<Polygon>(f, pointsBbox) as TurfFeature<Polygon>;
         // filter out zero-sized polygons
         if (bboxClipped.geometry.coordinates.length > 0) {
-          if (!seenPolygons.hasOwnProperty(f.id)) {
+          // Only add a water body once despite possible multiple clusters covering any water body
+          const geomSha3 = GisOps.buildGeometryChecksum(f.geometry.coordinates);
+          if (!seenPolygons.hasOwnProperty(geomSha3)) {
+            log.silly(theClass, `cluster filter - polygon not seen: ${geomSha3}`);
             features.push(f);
-            seenPolygons[f.id] = true;
+            seenPolygons[geomSha3] = true;
           } else {
-            // TODO - need to accumulate the points and use these in the 1 polygon that has been selected
+            log.silly(theClass, `cluster filter - seen polygon: ${geomSha3}`);
           }
+        } else {
+          console.log(`cluster filter - coords <=0`);
         }
       });
     });
@@ -205,14 +213,13 @@ export class GisOps {
   }
 
   /**
-   * The clustering algorithms return a flat set of points with a property 'cluster' with some numerical value indicating the cluster it
-   * is in.  This breaks each of those up in to items in an array with each entry being a cluster.
-   * @param clusterPoints
+   * Create a unique identifier for a polygon.
+   *
+   * @param coordinates as input into checksum algorithm
    */
-  // private static breakupIntoClusters(clusterPoints: FeatureCollection<Point>): FeatureCollection<Point>[] {
-  //   const clusters: FeatureCollection<Point>[] = [];
-  //
-  //   featureEach(clusterPoints, ())
-  //
-  // }
+  private static buildGeometryChecksum(coordinates: number[][][]): string {
+    const value = coordinates.reduce((a, b) => [...a, ...b], []);
+
+    return Md5.hashStr(value.join('_')) as string;
+  }
 }
