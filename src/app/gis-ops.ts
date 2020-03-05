@@ -115,11 +115,12 @@ export class GisOps {
 
 
   /**
-   * Return all points related to the given allPointsIntersection - that point plus its error margin points.
+   * Return the source points for all points in the given allPointsIntersection (it includes source points + error margin points).  When a
+   * line is drawn from a pie chart to its EOW data point, the lines should go to the source point, not the error margin points around it.
    *
-   * @param allPointsIntersection are the EOWData points within waterlayer polygons
-   * @param allPointsMap is the source EOWData points and their respective error margin points (ie. A point with a concentric circle of points around - only 4)
-   * @return the error margin points in allPointsMap that have a source point in allPointsIntersection
+   * @param allPointsIntersection are the EOWData points found within one waterlayer polygon (the one being searched outside this method)
+   * @param allPointsMap is the source EOWData points + their error margin points (ie. A point with a concentric circle of points around)
+   * @return the source points in allPointsMap (essentially map used source points + error margin points to their source point)
    */
   static filterSourcePoints(allPointsIntersection: FeatureCollection<Point>, allPointsMap: PointsMap): FeatureCollection<Point> {
     const filteredPoints: FeatureCollection<Point> = {
