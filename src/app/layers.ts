@@ -21,6 +21,7 @@ import Feature from 'ol/Feature';
 import Stroke from 'ol/style/Stroke';
 import {bbox as bboxStrategy} from 'ol/loadingstrategy';
 import {LayersInfoManager, LayersSourceSetup} from './eow-layers';
+import LayerSwitcher from 'ol-layerswitcher';
 
 const theClass = 'Layers';
 
@@ -98,6 +99,7 @@ export class Layers {
   constructor(private eowMap: EOWMap, private htmlDocument: Document, private http: HttpClient, private log: Brolog) {
     this.eowMap.getMap().subscribe(async map => {
       this.map = map;
+      this.map.addControl(new LayerSwitcher());
     });
 
     this.mapLayersObs = new BehaviorSubject(null);
@@ -282,7 +284,9 @@ export class Layers {
         options.opacity = options.opacity || 0.6;
         this.log.verbose(`Lines layer: ${name} - # lines added: ${features.length}`);
         newLayer = new VectorLayer(Object.assign(options, {
-          source: featureSource
+          source: featureSource,
+          title: name,
+          group: 'Features'
         }));
         newLayer.set('name', name);
         this.addLayer(newLayer, name);

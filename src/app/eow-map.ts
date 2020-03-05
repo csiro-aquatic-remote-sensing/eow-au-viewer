@@ -29,7 +29,9 @@ export class EOWMap {
 
   init(popupObject: Popup) {
     const mainMap = new TileLayer({
-      source: new OSM()
+      source: new OSM(),
+      title: 'Open Street Map',
+      type: 'base'
     });
     mainMap.set('name', 'Main map');
 
