@@ -14,7 +14,7 @@ import Brolog from 'brolog';
 import LayerGeometries from './layers-geometries';
 import {EowDataStruct, EowWaterBodyIntersection, PointsMap} from './eow-data-struct';
 import {EowLayers} from './eow-layers';
-import {Layers} from './layers';
+import {ApplicationLayers} from './layers';
 import * as sinon from 'sinon';
 import {EOWMap} from './eow-map';
 import {of} from 'rxjs';
@@ -576,7 +576,7 @@ describe('geometry-ops', () => {
       const mockEOWMapStub = sinon.stub(mockEOWMap, 'getMap').callsFake(() => {
         return of(mockMap);
       });
-      const layers = new Layers(mockEOWMap, null, null, log); // this.eowMap, this.htmlDocument, this.http, this.log);
+      const layers = new ApplicationLayers(mockEOWMap, log); // this.eowMap, this.htmlDocument, this.http, this.log);
       sinon.stub(layers, 'drawLayerInMenu');  // Want it to be a NOOP
       const eowLayers = await new EowLayers(layers, this.log).init(); // this.eowMap);
       // layerData = new LayerGeometries(eowLayers, log);

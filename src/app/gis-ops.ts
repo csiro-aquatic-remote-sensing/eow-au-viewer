@@ -19,7 +19,7 @@ import {brologLevel} from './globals';
 import Brolog from 'brolog';
 import bboxClip from '@turf/bbox-clip';
 import {EowDataStruct, PointsMap} from './eow-data-struct';
-import {fillStyle, Layers, redLines} from './layers';
+import {fillStyle, ApplicationLayers, redLines} from './layers';
 import GeoJSON from 'ol/format/GeoJSON';
 import {Style} from 'ol/style';
 import Stroke from 'ol/style/Stroke';
@@ -146,7 +146,7 @@ export class GisOps {
    * @return waterBodyFeatureCollection filtered to be those in the bbox created around the given points
    */
   static filterFromEOWDataBbox(waterBodyFeatureCollection: FeatureCollection<Polygon>, points: FeatureCollection<Point>,
-                               layers: Layers, layerName: string): FeatureCollection<Polygon> {
+                               layers: ApplicationLayers, layerName: string): FeatureCollection<Polygon> {
     const pointsBbox: BBox = bbox(points);
     GisOps.drawBox(bboxPolygon(pointsBbox), layers, layerName);
     const features: TurfFeature<Polygon>[] = [];
@@ -169,7 +169,7 @@ export class GisOps {
    * @return waterBodyFeatureCollection filtered to be those in the bbox created around the given points
    */
   static filterFromClusteredEOWDataBbox(waterBodyFeatures: Feature[], points: FeatureCollection<Point>,
-                                        layers: Layers, layerName: string): FeatureCollection<Polygon> {
+                                        layers: ApplicationLayers, layerName: string): FeatureCollection<Polygon> {
     // Get clusters of EOWPoints, bbox each one and filter on these
     const waterBodyFeatureCollection: FeatureCollection<Polygon> = GisOps.createFeatureCollection(waterBodyFeatures);
     const clusteredPoints: FeatureCollection<Point> = clustersKmeans(points);
@@ -201,7 +201,7 @@ export class GisOps {
     return turfFeatureCollection<Polygon>(features);
   }
 
-  private static async drawBox(bboxClipped: TurfFeature<Polygon>, layers: Layers, layerName: string) {
+  private static async drawBox(bboxClipped: TurfFeature<Polygon>, layers: ApplicationLayers, layerName: string) {
     const olFeatures = GisOps.turfFeaturesToOlFeatures([bboxClipped]);
     await layers.createLayerFromWFSFeatures(olFeatures, {
       clear: false,

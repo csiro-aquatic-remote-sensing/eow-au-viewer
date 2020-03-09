@@ -5,7 +5,7 @@ import Map from 'ol/Map';
 import GeoJSON from 'ol/format/GeoJSON';
 import {lineString as turfLineString} from '@turf/helpers';
 import Brolog from 'brolog';
-import {Layers} from '../layers';
+import {ApplicationLayers} from '../layers';
 import {TimeSeriesChart} from './time-series-chart';
 
 const theClass = 'PieChartContainer';
@@ -13,7 +13,7 @@ const theClass = 'PieChartContainer';
 const debugDrawLines = true; // If true then draw line from center of pie chart to the features that the chart is for
 
 export class TimeSeriesChartContainer extends ChartContainer {
-  constructor(layerName: string, layers: Layers, log: Brolog) {
+  constructor(layerName: string, layers: ApplicationLayers, log: Brolog) {
     super(layerName, layers, log);
   }
 

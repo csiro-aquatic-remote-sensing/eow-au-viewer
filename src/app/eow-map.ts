@@ -14,6 +14,9 @@ import {feature as turfFeature} from '@turf/helpers';
 import {LayersInfo} from './eow-layers';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
+import {ATTRIBUTION} from 'ol/source/OSM';
+import LayerSwitcher from 'ol-layerswitcher';
+import {defaults} from 'ol/control';
 
 const theClass = 'EOWMap';
 const defaultCoord = [133.945313, -26.431228];
@@ -29,11 +32,11 @@ export class EOWMap {
 
   init(popupObject: Popup) {
     const mainMap = new TileLayer({
-      source: new OSM(),
-      title: 'Open Street Map',
-      type: 'base'
+      source: new OSM()
     });
     mainMap.set('name', 'Main map');
+    mainMap.set('title', 'Open Street Map');
+    mainMap.set('type', 'base');
 
     this.map = new Map({
       target: 'map',
@@ -45,12 +48,20 @@ export class EOWMap {
         zoom: theZoom,
         projection: 'EPSG:4326'
       }),
-      controls: [],
+      controls: defaults({
+        zoom: true,
+        attribution: true,
+        rotate: true
+      })
     });
 
     this._mapObs = new BehaviorSubject<Map>(this.map);
 
     this.setupEventHandling(popupObject);
+
+    const layerSwitcher = new LayerSwitcher();
+    this.map.addControl(layerSwitcher);
+    // layerSwitcher.showPanel();
 
     return this;
   }

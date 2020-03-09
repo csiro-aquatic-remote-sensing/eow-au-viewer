@@ -26,6 +26,7 @@
             "styles": [
               "node_modules/ol/ol.css",
               "node_modules/ol-layerswitcher/src/ol-layerswitcher.css",
+              "src/layerSwitcher.css",
               "src/styles.css"
             ],
             "scripts": []

@@ -5,7 +5,7 @@ import Map from 'ol/Map';
 
 import {Coords} from '../eow-data-struct';
 import Brolog from 'brolog';
-import {Layers} from '../layers';
+import {ApplicationLayers} from '../layers';
 
 const htmlElementId = 'waterbody';
 export const LOG2 = Math.log(2);
@@ -20,7 +20,7 @@ export abstract class ChartContainer {
   protected id: string;
   protected log: Brolog;
   protected layerName: string;
-  protected layers: Layers;
+  protected layers: ApplicationLayers;
 
   /**
    * Abstract class for the business related functions surrounding drawing charts on map.
@@ -31,7 +31,7 @@ export abstract class ChartContainer {
    * @param id of div to draw in to
    * @param data to make up chart to draw
    */
-  constructor(layerName: string, layers: Layers, log: Brolog) {
+  constructor(layerName: string, layers: ApplicationLayers, log: Brolog) {
     this.log = log;
     this.layerName = layerName;
     this.layers = layers;
