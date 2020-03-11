@@ -88,6 +88,12 @@ describe('Layers', () => {
       return expect(create()).to.be.rejectedWith(`Cannot create layer with same name "${baseLayerName}`);
     });
 
+    it(`2 layers should NOT be able to have same name unless options.allowMergeThruSameLayerName = true`, () => {
+      const create = () => layers.createLayer({layerOrFeatureName: baseLayerName, allowMergeThruSameLayerName: true}, () => (new VectorLayer()));
+      create(); // succeeds
+      return expect(create()).to.be.eventually.fulfilled; // rejectedWith(`Cannot create layer with same name "${baseLayerName}`);
+    });
+
     it(`A group with the GroupName should be created if a new layer refers to it`, () => {
       const create = () => layers.createLayer({layerOrFeatureName: baseLayerName, layerGroupName: baseGroup},
         () => (new VectorLayer()));

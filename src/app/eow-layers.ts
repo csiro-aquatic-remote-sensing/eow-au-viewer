@@ -29,6 +29,11 @@ export interface LayersSourceSetup {
    */
   layerDisplayName?: string;
   /**
+   * The default behaviour when creating layers is to error if a layer with the same name is attempted to be created a subsequent time.
+   * But for some layers, like WFS with their features, you can combine features in to the one layer.  Set this to true in this case.
+   */
+  allowMergeThruSameLayerName?: boolean;
+  /**
    * Initial value of if to show the layer.  Corresponds to a checkbox or similar in the UI to turn the layer on and off.
    */
   visible?: boolean;

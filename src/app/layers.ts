@@ -54,14 +54,18 @@ export class ApplicationLayers {
   }
 
   // private
-  async createLayer(options: LayersSourceSetup, createNewLayerFunction: () => Layer): Promise<BaseLayer> {
+  async createLayer(options: LayersSourceSetup, createNewLayerFunction: (layer?: Layer) => Layer): Promise<Layer> {
     return new Promise((resolve, reject) => {
       const layerName = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
-      if (this.getLayer(layerName) !== null) {
+      const existingLayer = this.getLayer(layerName);
+      if (existingLayer !== null && ! options.allowMergeThruSameLayerName) {
         reject(`Cannot create layer with same name "${layerName}"`);
       }
 
-      const layer = createNewLayerFunction();
+      const layer = createNewLayerFunction(existingLayer);
+      if (existingLayer) {
+        resolve(existingLayer);
+      }
       layer.set('layerName', layerName);
       if (options.layerGroupName) {
         let group = this.getGroup(options.layerGroupName) as LayerGroup;
@@ -83,14 +87,14 @@ export class ApplicationLayers {
     });
   }
 
-  getLayer(layerName: string): BaseLayer {
+  getLayer(layerName: string): Layer {
     const layersWithName = this.map.getLayers().getArray().filter(l => {
       return l.get('layerName') === layerName;
     });
     if (layersWithName.length > 1) {
       throw new Error(`More than one layer with name: ${layerName}`);
     }
-    return layersWithName && layersWithName.length > 0 ? layersWithName[0] : null;
+    return layersWithName && layersWithName.length > 0 ? layersWithName[0] as Layer : null;
   }
 
   getGroup(groupName: string): BaseLayer {
@@ -112,7 +116,7 @@ export class ApplicationLayers {
    */
   async createLayerFromGeoJSON(url, options: LayersSourceSetup, waterBodiesLayers: LayersInfoManager): Promise<BaseLayer> {
     // return new Promise(async (resolve, reject) => {
-    const createNewLayer = (layer?: BaseLayer): Layer => {
+    const createNewLayer = (layer?: Layer): Layer => {
       // const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
       // const response = await fetch(url);
       // if (!response.ok) {
@@ -150,7 +154,7 @@ export class ApplicationLayers {
       throw new Error('options.featureName expected');
     }
     // const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
-    const createNewLayer = (layer?: BaseLayer): Layer => {
+    const createNewLayer = (layer?: Layer): Layer => {
       const buildQuery = ({extent, resolution, projection}): string | null => {
         if (options.dynamicQuery) {
           return options.dynamicQuery({options, extent, resolution, projection});
@@ -229,7 +233,7 @@ export class ApplicationLayers {
       // const index = this.addLayer(newLayer, name);
       // This waterBodiesLayers.addInfo() needs to be done here in the promise
       const behaviourSubject = new BehaviorSubject<VectorSource>(vectorSource);
-      waterBodiesLayers.addInfo(name, 99, urlForWFS, options, behaviourSubject);
+      waterBodiesLayers.addInfo(name, 99, urlForWFS, options, behaviourSubject);  // TODO I shouldn't need this now have rewritten layers.ts
       return newLayer;
     };
     return this.createLayer(options, createNewLayer);
@@ -244,7 +248,7 @@ export class ApplicationLayers {
    */
   async createLayerFromWMS(url, options: LayersSourceSetup, waterBodiesLayers: LayersInfoManager): Promise<BaseLayer> {
     // return new Promise((resolve) => {
-    const createNewLayer = (layer?: BaseLayer): Layer => {
+    const createNewLayer = (layer?: Layer): Layer => {
       options.opacity = options.opacity || 0.6;
       const newLayer = new TileLayer(Object.assign(options, {
         source: new TileWMS({
@@ -272,14 +276,12 @@ export class ApplicationLayers {
    */
   async createLayerFromWFSFeatures(features: Feature[], options: LayersSourceSetup, waterBodiesLayers: LayersInfoManager): Promise<BaseLayer> {
     // return new Promise((resolve) => {
-    const createNewLayer = (layer?: BaseLayer): Layer => {
+    const createNewLayer = (layer?: Layer): Layer => {
 
       const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
-      // const existingLayerIndex = this.layerNames.getName(name) || -1; // hasOwnProperty(name) ? this.layerNames[name] : -1;
       let newLayer;
       // if (existingLayerIndex > -1) {
-      if (layer) {
-        // newLayer = this.map.getLayers().getArray()[createAppendLayerState.indexInMap];
+      if (layer) {  // Because we allow this we set options.allowMergeThruSameLayerName to true
         const source: VectorSource = (layer as VectorLayer).getSource() as VectorSource;
         if (options.clear) {
           source.clear(true);
@@ -302,7 +304,7 @@ export class ApplicationLayers {
       // resolve(newLayer);
       return newLayer;
     };
-    return this.createLayer(options, createNewLayer);
+    return this.createLayer(Object.assign(options, {allowMergeThruSameLayerName: true}), createNewLayer);
   }
 
   /**
