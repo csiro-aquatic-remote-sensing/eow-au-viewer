@@ -18,6 +18,7 @@ import {ATTRIBUTION} from 'ol/source/OSM';
 import LayerSwitcher from 'ol-layerswitcher';
 import {defaults} from 'ol/control';
 import {Injectable} from '@angular/core';
+import SideBarService from './sidebar/sidebar.service';
 
 const theClass = 'EOWMap';
 const defaultCoord = [133.945313, -26.431228];
@@ -29,7 +30,7 @@ export class EOWMap {
   private _mapObs: BehaviorSubject<Map>;
   private map: Map;
 
-  constructor(private log: Brolog) {  // private popupObject: Popup,
+  constructor(private sideBarService: SideBarService, private log: Brolog) {  // private popupObject: Popup,
     this._mapObs = new BehaviorSubject<Map>(null);
   }
 
@@ -88,6 +89,7 @@ export class EOWMap {
 
       if (features.length) {
         this.log.verbose(theClass, `Clicked on map at: ${JSON.stringify(coordinate)}  - fix the call to display Popup (do through sidebar)`);
+        this.sideBarService.show('eow-dataPoint-information');
         // popupObject.draw(features, coordinate);
       }
     });
