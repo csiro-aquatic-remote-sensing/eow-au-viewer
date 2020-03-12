@@ -99,7 +99,7 @@ export class ApplicationLayers {
    * @param doLookInGroups if true then descend in to searching the layers in groups
    * @param layersArrayToSearch is the array of layers to look through.  If not supplied then `this.map.getLayers().getArray()` will be used
    */
-  getLayer(layerName: string, doLookInGroups: boolean = false, layersArrayToSearch?: BaseLayer[]): Layer {
+  getLayer(layerName: string, doLookInGroups: boolean = true, layersArrayToSearch?: BaseLayer[]): Layer {
     let layersToSearch;
 
     if (doLookInGroups) {
