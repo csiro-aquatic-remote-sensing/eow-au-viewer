@@ -209,7 +209,8 @@ export class GisOps {
         stroke: new Stroke({color: 'rgba(255, 25, 125, 1)', width: 1.5, lineCap: 'butt'})
       }),
       visible: true,
-      layerDisplayName: layerName
+      layerDisplayName: layerName,
+      layerGroupName: 'Dev features'
     }, null);
   }
 

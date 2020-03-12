@@ -159,19 +159,19 @@ export class EowLayers {
     this.setupWFSLayer(layerPromises, 'https://hotspots.dea.ga.gov.au/geoserver/public/wfs',
       {
         createLayer: true, useAsWaterBodySource: true, layerOrFeatureName: 'DigitalEarthAustraliaWaterbodies', featurePrefix: 'public',
-        layerDisplayName: 'Waterbodies Features', dynamicQuery, layerGroupName: 'Features'
+        layerDisplayName: 'Waterbodies Features', dynamicQuery, layerGroupName: 'Map Features'
       }); // maxResolution: 0.05,
 
     this.setupWMSLayer(layerPromises, 'https://hotspots.dea.ga.gov.au/geoserver/public/wms',
       {
         createLayer: true, useAsWaterBodySource: false, layerOrFeatureName: 'DigitalEarthAustraliaWaterbodies',
-        TILED: true, layerDisplayName: 'Waterbodies Map', layerGroupName: 'Features'
+        TILED: true, layerDisplayName: 'Waterbodies Map', layerGroupName: 'Map Features'
       });
 
     this.setupWMSLayer(layerPromises, 'https://ows.services.dea.ga.gov.au/wms?',
       {
         createLayer: true, useAsWaterBodySource: false,  TILED: true,
-        layerOrFeatureName: 'wofs_filtered_summary', layerDisplayName: 'WOFS', visible: true, layerGroupName: 'Features'
+        layerOrFeatureName: 'wofs_filtered_summary', layerDisplayName: 'WOFS', visible: true, layerGroupName: 'Map Features'
       }); // minResolution: 0.00069,
 
     return Promise.all(layerPromises);
