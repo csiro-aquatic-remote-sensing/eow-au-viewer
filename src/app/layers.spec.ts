@@ -89,7 +89,10 @@ describe('Layers', () => {
     });
 
     it(`2 layers should NOT be able to have same name unless options.allowMergeThruSameLayerName = true`, () => {
-      const create = () => layers.createLayer({layerOrFeatureName: baseLayerName, allowMergeThruSameLayerName: true}, () => (new VectorLayer()));
+      const create = () => layers.createLayer({
+        layerOrFeatureName: baseLayerName,
+        allowMergeThruSameLayerName: true
+      }, () => (new VectorLayer()));
       create(); // succeeds
       return expect(create()).to.be.eventually.fulfilled; // rejectedWith(`Cannot create layer with same name "${baseLayerName}`);
     });
@@ -102,7 +105,7 @@ describe('Layers', () => {
         expect(layer).to.not.be.undefined;  // tslint:disable-line
         console.log(`layer keys: ${Object.keys(layer)}`);
         expect(layers.getMapLayers().getArray()).lengthOf(1);
-        expect(layers.getGroup(baseGroup).constructor.name).to.eql(`LayerGroup`)
+        expect(layers.getGroup(baseGroup).constructor.name).to.eql(`LayerGroup`);
         expect(layers.getGroup(baseGroup).get('groupName')).to.eql(baseGroup);
         expect(layers.getGroup(baseGroup).getLayersArray()).lengthOf(1);
       });
@@ -143,9 +146,45 @@ describe('Layers', () => {
       expect(getLayer2).to.not.be.null; // tslint:disable-line
       expect(getLayer2.get('groupName')).to.not.be.null;  // tslint:disable-line
       expect(getLayer2.get('groupName')).to.eql(groupName2);
+    });
 
-      console.log(`group crated`);
+    it(`2 layers added to group - should have 2 layers`, () => {
+      layers.createLayer({layerOrFeatureName: baseLayerName + '1', layerGroupName: baseGroup}, () => (new VectorLayer()));
+      layers.createLayer({layerOrFeatureName: baseLayerName + '2', layerGroupName: baseGroup}, () => (new VectorLayer()));
+      const allLayers = layers.getAllLayers(layers.getMapLayers().getArray());
+      expect(allLayers).lengthOf(2);
+    });
+
+    it(`2 layers added to group + one outside of group - should have 3 layers`, () => {
+      layers.createLayer({layerOrFeatureName: baseLayerName + '1', layerGroupName: baseGroup}, () => (new VectorLayer()));
+      layers.createLayer({layerOrFeatureName: baseLayerName + '2', layerGroupName: baseGroup}, () => (new VectorLayer()));
+      layers.createLayer({layerOrFeatureName: baseLayerName + '3'}, () => (new VectorLayer()));
+      const allLayers = layers.getAllLayers(layers.getMapLayers().getArray());
+      expect(allLayers).lengthOf(3);
+    });
+
+    it(`2 layers added to 2 groups group + one outside of group - should have 5 layers`, () => {
+      const groupName1 = baseGroup + '1';
+      const groupName2 = baseGroup + '2';
+      layers.createLayer({layerOrFeatureName: baseLayerName + '1', layerGroupName: groupName1}, () => (new VectorLayer()));
+      layers.createLayer({layerOrFeatureName: baseLayerName + '2', layerGroupName: groupName1}, () => (new VectorLayer()));
+      layers.createLayer({layerOrFeatureName: baseLayerName + '3', layerGroupName: groupName2}, () => (new VectorLayer()));
+      layers.createLayer({layerOrFeatureName: baseLayerName + '4', layerGroupName: groupName2}, () => (new VectorLayer()));
+      layers.createLayer({layerOrFeatureName: baseLayerName + '5'}, () => (new VectorLayer()));
+      const allLayers = layers.getAllLayers(layers.getMapLayers().getArray());
+      expect(allLayers).lengthOf(5);
     });
   });
-})
-;
+
+  it(`2 layers added to 2 groups group + one outside of group - should have 5 layers - and use dupe layerNames across groups`, () => {
+    const groupName1 = baseGroup + '1';
+    const groupName2 = baseGroup + '2';
+    layers.createLayer({layerOrFeatureName: baseLayerName + '1', layerGroupName: groupName1}, () => (new VectorLayer()));
+    layers.createLayer({layerOrFeatureName: baseLayerName + '2', layerGroupName: groupName1}, () => (new VectorLayer()));
+    layers.createLayer({layerOrFeatureName: baseLayerName + '1', layerGroupName: groupName2}, () => (new VectorLayer()));
+    layers.createLayer({layerOrFeatureName: baseLayerName + '2', layerGroupName: groupName2}, () => (new VectorLayer()));
+    layers.createLayer({layerOrFeatureName: baseLayerName + '5'}, () => (new VectorLayer()));
+    const allLayers = layers.getAllLayers(layers.getMapLayers().getArray());
+    expect(allLayers).lengthOf(5);
+  });
+});

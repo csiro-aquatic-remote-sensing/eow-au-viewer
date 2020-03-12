@@ -7,7 +7,7 @@ import WFS from 'ol/format/WFS';
 import Map from 'ol/Map';
 import TileLayer from 'ol/layer/Tile';
 import {Brolog} from 'brolog';
-// import IconAnchorUnits from 'ol/style/IconAnchorUnits';
+import IconAnchorUnits from 'ol/style/IconAnchorUnits';
 import {EOWMap} from './eow-map';
 import {BehaviorSubject} from 'rxjs';
 import Feature from 'ol/Feature';
@@ -20,19 +20,21 @@ import Layer from 'ol/layer/Layer';
 import BaseLayer from 'ol/layer/Base';
 import Collection from 'ol/Collection';
 import LayerGroup from 'ol/layer/Group';
+import Icon from 'ol/style/Icon';
 
 const theClass = 'Layers';
+const lookInGroups = true;
 
-// export const iconStyle = new Style({
-//   image: new Icon({
-//     anchor: [0.5, 46],
-//     anchorXUnits: IconAnchorUnits.FRACTION,
-//     anchorYUnits: IconAnchorUnits.PIXELS,
-//     opacity: 0.75,
-//     scale: 0.02,
-//     src: '../assets/icon.png'
-//   })
-// });
+export const iconStyle = new Style({
+  image: new Icon({
+    anchor: [0.5, 46],
+    anchorXUnits: IconAnchorUnits.FRACTION,
+    anchorYUnits: IconAnchorUnits.PIXELS,
+    opacity: 0.75,
+    scale: 0.02,
+    src: '../assets/icon.png'
+  })
+});
 export const fillStyle = new Style({
   fill: new Fill({color: 'rgba(224, 255, 255, 0.33)'})
 });
@@ -57,7 +59,7 @@ export class ApplicationLayers {
   async createLayer(options: LayersSourceSetup, createNewLayerFunction: (layer?: Layer) => Layer): Promise<Layer> {
     return new Promise((resolve, reject) => {
       const layerName = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
-      const existingLayer = this.getLayer(layerName);
+      const existingLayer = this.getLayer(layerName, lookInGroups);
       if (existingLayer !== null && ! options.allowMergeThruSameLayerName) {
         reject(`Cannot create layer with same name "${layerName}"`);
       }
@@ -67,12 +69,15 @@ export class ApplicationLayers {
         resolve(existingLayer);
       }
       layer.set('layerName', layerName);
+      layer.set('title', layerName);
       if (options.layerGroupName) {
         let group = this.getGroup(options.layerGroupName) as LayerGroup;
         if (group === null) {
           // create Group
           group = new LayerGroup();
           group.set('groupName', options.layerGroupName);
+          group.set('isGroup', 'true');
+          group.set('title', options.layerGroupName);
           this.map.addLayer(group);
         }
         const groupLayers = group.getLayersArray();
@@ -87,14 +92,43 @@ export class ApplicationLayers {
     });
   }
 
-  getLayer(layerName: string): Layer {
-    const layersWithName = this.map.getLayers().getArray().filter(l => {
+  /**
+   * Return the layer with the given 'layerName' property.  Descend in to groups if given doLookInGroups is true.
+   *
+   * @param layerName to look for
+   * @param doLookInGroups if true then descend in to searching the layers in groups
+   * @param layersArrayToSearch is the array of layers to look through.  If not supplied then `this.map.getLayers().getArray()` will be used
+   */
+  getLayer(layerName: string, doLookInGroups: boolean = false, layersArrayToSearch?: BaseLayer[]): Layer {
+    let layersToSearch;
+
+    if (doLookInGroups) {
+      layersToSearch = this.getAllLayers(this.map.getLayers().getArray());
+    } else {
+      layersToSearch = this.map.getLayers().getArray().filter(l => l.constructor.name !== 'LayerGroup');
+    }
+
+    const layersWithName = layersToSearch.filter(l => {
       return l.get('layerName') === layerName;
     });
     if (layersWithName.length > 1) {
       throw new Error(`More than one layer with name: ${layerName}`);
     }
     return layersWithName && layersWithName.length > 0 ? layersWithName[0] as Layer : null;
+  }
+
+  /**
+   * Recursively descend in to groups and extract all non-group layers
+   *
+   * @param layersArrayToSearch is the input layers to search through
+   */
+  getAllLayers(layersArrayToSearch: BaseLayer[]): Layer[] {
+    const layers = layersArrayToSearch.filter(l => l.constructor.name !== 'LayerGroup');
+    const groups = layersArrayToSearch.filter(l => l.constructor.name === 'LayerGroup');
+    const groupLayersRaw = groups.map(g => g.get('layers').getArray()).reduce((acc, val) => acc.concat(val), []);
+    const groupLayers = groups.length > 0 ? this.getAllLayers(groupLayersRaw) : [];
+
+    return [].concat(layers, groupLayers);
   }
 
   getGroup(groupName: string): BaseLayer {
@@ -153,7 +187,7 @@ export class ApplicationLayers {
     if (!options.layerOrFeatureName) {
       throw new Error('options.featureName expected');
     }
-    // const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
+    const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
     const createNewLayer = (layer?: Layer): Layer => {
       const buildQuery = ({extent, resolution, projection}): string | null => {
         if (options.dynamicQuery) {
@@ -274,7 +308,7 @@ export class ApplicationLayers {
    * @param options when creating layer
    * @param waterBodiesLayers class instance to update for the client
    */
-  async createLayerFromWFSFeatures(features: Feature[], options: LayersSourceSetup, waterBodiesLayers: LayersInfoManager): Promise<BaseLayer> {
+  async createLayerFromWFSFeatures(features: Feature[], options: LayersSourceSetup, waterBodiesLayers: LayersInfoManager): Promise<Layer> {
     // return new Promise((resolve) => {
     const createNewLayer = (layer?: Layer): Layer => {
 
@@ -313,14 +347,11 @@ export class ApplicationLayers {
    * @param layerName to clear
    */
   public clearLayerOfWFSFeatures(layerName: string) {
-    // todo - fix - this.mapLayers.clearLayerOfWFSFeatures(layerName);
-
-    //   const existingLayerIndex = this.layerNames.getName(layerName) || -1; // hasOwnProperty(name) ? this.layerNames[name] : -1;
-    //   let layer;
-    //   if (existingLayerIndex > -1) {
-    //     layer = this.map.getLayers().getArray()[existingLayerIndex];
-    //     const source: VectorSource = layer.getSource();
-    //     source.clear(true);
-    //   }
+    const layer = (this.getLayer(layerName) as VectorLayer);
+    if (layer) {
+      layer.getSource().clear(true);
+    } else {
+      console.error(`clearLayerOfWFSFeatures - layer doesnt exist: ${layerName}`);
+    }
   }
 }
