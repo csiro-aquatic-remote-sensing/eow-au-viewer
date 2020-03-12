@@ -5,14 +5,14 @@ import Map from 'ol/Map';
 import GeoJSON from 'ol/format/GeoJSON';
 import {lineString as turfLineString} from '@turf/helpers';
 import Brolog from 'brolog';
-import {Layers} from '../layers';
+import {ApplicationLayers} from '../layers';
 
 const theClass = 'PieChartContainer';
 
 const debugDrawLines = true; // If true then draw line from center of pie chart to the features that the chart is for
 
 export class PieChartContainer extends ChartContainer {
-  constructor(layerName: string, layers: Layers, log: Brolog) {
+  constructor(layerName: string, layers: ApplicationLayers, log: Brolog) {
     super(layerName, layers, log);
   }
 
@@ -54,7 +54,9 @@ export class PieChartContainer extends ChartContainer {
         return lsFeature;
       });
       // console.log(`drawDebugLines - ${JSON.stringify(lineFeatures, null, 2)}`);
-      await this.layers.createLayerFromWFSFeatures(lineFeatures, {visible: false, layerDisplayName: `Lines for  ${layerName}`}, null);
+      await this.layers.createLayerFromWFSFeatures(lineFeatures, {
+        visible: true, layerDisplayName: `Lines for ${layerName}`, layerGroupName: 'Dev features'
+      }, null);
     }
   }
 }

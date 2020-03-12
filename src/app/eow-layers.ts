@@ -1,5 +1,5 @@
 import {Brolog} from 'brolog';
-import {Layers} from './layers';
+import {ApplicationLayers} from './layers';
 import {BehaviorSubject} from 'rxjs';
 import VectorSource from 'ol/source/Vector';
 import { interval } from 'rxjs';
@@ -29,6 +29,11 @@ export interface LayersSourceSetup {
    */
   layerDisplayName?: string;
   /**
+   * The default behaviour when creating layers is to error if a layer with the same name is attempted to be created a subsequent time.
+   * But for some layers, like WFS with their features, you can combine features in to the one layer.  Set this to true in this case.
+   */
+  allowMergeThruSameLayerName?: boolean;
+  /**
    * Initial value of if to show the layer.  Corresponds to a checkbox or similar in the UI to turn the layer on and off.
    */
   visible?: boolean;
@@ -53,6 +58,10 @@ export interface LayersSourceSetup {
    * Use this query to substitute values in so as to make it dynamic.  Only one placeholder - $
    */
   dynamicQuery?: ({options, extent, resolution, projection}) => string | null;
+  /**
+   * Sort the layer names in the layerSwitcher menu in to groups that has heading with same value (that of layerGroup)
+   */
+  layerGroupName?: string;
   /**
    * Zoom and resolution.  The resolution values are more accurate but if not given the zoom ones (coarser) will be used
    */
@@ -80,7 +89,8 @@ export class LayersInfoManager {
 
   public addInfo(name, index, url, options, observable?) {
     this.layersInfo.push({name, index, url, options, observable});
-    // subscribers will get the lot each time the subscription updates.  Using Object.assign to send a copy.
+    // subscribers will get the lot each time the subscription updates.  Nutsack69(
+    // NnnnkdkdUsing Object.assign to send a copy.
     this._layersInfo.next(Object.assign([], this.layersInfo));
   }
 
@@ -104,7 +114,7 @@ export class LayersInfoManager {
 export class EowLayers {
   waterBodiesLayers = new LayersInfoManager();
 
-  constructor(private layers: Layers, private log: Brolog) {
+  constructor(private layers: ApplicationLayers, private log: Brolog) {
   }
 
   async init() {
@@ -133,7 +143,7 @@ export class EowLayers {
           return '2000000';  // 500,000
         } else if (resolution < 0.002746582 && resolution >= 0.000686646) {
           return '250000';  // 250,000
-        } else if (resolution < 0.000686646 && resolution >= 0.000343323){
+        } else if (resolution < 0.000686646 && resolution >= 0.000343323) {
           return '20000'; // 20,000
         } else {
           return '2000'; // 2,000
@@ -149,19 +159,19 @@ export class EowLayers {
     this.setupWFSLayer(layerPromises, 'https://hotspots.dea.ga.gov.au/geoserver/public/wfs',
       {
         createLayer: true, useAsWaterBodySource: true, layerOrFeatureName: 'DigitalEarthAustraliaWaterbodies', featurePrefix: 'public',
-        layerDisplayName: 'Waterbodies Features', dynamicQuery
+        layerDisplayName: 'Waterbodies Features', dynamicQuery, layerGroupName: 'Map Features'
       }); // maxResolution: 0.05,
 
     this.setupWMSLayer(layerPromises, 'https://hotspots.dea.ga.gov.au/geoserver/public/wms',
       {
         createLayer: true, useAsWaterBodySource: false, layerOrFeatureName: 'DigitalEarthAustraliaWaterbodies',
-        TILED: true, layerDisplayName: 'Waterbodies Map'
+        TILED: true, layerDisplayName: 'Waterbodies Map', layerGroupName: 'Map Features'
       });
 
     this.setupWMSLayer(layerPromises, 'https://ows.services.dea.ga.gov.au/wms?',
       {
         createLayer: true, useAsWaterBodySource: false,  TILED: true,
-        layerOrFeatureName: 'wofs_filtered_summary', layerDisplayName: 'WOFS', visible: true
+        layerOrFeatureName: 'wofs_filtered_summary', layerDisplayName: 'WOFS', visible: true, layerGroupName: 'Map Features'
       }); // minResolution: 0.00069,
 
     return Promise.all(layerPromises);
@@ -189,12 +199,12 @@ export class EowLayers {
   /**
    * LayerInfo has a field 'index' that needs to come from Layers.layerNames, which is a mapping from layer name to index in Maps layers array
    */
-  private getLayerIndex(layerInfo: LayersSourceSetup) {
-    const layerName = layerInfo.layerDisplayName || layerInfo.layerOrFeatureName;
-    if (this.layers.layerNames.hasOwnProperty(layerName)) {
-      return this.layers.layerNames.getName(layerName);
-    } else {
-      throw new Error(`layers.layerNames doesnt have layer with name: ${layerName}`);
-    }
-  }
+  // private getLayerIndex(layerInfo: LayersSourceSetup) {
+  //   const layerName = layerInfo.layerDisplayName || layerInfo.layerOrFeatureName;
+  //   if (this.layers.layerNames.hasOwnProperty(layerName)) {
+  //     return this.layers.layerNames.getName(layerName);
+  //   } else {
+  //     throw new Error(`layers.layerNames doesnt have layer with name: ${layerName}`);
+  //   }
+  // }
 }

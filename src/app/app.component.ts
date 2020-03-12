@@ -4,7 +4,7 @@ import {AnimationOptions} from 'ol/View';
 import Feature from 'ol/Feature';
 import {HttpClient} from '@angular/common/http';
 import {Popup} from './popup';
-import {Layers} from './layers';
+import {ApplicationLayers} from './layers';
 import {MeasurementStore} from './measurement-store';
 import {UserStore} from './user-store';
 import {EowDataLayer} from './eow-data-layer';
@@ -44,7 +44,7 @@ export class AppComponent implements OnInit {
   measurementStore: MeasurementStore;
   userStore: UserStore;
   eowData: EowDataLayer;
-  layers: Layers;
+  layers: ApplicationLayers;
   eowLayers: EowLayers;
   eowDataGeometries: EowDataGeometries;
   layersGeometries: LayerGeometries;
@@ -90,7 +90,7 @@ export class AppComponent implements OnInit {
       this.dataLayer = dataLayer;
     });
 
-    this.layers = new Layers(this.eowMap, this.htmlDocument, this.http, this.log);
+    this.layers = new ApplicationLayers(this.eowMap, this.log);
     this.eowLayers = await new EowLayers(this.layers, this.log).init(); // this.eowMap);
 
     this.measurementStore = await new MeasurementStore(this.log);
@@ -242,7 +242,7 @@ export class AppComponent implements OnInit {
                                  allPointsMap: PointsMap, sourceNErrorMarginPoints: FeatureCollection<Point>) {
     const eowWaterBodyIntersections = await GeometryOps.calculateLayerIntersections(points, sourceNErrorMarginPoints, allPointsMap, waterBodyPolygons, layerName);
     this.eowDataCharts.plotCharts(eowWaterBodyIntersections, layerName);
-    this.eowDataCharts.drawErrorMarginPoints(this.pointsErrorMargins);
+    await this.eowDataCharts.drawErrorMarginPoints(this.pointsErrorMargins);
   }
 
   /**

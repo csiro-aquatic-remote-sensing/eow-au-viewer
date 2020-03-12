@@ -11,7 +11,7 @@ import Map from 'ol/Map';
 import GeoJSON from 'ol/format/GeoJSON';
 
 import {EOWMap} from '../eow-map';
-import {Layers, redLines} from '../layers';
+import {ApplicationLayers, redLines} from '../layers';
 import {EowDataStruct, EowWaterBodyIntersection, SourcePointMarginsType} from '../eow-data-struct';
 import {PieChartContainer} from './pie-chart-container';
 import {TimeSeriesChartContainer} from './time-series-chart-container';
@@ -29,7 +29,7 @@ export default class EowDataCharts {
   htmlDocument: Document;
   ids: { [id: string]: boolean } = {};
 
-  constructor(private layers: Layers, private log: Brolog) {
+  constructor(private layers: ApplicationLayers, private log: Brolog) {
   }
 
   init(eowMap: EOWMap, htmlDocument) {
@@ -47,6 +47,7 @@ export default class EowDataCharts {
    * represents the water body.  The charts are for the FU values in that water body.
    * @param eowDataInWaterbodies - Polygons of waterbodies and EOWData in that waterbody
    */
+  // TODO - this should be async
   plotCharts(eowDataInWaterbodies: EowWaterBodyIntersection[], layerName: string) { // FeatureCollection<Point>[]) {
     /*
       1. Loop through array of Waterbody polygons
@@ -172,7 +173,8 @@ export default class EowDataCharts {
     await this.layers.createLayerFromWFSFeatures(errorMarginPoints.features, {
       style: redLines,
       visible: false,
-      layerDisplayName: `Error margin lines`
+      layerDisplayName: `Error margin lines`,
+      layerGroupName: 'Dev features'
     }, null);
   }
 }

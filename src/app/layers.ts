@@ -1,19 +1,12 @@
-import Icon from 'ol/style/Icon';
 import TileWMS from 'ol/source/TileWMS';
-import {
-  Style,
-  Fill
-} from 'ol/style';
+import {Style, Fill} from 'ol/style';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
 import WFS from 'ol/format/WFS';
 import Map from 'ol/Map';
 import TileLayer from 'ol/layer/Tile';
-import {HttpClient} from '@angular/common/http';
-import {
-  Brolog,
-} from 'brolog';
+import {Brolog} from 'brolog';
 import IconAnchorUnits from 'ol/style/IconAnchorUnits';
 import {EOWMap} from './eow-map';
 import {BehaviorSubject} from 'rxjs';
@@ -21,8 +14,16 @@ import Feature from 'ol/Feature';
 import Stroke from 'ol/style/Stroke';
 import {bbox as bboxStrategy} from 'ol/loadingstrategy';
 import {LayersInfoManager, LayersSourceSetup} from './eow-layers';
+import LayerSwitcher from 'ol-layerswitcher';
+import {Group} from 'ol/layer';
+import Layer from 'ol/layer/Layer';
+import BaseLayer from 'ol/layer/Base';
+import Collection from 'ol/Collection';
+import LayerGroup from 'ol/layer/Group';
+import Icon from 'ol/style/Icon';
 
 const theClass = 'Layers';
+const lookInGroups = true;
 
 export const iconStyle = new Style({
   image: new Icon({
@@ -41,69 +42,103 @@ export const redLines = new Style({
   stroke: new Stroke({color: 'rgba(125, 25, 0, 1)'})
 });
 
-export interface Options {
-  style?: any;
-  minZoom?: number;
-  visible?: boolean;
-  params?: any;
-}
+export class ApplicationLayers {
+  private map: Map;
 
-type LayerNamesSchema = { [name: string]: number }; // tslint:disable-line
+  constructor(private eowMap: EOWMap, private log: Brolog) {
+    this.eowMap.getMap().subscribe(map => {
+      this.map = map;
+    });
+  }
 
-/**
- *
- * Internally to the Map, layers are stored in an array but we need to get to them through the layer 'name'.
- * We need to have the ability to append to existing features in createLayerFromWFSFeatures
- * LayerNames maps names to index in the Map's layers array
- */
-export class LayerNames {
-  private layerNames: LayerNamesSchema = {};
+  public getMapLayers(): Collection<BaseLayer> {
+    return this.map.getLayers();
+  }
 
-  private fixeName(name: string) {
-    if (! name) {
-      throw new Error(`name is undefined`);
-    }
-    return name.replace('\s+', '_');
+  // private
+  async createLayer(options: LayersSourceSetup, createNewLayerFunction: (layer?: Layer) => Layer): Promise<Layer> {
+    return new Promise((resolve, reject) => {
+      const layerName = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
+      const existingLayer = this.getLayer(layerName, lookInGroups);
+      if (existingLayer !== null && ! options.allowMergeThruSameLayerName) {
+        reject(`Cannot create layer with same name "${layerName}"`);
+      }
+
+      const layer = createNewLayerFunction(existingLayer);
+      if (existingLayer) {
+        resolve(existingLayer);
+      }
+      layer.set('layerName', layerName);
+      layer.set('title', layerName);
+      if (options.layerGroupName) {
+        let group = this.getGroup(options.layerGroupName) as LayerGroup;
+        if (group === null) {
+          // create Group
+          group = new LayerGroup();
+          group.set('groupName', options.layerGroupName);
+          group.set('isGroup', 'true');
+          group.set('title', options.layerGroupName);
+          this.map.addLayer(group);
+        }
+        const groupLayers = group.getLayersArray();
+        groupLayers.push(layer);
+        group.setLayers(new Collection<BaseLayer>(groupLayers));
+        layer.set('groupName', options.layerGroupName);
+      } else {
+        this.map.addLayer(layer);
+      }
+
+      resolve(layer);
+    });
   }
 
   /**
-   * Add a value at 'name' index and return the 'name' (as it might have been altered for consistency reasons)
-   * @param name is the index
-   * @param value to add at name
-   * @return name as it was used as index since might have been altered for consistency reasons
+   * Return the layer with the given 'layerName' property.  Descend in to groups if given doLookInGroups is true.
+   *
+   * @param layerName to look for
+   * @param doLookInGroups if true then descend in to searching the layers in groups
+   * @param layersArrayToSearch is the array of layers to look through.  If not supplied then `this.map.getLayers().getArray()` will be used
    */
-  public addName(name: string, value: any): string {
-    const fixed = this.fixeName(name);
-    if (this.layerNames.hasOwnProperty(fixed)) {
-      throw new Error(`Attempting to add an existing name: ${fixed}`);
+  getLayer(layerName: string, doLookInGroups: boolean = false, layersArrayToSearch?: BaseLayer[]): Layer {
+    let layersToSearch;
+
+    if (doLookInGroups) {
+      layersToSearch = this.getAllLayers(this.map.getLayers().getArray());
+    } else {
+      layersToSearch = this.map.getLayers().getArray().filter(l => l.constructor.name !== 'LayerGroup');
     }
-    this.layerNames[fixed] = value;
-    return fixed;
-  }
 
-  public getName(name: string) {
-    return this.layerNames[this.fixeName(name)];
-  }
-
-  public getAll(): string[] {
-    return Object.keys(this.layerNames);
-  }
-}
-
-export class Layers {
-  private mapLayersObs: BehaviorSubject<any>;
-  layerNames = new LayerNames();
-  private map: Map;
-
-  constructor(private eowMap: EOWMap, private htmlDocument: Document, private http: HttpClient, private log: Brolog) {
-    this.eowMap.getMap().subscribe(async map => {
-      this.map = map;
+    const layersWithName = layersToSearch.filter(l => {
+      return l.get('layerName') === layerName;
     });
+    if (layersWithName.length > 1) {
+      throw new Error(`More than one layer with name: ${layerName}`);
+    }
+    return layersWithName && layersWithName.length > 0 ? layersWithName[0] as Layer : null;
+  }
 
-    this.mapLayersObs = new BehaviorSubject(null);
-    this.mapLayersObs.asObservable().subscribe(layer => {
-      this.drawLayerInMenu(layer);
+  /**
+   * Recursively descend in to groups and extract all non-group layers
+   *
+   * @param layersArrayToSearch is the input layers to search through
+   */
+  getAllLayers(layersArrayToSearch: BaseLayer[]): Layer[] {
+    const layers = layersArrayToSearch.filter(l => l.constructor.name !== 'LayerGroup');
+    const groups = layersArrayToSearch.filter(l => l.constructor.name === 'LayerGroup');
+    const groupLayersRaw = groups.map(g => g.get('layers').getArray()).reduce((acc, val) => acc.concat(val), []);
+    const groupLayers = groups.length > 0 ? this.getAllLayers(groupLayersRaw) : [];
+
+    return [].concat(layers, groupLayers);
+  }
+
+  getGroup(groupName: string): BaseLayer {
+    const layersWithName = this.map.getLayers().getArray().filter(l => {
+      return l.get('groupName') === groupName && l.constructor.name === 'LayerGroup';
     });
+    if (layersWithName.length > 1) {
+      throw new Error(`More than one layer with group name: ${groupName}`);
+    }
+    return layersWithName && layersWithName.length > 0 ? layersWithName[0] : null;
   }
 
   /**
@@ -113,13 +148,14 @@ export class Layers {
    * @param options for creating the layer
    * @param waterBodiesLayers class instance to update for the client
    */
-  async createLayerFromGeoJSON(url, options: LayersSourceSetup, waterBodiesLayers: LayersInfoManager): Promise<any> {
-    return new Promise(async (resolve, reject) => {
-      const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`createLayerFromWFSURL - Fetch Network response not ok for Name: "${name}", URL: ${url} - status: ${response.status}`);
-      }
+  async createLayerFromGeoJSON(url, options: LayersSourceSetup, waterBodiesLayers: LayersInfoManager): Promise<BaseLayer> {
+    // return new Promise(async (resolve, reject) => {
+    const createNewLayer = (layer?: Layer): Layer => {
+      // const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
+      // const response = await fetch(url);
+      // if (!response.ok) {
+      //   throw new Error(`createLayerFromWFSURL - Fetch Network response not ok for Name: "${name}", URL: ${url} - status: ${response.status}`);
+      // }
       const newLayer = new VectorLayer(Object.assign(options, {
         source: new VectorSource({
           url,
@@ -127,12 +163,15 @@ export class Layers {
           // projection: 'EPSG:4326'
         })
       }));
-      newLayer.set('name', name);
-      const index = this.addLayer(newLayer, name);
+      // newLayer.set('name', name);
+      // const index = this.addLayer(newLayer, name);
       // This waterBodiesLayers.addInfo() needs to be done here in the promise
-      waterBodiesLayers.addInfo(name, index, url, options);
-      resolve(newLayer);
-    });
+      waterBodiesLayers.addInfo(name, 999, url, options);
+      // resolve(newLayer
+      // );
+      return newLayer;
+    };
+    return this.createLayer(options, createNewLayer);
   }
 
   /**
@@ -143,12 +182,13 @@ export class Layers {
    * @param options for creating the layer
    * @param waterBodiesLayers class instance to update for the client
    */
-  async createLayerFromWFS(urlForWFS, options: LayersSourceSetup, waterBodiesLayers: LayersInfoManager): Promise<any> {
-    return new Promise((resolve, reject) => {
-      if (!options.layerOrFeatureName) {
-        reject('options.featureName expected');
-      }
-      const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
+  async createLayerFromWFS(urlForWFS, options: LayersSourceSetup, waterBodiesLayers: LayersInfoManager): Promise<BaseLayer> {
+    // return new Promise((resolve, reject) => {
+    if (!options.layerOrFeatureName) {
+      throw new Error('options.featureName expected');
+    }
+    const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
+    const createNewLayer = (layer?: Layer): Layer => {
       const buildQuery = ({extent, resolution, projection}): string | null => {
         if (options.dynamicQuery) {
           return options.dynamicQuery({options, extent, resolution, projection});
@@ -177,7 +217,7 @@ export class Layers {
           // const normalBBox = `&bbox=${extent.join(',')},${proj}`;
           // const queryBBox = `BBOX(geom, ${extent.join(',')},'${proj}')`;
           const bboxOrQuery = buildQueryNbbox({extent, resolution, projection});
-            // options.query ? `&cql_filter=${options.query}%20AND%20${queryBBox}` : normalBBox;
+          // options.query ? `&cql_filter=${options.query}%20AND%20${queryBBox}` : normalBBox;
           const url = `${urlForWFS}?service=WFS&version=1.1.0&request=GetFeature&typename=${feature}&` +
             `outputFormat=application/json&srsname=${proj}${bboxOrQuery}`;
           const xhr = new XMLHttpRequest();
@@ -223,13 +263,14 @@ export class Layers {
           })
         })
       }));
-      newLayer.set('name', name);
-      const index = this.addLayer(newLayer, name);
+      // newLayer.set('name', name);
+      // const index = this.addLayer(newLayer, name);
       // This waterBodiesLayers.addInfo() needs to be done here in the promise
       const behaviourSubject = new BehaviorSubject<VectorSource>(vectorSource);
-      waterBodiesLayers.addInfo(name, index, urlForWFS, options, behaviourSubject);
-      resolve(newLayer);
-    });
+      waterBodiesLayers.addInfo(name, 99, urlForWFS, options, behaviourSubject);  // TODO I shouldn't need this now have rewritten layers.ts
+      return newLayer;
+    };
+    return this.createLayer(options, createNewLayer);
   }
 
   /**
@@ -239,8 +280,9 @@ export class Layers {
    * @param options for creating the layer
    * @param waterBodiesLayers class instance to update for the client
    */
-  async createLayerFromWMS(url, options: LayersSourceSetup, waterBodiesLayers: LayersInfoManager): Promise<any> {
-    return new Promise((resolve) => {
+  async createLayerFromWMS(url, options: LayersSourceSetup, waterBodiesLayers: LayersInfoManager): Promise<BaseLayer> {
+    // return new Promise((resolve) => {
+    const createNewLayer = (layer?: Layer): Layer => {
       options.opacity = options.opacity || 0.6;
       const newLayer = new TileLayer(Object.assign(options, {
         source: new TileWMS({
@@ -250,11 +292,13 @@ export class Layers {
           })
         })
       }));
-      const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
-      newLayer.set('name', name);
-      this.addLayer(newLayer, name);
-      resolve(newLayer);
-    });
+      // const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
+      // newLayer.set('name', name);
+      // this.addLayer(newLayer, name);
+      // resolve(newLayer);
+      return newLayer;
+    };
+    return this.createLayer(options, createNewLayer);
   }
 
   /**
@@ -264,14 +308,15 @@ export class Layers {
    * @param options when creating layer
    * @param waterBodiesLayers class instance to update for the client
    */
-  async createLayerFromWFSFeatures(features: Feature[], options: LayersSourceSetup, waterBodiesLayers: LayersInfoManager): Promise<any> {
-    return new Promise((resolve) => {
+  async createLayerFromWFSFeatures(features: Feature[], options: LayersSourceSetup, waterBodiesLayers: LayersInfoManager): Promise<Layer> {
+    // return new Promise((resolve) => {
+    const createNewLayer = (layer?: Layer): Layer => {
+
       const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
-      const existingLayerIndex = this.layerNames.getName(name) || -1; // hasOwnProperty(name) ? this.layerNames[name] : -1;
       let newLayer;
-      if (existingLayerIndex > -1) {
-        newLayer = this.map.getLayers().getArray()[existingLayerIndex];
-        const source: VectorSource = newLayer.getSource();
+      // if (existingLayerIndex > -1) {
+      if (layer) {  // Because we allow this we set options.allowMergeThruSameLayerName to true
+        const source: VectorSource = (layer as VectorLayer).getSource() as VectorSource;
         if (options.clear) {
           source.clear(true);
         }
@@ -282,14 +327,18 @@ export class Layers {
         options.opacity = options.opacity || 0.6;
         this.log.verbose(`Lines layer: ${name} - # lines added: ${features.length}`);
         newLayer = new VectorLayer(Object.assign(options, {
-          source: featureSource
+          source: featureSource,
+          title: name,
+          group: 'Features'
         }));
-        newLayer.set('name', name);
-        this.addLayer(newLayer, name);
-        newLayer.get('name');
+        // newLayer.set('name', name);
+        // this.addLayer(newLayer, name);
+        // newLayer.get('name');
       }
-      resolve(newLayer);
-    });
+      // resolve(newLayer);
+      return newLayer;
+    };
+    return this.createLayer(Object.assign(options, {allowMergeThruSameLayerName: true}), createNewLayer);
   }
 
   /**
@@ -298,69 +347,11 @@ export class Layers {
    * @param layerName to clear
    */
   public clearLayerOfWFSFeatures(layerName: string) {
-    const existingLayerIndex = this.layerNames.getName(layerName) || -1; // hasOwnProperty(name) ? this.layerNames[name] : -1;
-    let layer;
-    if (existingLayerIndex > -1) {
-      layer = this.map.getLayers().getArray()[existingLayerIndex];
-      const source: VectorSource = layer.getSource();
-      source.clear(true);
+    const layer = (this.getLayer(layerName) as VectorLayer);
+    if (layer) {
+      layer.getSource().clear(true);
+    } else {
+      console.error(`clearLayerOfWFSFeatures - layer doesnt exist: ${layerName}`);
     }
-  }
-
-  /**
-   * Add layer to map and keep information about it.
-   *
-   * @param layer to add
-   * @param layerName so can find it later (maps just use a numerically indexed array)
-   * @return index of layer in the map's array
-   */
-  private addLayer(layer: any, layerName: string): number {
-    this.map.addLayer(layer);
-    const index = this.map.getLayers().getLength() - 1;
-    const newName = this.layerNames.addName(layerName, index);
-    this.log.verbose(`map.add layer "${newName}" - there are now ${this.map.getLayers().getArray().length} layers`);
-
-    this.mapLayersObs.next(layer);
-    return index;
-  }
-
-  private drawLayerInMenu(layer: any) {
-    const generateCheckbox = (idCheckbox, labelName, htmlElement) => {
-      const theCheckbox = this.htmlDocument.createElement('input');
-      theCheckbox.type = 'checkbox';
-      theCheckbox.id = idCheckbox;
-      const label = this.htmlDocument.createElement('label');
-      label.htmlFor = idCheckbox;
-      label.appendChild(this.htmlDocument.createTextNode(labelName));
-      htmlElement.appendChild(theCheckbox);
-      htmlElement.appendChild(label);
-      return theCheckbox;
-    };
-
-    if (!layer) {
-      return;
-    }
-
-    const name = layer.get('name');
-    const checkbox = generateCheckbox(Math.floor(Math.random() * 10000), name, this.htmlDocument.querySelector('.layersSwitch'));
-
-    // Manage when checkbox is (un)checked
-    checkbox.addEventListener('change', function() {
-      if (this.checked !== layer.getVisible()) {
-        layer.setVisible(this.checked);
-      }
-    });
-
-    // Manage when layer visibility changes outside of this
-    layer.on('change:visible', function() {
-      if (this.getVisible() !== checkbox.checked) {
-        checkbox.checked = this.getVisible();
-      }
-    });
-
-    // Set state the first time
-    setTimeout(() => {
-      checkbox.checked = layer.getVisible();
-    }, 200);
   }
 }
