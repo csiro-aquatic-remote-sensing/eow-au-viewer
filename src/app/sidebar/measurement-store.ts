@@ -8,8 +8,8 @@ import keyBy from 'lodash/keyBy';
 import groupBy from 'lodash/groupBy';
 import {UserStore} from './user-store';
 import Brolog from 'brolog';
-import {EowDataLayer} from './eow-data-layer';
-import {EOWMap} from './eow-map';
+import {EowDataLayer} from '../eow-data-layer';
+import {EOWMap} from '../eow-map';
 import {Feature} from 'ol';
 import VectorLayer from 'ol/layer/Vector';
 

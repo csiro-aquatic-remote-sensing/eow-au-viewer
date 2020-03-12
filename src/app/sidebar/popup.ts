@@ -2,12 +2,12 @@ import Overlay from 'ol/Overlay';
 import {
   printStats,
   calculateStats,
-} from './utils';
-import colors from './colors.json';
+} from '../utils';
+import colors from '../colors.json';
 import OverlayPositioning from 'ol/OverlayPositioning';
-import {EOWMap} from './eow-map';
-import {PieChart} from './charts/pie-chart';
-import {EowDataStruct} from './eow-data-struct';
+import {EOWMap} from '../eow-map';
+import {PieChart} from '../charts/pie-chart';
+import {EowDataStruct} from '../eow-data-struct';
 import moment = require('moment');
 
 export class Popup {

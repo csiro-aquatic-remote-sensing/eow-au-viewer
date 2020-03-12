@@ -4,11 +4,11 @@ import debounce from 'lodash/debounce';
 import {
   printStats,
   calculateStats,
-} from './utils';
+} from '../utils';
 import Brolog from 'brolog';
 import {BehaviorSubject} from 'rxjs';
 import {MeasurementStore} from './measurement-store';
-import {EowDataLayer} from './eow-data-layer';
+import {EowDataLayer} from '../eow-data-layer';
 import VectorLayer from 'ol/layer/Vector';
 
 const theClass = 'UserStore';

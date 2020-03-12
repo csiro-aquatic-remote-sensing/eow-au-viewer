@@ -3,7 +3,7 @@ import GeoJSON from 'ol/format/GeoJSON';
 import Feature from 'ol/Feature';
 import {BehaviorSubject} from 'rxjs';
 import Brolog from 'brolog';
-import {Popup} from './popup';
+import {Popup} from './sidebar/popup';
 import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
 import View from 'ol/View';
