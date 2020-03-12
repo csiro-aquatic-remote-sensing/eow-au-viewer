@@ -109,8 +109,8 @@ export class AppComponent implements OnInit {
     // this.eowDataCharts = new EowDataCharts(this.layers, this.log);
 
     // this.popupObject.init(this.eowMap);
-    // this.eowDataCharts.init(this.eowMap, this.htmlDocument);
-    // this.measurementStore.init(this.eowMap, this.eowData, this.userStore);
+    this.eowDataCharts.init(this.eowMap, this.htmlDocument);
+    this.measurementStore.init(); // this.eowMap, this.eowData, this.userStore);
     await this.userStore.init();  // this.eowData, this.measurementStore);
 
     this.setupObserversHandleNewData();
