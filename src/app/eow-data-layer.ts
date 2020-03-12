@@ -15,8 +15,8 @@ import {
   calculateStats,
 } from './utils';
 import colors from './colors.json';
-import {UserStore} from './user-store';
-import {MeasurementStore} from './measurement-store';
+import {UserStore} from './sidebar/user-store';
+import {MeasurementStore} from './sidebar/measurement-store';
 import {BehaviorSubject} from 'rxjs';
 import {EOWMap} from './eow-map';
 import Feature from 'ol/Feature';
@@ -116,7 +116,7 @@ export class EowDataLayer {
         source: allDataSource,
         style: basicStyle
       });
-      dataLayer.set('name', 'EOW Data');
+      dataLayer.set('title', 'EOW Data');
       this._dataLayerObs.next(dataLayer);
       map.addLayer(dataLayer);
     });
