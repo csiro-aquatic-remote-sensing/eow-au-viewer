@@ -15,11 +15,13 @@ import {ApplicationLayers, redLines} from '../layers';
 import {EowDataStruct, EowWaterBodyIntersection, SourcePointMarginsType} from '../eow-data-struct';
 import {PieChartContainer} from './pie-chart-container';
 import {TimeSeriesChartContainer} from './time-series-chart-container';
+import {Injectable} from '@angular/core';
 
 const theClass = `EOWDataCharts`;
 
 type Coords = [number, number];
 
+@Injectable()
 export default class EowDataCharts {
   /**
    * Only create pie charts once.

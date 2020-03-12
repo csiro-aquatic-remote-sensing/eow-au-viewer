@@ -4,6 +4,7 @@ import {BehaviorSubject} from 'rxjs';
 import VectorSource from 'ol/source/Vector';
 import { interval } from 'rxjs';
 import { debounce } from 'rxjs/operators';
+import {Injectable} from '@angular/core';
 
 const theClass = 'Layers';
 
@@ -111,6 +112,7 @@ export class LayersInfoManager {
   }
 }
 
+@Injectable()
 export class EowLayers {
   waterBodiesLayers = new LayersInfoManager();
 

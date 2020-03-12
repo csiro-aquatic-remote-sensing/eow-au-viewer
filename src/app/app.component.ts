@@ -39,17 +39,17 @@ type WaterBodyFeatures = { [name: string]: Feature[] }; // tslint:disable-line
 })
 export class AppComponent implements OnInit {
   title = 'Eye On Water';
-  eowMap: EOWMap;
-  popupObject: Popup;
-  measurementStore: MeasurementStore;
-  userStore: UserStore;
-  eowData: EowDataLayer;
-  layers: ApplicationLayers;
-  eowLayers: EowLayers;
-  eowDataGeometries: EowDataGeometries;
-  layersGeometries: LayerGeometries;
+  // eowMap: EOWMap;
+  // popupObject: Popup;
+  // measurementStore: MeasurementStore;
+  // userStore: UserStore;
+  // eowData: EowDataLayer;
+  // layers: ApplicationLayers;
+  // eowLayers: EowLayers;
+  // eowDataGeometries: EowDataGeometries;
+  // layersGeometries: LayerGeometries;
   geometryOps: GeometryOps;
-  eowDataCharts: EowDataCharts;
+  // eowDataCharts: EowDataCharts;
   waterBodiesLayers: LayersInfo[];
   map: Map;
   points: FeatureCollection<Point>;
@@ -64,19 +64,25 @@ export class AppComponent implements OnInit {
   newWaterbodiesData = false;
   mapIsMovingState = false;
 
-  constructor(@Inject(DOCUMENT) private htmlDocument: Document, private http: HttpClient, private log: Brolog) {
+  constructor(@Inject(DOCUMENT) private htmlDocument: Document, private http: HttpClient, private log: Brolog,
+              private userStore: UserStore, private eowMap: EOWMap, private popupObject: Popup, private measurementStore: MeasurementStore,
+              private eowData: EowDataLayer, private layers: ApplicationLayers, private eowLayers: EowLayers,
+              private eowDataGeometries: EowDataGeometries, private layersGeometries: LayerGeometries,
+              private eowDataCharts: EowDataCharts, ) {
   }
 
   async ngOnInit() {
     // this.loopLastCalled = -(this.loopCallIntervalMS + 1);
-    this.userStore = new UserStore(this.htmlDocument, this.log);
-    this.popupObject = new Popup(this.htmlDocument, this.userStore);
-    this.eowMap = new EOWMap(this, this.log).init(this.popupObject);
+    // this.userStore = new UserStore(this.htmlDocument, this.log);
+    // this.popupObject = new Popup(this.htmlDocument, this.userStore);
+    // this.eowMap = new EOWMap(this, this.log).init(this.popupObject);
+    this.eowMap.init();
     this.eowMap.getMap().subscribe(async map => {
       this.map = map;
     });
 
-    this.eowData = new EowDataLayer().init(this.eowMap);
+    // this.eowData = new EowDataLayer().init(this.eowMap);
+    this.eowData.init();
     this.eowData.allDataSourceObs.subscribe(allDataSource => {
       this.allDataSource = allDataSource;
       // DEBUG
@@ -90,20 +96,22 @@ export class AppComponent implements OnInit {
       this.dataLayer = dataLayer;
     });
 
-    this.layers = new ApplicationLayers(this.eowMap, this.log);
-    this.eowLayers = await new EowLayers(this.layers, this.log).init(); // this.eowMap);
+    // this.layers = new ApplicationLayers(this.eowMap, this.log);
+    // this.eowLayers = await new EowLayers(this.layers, this.log).init(); // this.eowMap);
+    await this.eowLayers.init();
 
-    this.measurementStore = await new MeasurementStore(this.log);
-    this.eowDataGeometries = await new EowDataGeometries(this.log).init(this.eowData);  // TODO this seems to do similar to EowDataLayer - combine
+    // this.measurementStore = await new MeasurementStore(this.log);
+    // this.eowDataGeometries = await new EowDataGeometries(this.log).init(this.eowData);  // TODO this seems to do similar to EowDataLayer - combine
+    await this.eowDataGeometries.init();
 
-    this.layersGeometries = new LayerGeometries(this.eowLayers, this.log);
+    // this.layersGeometries = new LayerGeometries(this.eowLayers, this.log);
     // GeometryOps = new GeometryOps(this.log);
-    this.eowDataCharts = new EowDataCharts(this.layers, this.log);
+    // this.eowDataCharts = new EowDataCharts(this.layers, this.log);
 
-    this.popupObject.init(this.eowMap);
-    this.eowDataCharts.init(this.eowMap, this.htmlDocument);
-    this.measurementStore.init(this.eowMap, this.eowData, this.userStore);
-    await this.userStore.init(this.eowData, this.measurementStore);
+    // this.popupObject.init(this.eowMap);
+    // this.eowDataCharts.init(this.eowMap, this.htmlDocument);
+    // this.measurementStore.init(this.eowMap, this.eowData, this.userStore);
+    await this.userStore.init();  // this.eowData, this.measurementStore);
 
     this.setupObserversHandleNewData();
 
@@ -313,6 +321,24 @@ export class AppComponent implements OnInit {
       this.popupObject.draw(features, coordinate);
     }, true);
 
+    // User List
+    // TODO - this should be being removed (???) when setup SideBar properly
+    document.querySelector('.user-list').addEventListener('click', (event) => {
+      const element = (event.target as HTMLElement).closest('.item');
+      const selectedUserId = element.getAttribute('data-user');
+      console.log(`clicked on user-id: ${this.userStore.selectedUserId}`);
+      if (this.measurementStore.showMeasurements(selectedUserId)) {
+        this.userStore.clearSelectedUser();
+        this.userStore.selectedUserId = selectedUserId;
+        element.classList.add('selectedUser', 'box-shadow');
+        this.toggleFilterButton(true);
+      }
+    }, true);
+
+    if (this.allDataSource) {
+      this.measurementStore.initialLoadMeasurements(this.userStore);
+      this.allDataSource.un('change', this.measurementStore.initialLoadMeasurements.bind(this, this.userStore));
+    }
 
     this.htmlDocument.getElementById('clearFilterButton').addEventListener('click', (event) => {
       this.clearFilter();

@@ -17,20 +17,23 @@ import VectorLayer from 'ol/layer/Vector';
 import {ATTRIBUTION} from 'ol/source/OSM';
 import LayerSwitcher from 'ol-layerswitcher';
 import {defaults} from 'ol/control';
+import {Injectable} from '@angular/core';
 
 const theClass = 'EOWMap';
 const defaultCoord = [133.945313, -26.431228];
 const canberra = [149.130005, -35.280937];
 const theZoom = 12;
 
+@Injectable()
 export class EOWMap {
   private _mapObs: BehaviorSubject<Map>;
   private map: Map;
 
-  constructor(private app: AppComponent, private log: Brolog) {
+  constructor(private log: Brolog) {  // private popupObject: Popup,
+    this._mapObs = new BehaviorSubject<Map>(null);
   }
 
-  init(popupObject: Popup) {
+  init() { // popupObject: Popup) {
     const mainMap = new TileLayer({
       source: new OSM(),
     });
@@ -55,9 +58,9 @@ export class EOWMap {
       })
     });
 
-    this._mapObs = new BehaviorSubject<Map>(this.map);
+    this._mapObs.next(this.map);
 
-    this.setupEventHandling(popupObject);
+    this.setupEventHandling();  // this.popupObject);
 
     const layerSwitcher = new LayerSwitcher();
     this.map.addControl(layerSwitcher);
@@ -70,7 +73,7 @@ export class EOWMap {
     return this._mapObs.asObservable();
   }
 
-  private setupEventHandling(popupObject: Popup) {
+  private setupEventHandling() { // popupObject: Popup) {
     this.map.on('click', (evt) => {
       const {
         pixel,
@@ -84,8 +87,8 @@ export class EOWMap {
       });
 
       if (features.length) {
-        this.log.verbose(theClass, `Clicked on map at: ${JSON.stringify(coordinate)}`);
-        popupObject.draw(features, coordinate);
+        this.log.verbose(theClass, `Clicked on map at: ${JSON.stringify(coordinate)}  - fix the call to display Popup (do through sidebar)`);
+        // popupObject.draw(features, coordinate);
       }
     });
 

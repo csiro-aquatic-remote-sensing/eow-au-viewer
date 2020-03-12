@@ -18,6 +18,7 @@ import {LayersInfo} from './eow-layers';
 import {EowDataLayer} from './eow-data-layer';
 import VectorSource from 'ol/source/Vector';
 import {debounce} from 'rxjs/operators';
+import {Injectable} from '@angular/core';
 
 const theClass = 'EowDataGeometries';
 
@@ -32,6 +33,7 @@ const EXPANDING_POINTS_RADIUS_METRES = 135; // This value chosen as it selects J
                                             // Lake Burley Griffin due to some error in GPS or other
 const EXPANDING_POINTS_NUMBER = 4;
 
+@Injectable()
 export default class EowDataGeometries {
   // TODO fix BehaviourSubjects like https://coryrylan.com/blog/angular-observable-data-services
   /**
@@ -62,14 +64,15 @@ export default class EowDataGeometries {
 
   private allDataSource: VectorSource;
 
-  constructor(private log: Brolog) {
+  constructor(private eowData: EowDataLayer, private log: Brolog) {
   }
 
-  async init(eowData: EowDataLayer) {
-    eowData.allDataSourceObs.subscribe(async allDataSource => {
+  // async init(eowData: EowDataLayer) {
+  async init() {
+    this.eowData.allDataSourceObs.subscribe(async allDataSource => {
       if (allDataSource) {
         this.allDataSource = allDataSource;
-        await this.readEowDataPoints(eowData);
+        await this.readEowDataPoints(this.eowData);
       }
     });
 

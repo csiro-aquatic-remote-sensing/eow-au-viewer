@@ -17,12 +17,14 @@ import {FeatureLike} from 'ol/Feature';
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import {EowLayers, LayersInfo} from './eow-layers';
 import GeoJSON from 'ol/format/GeoJSON';
+import {Injectable} from '@angular/core';
 
 /**
  * We need to determine the Waterbodies (defined through various other layers) and the contained EOW Data so we can perform actions on
  * EOW Data in same waterbody.  Such as a Pie Graph.  This class manages the Geometries of the layers that define water bodies.
  */
-
+// TODO i don't think this is being used anymore
+@Injectable()
 export default class LayerGeometries {
   layerFeatures: { [name: string]: TurfFeature<Polygon>[] } = {};  // Each Layer passed to createGeometry() has multiple polygons
 

@@ -23,6 +23,7 @@ import Feature from 'ol/Feature';
 import {bbox as bboxStrategy} from 'ol/loadingstrategy';
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import {writeAllEOWDataImageUrls} from './globals';
+import {Injectable} from '@angular/core';
 
 const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia'; // ?service=WFS';
 // + '&version=1.0.0&request=GetFeature&typeName=eow_australia&maxFeatures=5000&outputFormat=application%2Fjson&srsName=epsg:3587';
@@ -32,6 +33,7 @@ const LOG2 = Math.log2(2);
 /**
  * This is for drawing the EOW Data on the map.
  */
+@Injectable()
 export class EowDataLayer {
   private _allDataSourceObs: BehaviorSubject<VectorSource> = new BehaviorSubject<VectorSource>(null);  // Observers that outside subscribers can use to know when data ready
   private _allDataSourceNumber = 0;
@@ -39,7 +41,10 @@ export class EowDataLayer {
   private _dataLayerNumber = 0;
   private styleCache = {};
 
-  init(eowMap: EOWMap) { // , htmlDocument: Document) {
+  constructor(private eowMap: EOWMap) { // , htmlDocument: Document) {
+  }
+
+  init() { // eowMap: EOWMap) { // , htmlDocument: Document) {
     // const allDataSource = new VectorSource({
     //   format: new GeoJSON({dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3857'}),
     //   url: WFS_URL
@@ -88,7 +93,7 @@ export class EowDataLayer {
       }, 2000); // yes, a hack
     });
 
-    eowMap.getMap().subscribe(map => {
+    this.eowMap.getMap().subscribe(map => {
       const basicStyle = (feature, resolution) => {
         const fuValue = feature.get('fu_value');
         const styleKey = `${fuValue}_${resolution}`;

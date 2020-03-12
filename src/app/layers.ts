@@ -21,6 +21,7 @@ import BaseLayer from 'ol/layer/Base';
 import Collection from 'ol/Collection';
 import LayerGroup from 'ol/layer/Group';
 import Icon from 'ol/style/Icon';
+import {Injectable} from '@angular/core';
 
 const theClass = 'Layers';
 const lookInGroups = true;
@@ -42,6 +43,7 @@ export const redLines = new Style({
   stroke: new Stroke({color: 'rgba(125, 25, 0, 1)'})
 });
 
+@Injectable()
 export class ApplicationLayers {
   private map: Map;
 
