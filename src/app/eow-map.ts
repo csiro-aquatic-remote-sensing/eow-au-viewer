@@ -17,20 +17,30 @@ import VectorLayer from 'ol/layer/Vector';
 import {ATTRIBUTION} from 'ol/source/OSM';
 import LayerSwitcher from 'ol-layerswitcher';
 import {defaults} from 'ol/control';
+import {Injectable} from '@angular/core';
+import SideBarService from './sidebar/sidebar.service';
+import {EowBaseService} from './eow-base-service';
 
 const theClass = 'EOWMap';
 const defaultCoord = [133.945313, -26.431228];
 const canberra = [149.130005, -35.280937];
 const theZoom = 12;
 
+@Injectable()
+export class EOWMap extends EowBaseService {
 export class EOWMap {
   private _mapObs: BehaviorSubject<Map>;
   private map: Map;
 
-  constructor(private app: AppComponent, private log: Brolog) {
+  constructor(private log: Brolog) {  // private popupObject: Popup,
+    super();
+    this._mapObs = new BehaviorSubject<Map>(null);
   }
 
-  init(popupObject: Popup) {
+  destroy() {
+    super.destroy();
+  }
+  init() { // popupObject: Popup) {
     const mainMap = new TileLayer({
       source: new OSM(),
     });
@@ -55,9 +65,9 @@ export class EOWMap {
       })
     });
 
-    this._mapObs = new BehaviorSubject<Map>(this.map);
+    this._mapObs.next(this.map);
 
-    this.setupEventHandling(popupObject);
+    this.setupEventHandling();  // this.popupObject);
 
     const layerSwitcher = new LayerSwitcher();
     this.map.addControl(layerSwitcher);
@@ -70,7 +80,7 @@ export class EOWMap {
     return this._mapObs.asObservable();
   }
 
-  private setupEventHandling(popupObject: Popup) {
+  private setupEventHandling() { // popupObject: Popup) {
     this.map.on('click', (evt) => {
       const {
         pixel,
@@ -84,17 +94,12 @@ export class EOWMap {
       });
 
       if (features.length) {
-        this.log.verbose(theClass, `Clicked on map at: ${JSON.stringify(coordinate)}`);
-        popupObject.draw(features, coordinate);
+        this.log.verbose(theClass, `Clicked on map at: ${JSON.stringify(coordinate)}  - fix the call to display Popup (do through sidebar)`);
+        // TODO - can't use this in here - circular ref
+        // this.sideBarService.show('eow-dataPoint-information');
+        // popupObject.draw(features, coordinate);
       }
     });
-
-    // Draw the EOW Artefacts initially and after the map moves / zooms
-    // this.map.on('moveend', async (evt) => {
-    //   console.log(`map moveend`);
-    //   // TODO - with changes in app.component to handle when get new waterbodies data (uses 'moveend'),this may no longer be needed
-    //   await this.app.calculateIntersectionsPlot();
-    // });
   }
 
   /**

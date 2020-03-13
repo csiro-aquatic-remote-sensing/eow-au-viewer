@@ -10,7 +10,7 @@ import {
   Brolog,
 } from 'brolog';
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
-import {BehaviorSubject, interval} from 'rxjs';
+import {BehaviorSubject, interval, Subscription} from 'rxjs';
 import {featureEach} from '@turf/meta';
 import circle from '@turf/circle';
 import {EowDataStruct, PointsMap, SourcePointMarginsType} from './eow-data-struct';
@@ -18,6 +18,8 @@ import {LayersInfo} from './eow-layers';
 import {EowDataLayer} from './eow-data-layer';
 import VectorSource from 'ol/source/Vector';
 import {debounce} from 'rxjs/operators';
+import {Injectable} from '@angular/core';
+import {EowBaseService} from './eow-base-service';
 
 const theClass = 'EowDataGeometries';
 
@@ -32,7 +34,8 @@ const EXPANDING_POINTS_RADIUS_METRES = 135; // This value chosen as it selects J
                                             // Lake Burley Griffin due to some error in GPS or other
 const EXPANDING_POINTS_NUMBER = 4;
 
-export default class EowDataGeometries {
+@Injectable()
+export default class EowDataGeometries extends EowBaseService {
   // TODO fix BehaviourSubjects like https://coryrylan.com/blog/angular-observable-data-services
   /**
    * EOW Data Points as read from the WFS data.  The number field is so that only broadcast a change when there is a real change.
@@ -62,16 +65,22 @@ export default class EowDataGeometries {
 
   private allDataSource: VectorSource;
 
-  constructor(private log: Brolog) {
+  constructor(private eowData: EowDataLayer, private log: Brolog) {
+    super();
   }
 
-  async init(eowData: EowDataLayer) {
-    eowData.allDataSourceObs.subscribe(async allDataSource => {
+  destroy() {
+    super.destroy();
+  }
+
+  // async init(eowData: EowDataLayer) {
+  async init() {
+    this.subscriptions.push(this.eowData.allDataSourceObs.subscribe(async allDataSource => {
       if (allDataSource) {
         this.allDataSource = allDataSource;
-        await this.readEowDataPoints(eowData);
+        await this.readEowDataPoints(this.eowData);
       }
-    });
+    }));
 
     return this; // so can chain the init to the declaration
   }
@@ -130,7 +139,7 @@ export default class EowDataGeometries {
    * @returns object - {sourcePoint: <centre point>, margins: FeatureCollection<Point>(<points around centre point>)}
    */
   private calculatePointsErrorMargin() {
-    this.getPoints().subscribe(eowPoints => {
+    this.subscriptions.push(this.getPoints().subscribe(eowPoints => {
       const errorMarginPoints: SourcePointMarginsType[] = [];
       const allPoints: FeatureCollection<Point> = {
         features: [],  // Array<Feature<Point, Properties>>,
@@ -162,7 +171,7 @@ export default class EowDataGeometries {
         this.allPointsNumber = allPoints.features.length;
         this._allPointsObs.next(allPoints);
       }
-    });
+    }));
   }
 
   /**
@@ -175,7 +184,7 @@ export default class EowDataGeometries {
    * @param errorMarginPoints with the sourcePoint feature and marginPoints FeatureCollection.
    */
   private async generatePointsMap() {
-    this.getPointsErrorMargin().subscribe(errorMarginPoints => {
+    this.subscriptions.push(this.getPointsErrorMargin().subscribe(errorMarginPoints => {
       const pointsMap: PointsMap = {};
 
       errorMarginPoints.forEach(emp => {
@@ -190,6 +199,6 @@ export default class EowDataGeometries {
         this.pointsErrorMarginNumber = Object.keys(pointsMap).length;
         this._allPointsMapObs.next(pointsMap);
       }
-    });
+    }));
   }
 }

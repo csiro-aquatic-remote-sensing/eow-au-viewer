@@ -6,6 +6,18 @@ import {HttpClientModule} from '@angular/common/http';
 import {Brolog} from 'brolog';
 import {brologLevel} from './globals';
 import { SidebarComponent } from './sidebar/sidebar.component';
+import {MeasurementStore} from './sidebar/measurement-store';
+import {UserStore} from './sidebar/user-store';
+import EowDataGeometries from './eow-data-geometries';
+import {EowDataLayer} from './eow-data-layer';
+import {EowDataStruct} from './eow-data-struct';
+import EowDataCharts from './charts/eow-data-charts';
+import {EOWMap} from './eow-map';
+import {EowLayers} from './eow-layers';
+import {ApplicationLayers} from './layers';
+import {Popup} from './sidebar/popup';
+import LayerGeometries from './layers-geometries';
+import SideBarService from './sidebar/sidebar.service';
 
 @NgModule({
   declarations: [
@@ -19,8 +31,10 @@ import { SidebarComponent } from './sidebar/sidebar.component';
     {
       provide: Brolog,
       // 'silent' | 'error' | 'warn' | 'info' | 'verbose' | 'silly'
-      useFactory: function brologFactory() { return Brolog.instance(brologLevel); }
-    }
+      useFactory: function brologFactory() { return Brolog.instance(brologLevel); },
+    },
+    MeasurementStore, UserStore, EowDataGeometries, EowDataLayer, EowDataStruct, EowDataLayer, EowDataCharts, EOWMap,
+    EowLayers, ApplicationLayers, Popup, LayerGeometries, SideBarService
   ],
   bootstrap: [AppComponent]
 })

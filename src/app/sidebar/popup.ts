@@ -9,37 +9,48 @@ import {EOWMap} from '../eow-map';
 import {PieChart} from '../charts/pie-chart';
 import {EowDataStruct} from '../eow-data-struct';
 import moment = require('moment');
+import {Inject, Injectable} from '@angular/core';
+import {DOCUMENT} from '@angular/common';
+import {UserStore} from './user-store';
+import {EowBaseService} from '../eow-base-service';
 
-export class Popup {
+@Injectable()
+export class Popup extends EowBaseService {
   elementId = 'popup';
   popup: any;
-  htmlDocument: Document;
-  userStore: any;
+  // htmlDocument: Document;
+  // userStore: any;
   pieChart: PieChart;
 
-  constructor(htmlDocument: Document, userStore: any) {
-    this.htmlDocument = htmlDocument;
-    this.userStore = userStore;
+  constructor(@Inject(DOCUMENT) private htmlDocument: Document, private userStore: UserStore) { // }, private eowMap: EOWMap) {
+    super();
+    // this.htmlDocument = htmlDocument;
+    // this.userStore = userStore;
+  }
+
+  destroy() {
+    super.destroy();
   }
 
   /**
    * Create the map overlay.
    * @param elementId to draw into
    */
-  init(eowMap: EOWMap) {
-    if (!this.popup) {
-      eowMap.getMap().subscribe(map => {
-        this.popup = new Overlay({
-          element: this.htmlDocument.getElementById(this.elementId),
-          position: [0, 0],
-          autoPan: true,
-          autoPanMargin: 275,
-          positioning: OverlayPositioning.CENTER_LEFT
-        });
-        map.addOverlay(this.popup);
-        this.setupEventHandlers();
-      });
-    }
+  init() { // eowMap: EOWMap) {
+    // TODO now becoming part of sidebar change this
+    // if (!this.popup) {
+    //   this.eowMap.getMap().subscribe(map => {
+    //     this.popup = new Overlay({
+    //       element: this.htmlDocument.getElementById(this.elementId),
+    //       position: [0, 0],
+    //       autoPan: true,
+    //       autoPanMargin: 275,
+    //       positioning: OverlayPositioning.CENTER_LEFT
+    //     });
+    //     map.addOverlay(this.popup);
+    //     this.setupEventHandlers();
+    //   });
+    // }
   }
 
   private setupEventHandlers() {

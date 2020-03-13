@@ -25,10 +25,10 @@ export class PieChartContainer extends ChartContainer {
     return EowDataStruct.preparePieChartData(data);
   }
 
-  drawChartOfType() {
+  async drawChartOfType() {
     PieChart.drawD3(this.preparedData, this.id, this.map.getView().getZoom() * LOG2);
 
-    this.drawDebugLines(this.point, this.preparedData, this.layerName);
+    await this.drawDebugLines(this.point, this.preparedData, this.layerName);
   }
 
   /**

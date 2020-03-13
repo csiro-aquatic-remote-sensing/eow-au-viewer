@@ -6,32 +6,42 @@ import {
   calculateStats,
 } from '../utils';
 import Brolog from 'brolog';
-import {BehaviorSubject} from 'rxjs';
+import {BehaviorSubject, Subscription} from 'rxjs';
 import {MeasurementStore} from './measurement-store';
 import {EowDataLayer} from '../eow-data-layer';
 import VectorLayer from 'ol/layer/Vector';
+import {Inject, Injectable} from '@angular/core';
+import {DOCUMENT} from '@angular/common';
+import {EowBaseService} from '../eow-base-service';
 
 const theClass = 'UserStore';
 
-export class UserStore {
+@Injectable()
+export class UserStore extends EowBaseService {
   // htmlDocument: Document;
   users: [];
   userById: {};
   selectedUserId = '';
   private dataLayer: VectorLayer;
 
-  constructor(private htmlDocument: Document, private log: Brolog) {
+  constructor(@Inject(DOCUMENT) private htmlDocument: Document, private log: Brolog,
+              private eowData: EowDataLayer) { // }, private measurementStore: MeasurementStore) {
+    super();
   }
 
-  async init(eowData: EowDataLayer, measurementStore: MeasurementStore): Promise<UserStore> {
+  destroy() {
+    super.destroy();
+  }
+
+  // async init(eowData: EowDataLayer, measurementStore: MeasurementStore): Promise<UserStore> {
+  async init(): Promise<UserStore> {
     const USER_SERVICE = 'https://www.eyeonwater.org/api/users';
 
-    eowData.dataLayerObs.subscribe(dataLayer => {
+    this.subscriptions.push(this.eowData.dataLayerObs.subscribe(dataLayer => {
       this.dataLayer = dataLayer;
-    });
+    }));
 
     async function loadUsers() {
-      // TODO I'm curious as to if this is correct under Angular
       const response = await window.fetch(USER_SERVICE);
       const {
         results: {
@@ -48,7 +58,7 @@ export class UserStore {
         this.userById = keyBy(this.users, 'id');
         this.renderUsers(this.users);
         this.log.silly(theClass, `Users Loaded - ids: ${JSON.stringify(Object.keys(this.userById))}`);
-        this.setupEventHandlers(measurementStore);
+        this.setupEventHandlers();  // this.measurementStore);
         resolve();
       });
     });
@@ -56,7 +66,7 @@ export class UserStore {
     return this;
   }
 
-  setupEventHandlers(measurementStore: MeasurementStore) {
+  setupEventHandlers() { // measurementStore: MeasurementStore) {
     // this.eowData.dataLayerObs.subscribe(dataLayer => {
     if (this.dataLayer) {
       this.dataLayer.on('change', debounce(({target}) => {
@@ -67,18 +77,18 @@ export class UserStore {
     }
     // });
 
-    // User List
-    document.querySelector('.user-list').addEventListener('click', (event) => {
-      const element = (event.target as HTMLElement).closest('.item');
-      const selectedUserId = element.getAttribute('data-user');
-      console.log(`clicked on user-id: ${this.selectedUserId}`);
-      if (measurementStore.showMeasurements(selectedUserId)) {
-        this.clearSelectedUser();
-        this.selectedUserId = selectedUserId;
-        element.classList.add('selectedUser', 'box-shadow');
-        this.toggleFilterButton(true);
-      }
-    }, true);
+    // // User List
+    // document.querySelector('.user-list').addEventListener('click', (event) => {
+    //   const element = (event.target as HTMLElement).closest('.item');
+    //   const selectedUserId = element.getAttribute('data-user');
+    //   console.log(`clicked on user-id: ${this.selectedUserId}`);
+    //   if (measurementStore.showMeasurements(selectedUserId)) {
+    //     this.clearSelectedUser();
+    //     this.selectedUserId = selectedUserId;
+    //     element.classList.add('selectedUser', 'box-shadow');
+    //     this.toggleFilterButton(true);
+    //   }
+    // }, true);
   }
 
   getUserById(userId) {

@@ -12,34 +12,44 @@ import {EowDataLayer} from '../eow-data-layer';
 import {EOWMap} from '../eow-map';
 import {Feature} from 'ol';
 import VectorLayer from 'ol/layer/Vector';
+import {Injectable} from '@angular/core';
+import {EowBaseService} from '../eow-base-service';
+import {Subscription} from 'rxjs';
 
 let performOnce = true;
 
-export class MeasurementStore {
+@Injectable()
+export class MeasurementStore extends EowBaseService {
   measurements: Feature[];
   measurementsById: {};
   measurementsByOwner: {};
-  eowData: EowDataLayer;
+  // eowData: EowDataLayer;
   allDataSource: VectorSource;
   dataLayer: VectorLayer;
   map: Map;
 
-  constructor(private log: Brolog) {
+  constructor(private eowMap: EOWMap, private eowData: EowDataLayer, private log: Brolog) { // , private userStore: UserStore
+    super();
   }
 
-  init(eowMap: EOWMap, eowData: EowDataLayer, userStore: UserStore) {
+  destroy() {
+    super.destroy();
+  }
+
+  // init(eowMap: EOWMap, eowData: EowDataLayer, userStore: UserStore) {
+  init() {
     // this.eowMap = eowMap;
     // this.eowData = eowData;
-    eowData.allDataSourceObs.subscribe(allDataSource => {
+    this.subscriptions.push(this.eowData.allDataSourceObs.subscribe(allDataSource => {
       this.allDataSource = allDataSource;
-      this.setupEventHandling(userStore);
-    });
-    eowMap.getMap().subscribe(map => {
+      // this.setupEventHandling();  // this.userStore);
+    }));
+    this.subscriptions.push(this.eowMap.getMap().subscribe(map => {
       this.map = map;
-    });
-    eowData.dataLayerObs.subscribe(dataLayer => {
+    }));
+    this.subscriptions.push(this.eowData.dataLayerObs.subscribe(dataLayer => {
       this.dataLayer = dataLayer;
-    });
+    }));
 
     return this;
   }
@@ -52,37 +62,34 @@ export class MeasurementStore {
     return this.measurementsById[id] || [];
   }
 
-  setupEventHandling(userStore: UserStore) {
-    if (this.allDataSource) {
-      this.initialLoadMeasurements(userStore);
-    }
-  }
+  // Moving to app.component
+  // setupEventHandling(userStore: UserStore) {
+  //   if (this.allDataSource) {
+  //     this.initialLoadMeasurements(userStore);
+  //   }
+  // }
 
   /**
    * @param userStore to lookup if any selected user since we don't want to run this again in this case
    * @param event that triggered this
    */
-  private initialLoadMeasurements(userStore) {
-    if (performOnce && userStore.selectedUserId === '') {
-      // this.eowData.allDataSourceObs.subscribe(allDataSource => {
-      if (this.allDataSource) {
-        performOnce = false;
-        // const source = event.target;
-        const features = this.allDataSource.getFeatures();
-        // Store the measurements in easy to access data structure
-        this.measurements = features;
-        this.measurementsById = keyBy(features, f => f.get('n_code'));
-        this.measurementsByOwner = groupBy(features, f => f.get('user_n_code'));
+  initialLoadMeasurements(userStore, allDataSource: VectorSource) {
+    if (allDataSource) {
+      performOnce = false;
+      // const source = event.target;
+      const features = allDataSource.getFeatures();
+      // Store the measurements in easy to access data structure
+      this.measurements = features;
+      this.measurementsById = keyBy(features, f => f.get('n_code'));
+      this.measurementsByOwner = groupBy(features, f => f.get('user_n_code'));
 
-        this.recentMeasurements(this.measurements);
-        this.allDataSource.un('change', this.initialLoadMeasurements.bind(this, userStore));
-        // console.log(`loadMeasurements (by Id): ${JSON.stringify(Object.keys(this.measurementsById))}`);
-        // console.log(`loadMeasurements (by Owner): ${JSON.stringify(Object.keys(this.measurementsByOwner))}`);
-        // }
-      }
+      this.recentMeasurements(this.measurements);
+      // this.allDataSource.un('change', this.initialLoadMeasurements.bind(this, userStore));
+      // console.log(`loadMeasurements (by Id): ${JSON.stringify(Object.keys(this.measurementsById))}`);
+      // console.log(`loadMeasurements (by Owner): ${JSON.stringify(Object.keys(this.measurementsByOwner))}`);
+      // }
     }
   }
-
 
   clearFilter() {
     this.recentMeasurements(this.measurements);

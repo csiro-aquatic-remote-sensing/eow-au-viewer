@@ -6,11 +6,12 @@ import Map from 'ol/Map';
 import {Coords} from '../eow-data-struct';
 import Brolog from 'brolog';
 import {ApplicationLayers} from '../layers';
+import {EowBaseService} from '../eow-base-service';
 
 const htmlElementId = 'waterbody';
 export const LOG2 = Math.log(2);
 
-export abstract class ChartContainer {
+export abstract class ChartContainer extends EowBaseService {
   // TODO - define this type
   protected preparedData: any[];
 
@@ -31,7 +32,8 @@ export abstract class ChartContainer {
    * @param id of div to draw in to
    * @param data to make up chart to draw
    */
-  constructor(layerName: string, layers: ApplicationLayers, log: Brolog) {
+  protected constructor(layerName: string, layers: ApplicationLayers, log: Brolog) {
+    super();
     this.log = log;
     this.layerName = layerName;
     this.layers = layers;

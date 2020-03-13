@@ -15,12 +15,16 @@ import {ApplicationLayers, redLines} from '../layers';
 import {EowDataStruct, EowWaterBodyIntersection, SourcePointMarginsType} from '../eow-data-struct';
 import {PieChartContainer} from './pie-chart-container';
 import {TimeSeriesChartContainer} from './time-series-chart-container';
+import {Injectable} from '@angular/core';
+import {Subscription} from 'rxjs';
+import {EowBaseService} from '../eow-base-service';
 
 const theClass = `EOWDataCharts`;
 
 type Coords = [number, number];
 
-export default class EowDataCharts {
+@Injectable()
+export default class EowDataCharts extends EowBaseService{
   /**
    * Only create pie charts once.
    */
@@ -30,13 +34,18 @@ export default class EowDataCharts {
   ids: { [id: string]: boolean } = {};
 
   constructor(private layers: ApplicationLayers, private log: Brolog) {
+    super();
+  }
+
+  destroy() {
+    super.destroy();
   }
 
   init(eowMap: EOWMap, htmlDocument) {
     this.htmlDocument = htmlDocument;
-    eowMap.getMap().subscribe(map => {
+    this.subscriptions.push(eowMap.getMap().subscribe(map => {
       this.map = map;
-    });
+    }));
   }
 
   private setupEventHandlers() {

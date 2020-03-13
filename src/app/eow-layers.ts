@@ -4,6 +4,8 @@ import {BehaviorSubject} from 'rxjs';
 import VectorSource from 'ol/source/Vector';
 import { interval } from 'rxjs';
 import { debounce } from 'rxjs/operators';
+import {Injectable} from '@angular/core';
+import {EowBaseService} from './eow-base-service';
 
 const theClass = 'Layers';
 
@@ -90,7 +92,7 @@ export class LayersInfoManager {
   public addInfo(name, index, url, options, observable?) {
     this.layersInfo.push({name, index, url, options, observable});
     // subscribers will get the lot each time the subscription updates.  Nutsack69(
-    // NnnnkdkdUsing Object.assign to send a copy.
+    // Using Object.assign to send a copy.
     this._layersInfo.next(Object.assign([], this.layersInfo));
   }
 
@@ -111,10 +113,16 @@ export class LayersInfoManager {
   }
 }
 
-export class EowLayers {
+@Injectable()
+export class EowLayers extends EowBaseService {
   waterBodiesLayers = new LayersInfoManager();
 
   constructor(private layers: ApplicationLayers, private log: Brolog) {
+    super();
+  }
+
+  destroy() {
+    super.destroy();
   }
 
   async init() {
@@ -165,13 +173,13 @@ export class EowLayers {
     this.setupWMSLayer(layerPromises, 'https://hotspots.dea.ga.gov.au/geoserver/public/wms',
       {
         createLayer: true, useAsWaterBodySource: false, layerOrFeatureName: 'DigitalEarthAustraliaWaterbodies',
-        TILED: true, layerDisplayName: 'Waterbodies Map', layerGroupName: 'Map Features'
+        TILED: true, layerDisplayName: 'Waterbodies Map', layerGroupName: 'Map Features', visible: false
       });
 
     this.setupWMSLayer(layerPromises, 'https://ows.services.dea.ga.gov.au/wms?',
       {
         createLayer: true, useAsWaterBodySource: false,  TILED: true,
-        layerOrFeatureName: 'wofs_filtered_summary', layerDisplayName: 'WOFS', visible: true, layerGroupName: 'Map Features'
+        layerOrFeatureName: 'wofs_filtered_summary', layerDisplayName: 'WOFS', visible: false, layerGroupName: 'Map Features'
       }); // minResolution: 0.00069,
 
     return Promise.all(layerPromises);
