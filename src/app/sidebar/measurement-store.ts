@@ -66,27 +66,23 @@ export class MeasurementStore {
    * @param userStore to lookup if any selected user since we don't want to run this again in this case
    * @param event that triggered this
    */
-  initialLoadMeasurements(userStore) {
-    if (performOnce && userStore.selectedUserId === '') {
-      // this.eowData.allDataSourceObs.subscribe(allDataSource => {
-      if (this.allDataSource) {
-        performOnce = false;
-        // const source = event.target;
-        const features = this.allDataSource.getFeatures();
-        // Store the measurements in easy to access data structure
-        this.measurements = features;
-        this.measurementsById = keyBy(features, f => f.get('n_code'));
-        this.measurementsByOwner = groupBy(features, f => f.get('user_n_code'));
+  initialLoadMeasurements(userStore, allDataSource: VectorSource) {
+    if (allDataSource) {
+      performOnce = false;
+      // const source = event.target;
+      const features = allDataSource.getFeatures();
+      // Store the measurements in easy to access data structure
+      this.measurements = features;
+      this.measurementsById = keyBy(features, f => f.get('n_code'));
+      this.measurementsByOwner = groupBy(features, f => f.get('user_n_code'));
 
-        this.recentMeasurements(this.measurements);
-        // this.allDataSource.un('change', this.initialLoadMeasurements.bind(this, userStore));
-        // console.log(`loadMeasurements (by Id): ${JSON.stringify(Object.keys(this.measurementsById))}`);
-        // console.log(`loadMeasurements (by Owner): ${JSON.stringify(Object.keys(this.measurementsByOwner))}`);
-        // }
-      }
+      this.recentMeasurements(this.measurements);
+      // this.allDataSource.un('change', this.initialLoadMeasurements.bind(this, userStore));
+      // console.log(`loadMeasurements (by Id): ${JSON.stringify(Object.keys(this.measurementsById))}`);
+      // console.log(`loadMeasurements (by Owner): ${JSON.stringify(Object.keys(this.measurementsByOwner))}`);
+      // }
     }
   }
-
 
   clearFilter() {
     this.recentMeasurements(this.measurements);
