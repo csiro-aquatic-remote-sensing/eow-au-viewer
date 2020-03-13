@@ -77,7 +77,6 @@ export default class SideBarService {
     }, true);
 
     // User List
-    // TODO - this should be being removed (???) when setup SideBar properly
     this.htmlDocument.querySelector('.user-list').addEventListener('click', (event) => {
       const element = (event.target as HTMLElement).closest('.item');
       const selectedUserId = element.getAttribute('data-user');

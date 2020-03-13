@@ -94,13 +94,6 @@ export class EOWMap {
         // popupObject.draw(features, coordinate);
       }
     });
-
-    // Draw the EOW Artefacts initially and after the map moves / zooms
-    // this.map.on('moveend', async (evt) => {
-    //   console.log(`map moveend`);
-    //   // TODO - with changes in app.component to handle when get new waterbodies data (uses 'moveend'),this may no longer be needed
-    //   await this.app.calculateIntersectionsPlot();
-    // });
   }
 
   /**
