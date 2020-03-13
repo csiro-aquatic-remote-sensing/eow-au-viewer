@@ -167,13 +167,13 @@ export class EowLayers {
     this.setupWMSLayer(layerPromises, 'https://hotspots.dea.ga.gov.au/geoserver/public/wms',
       {
         createLayer: true, useAsWaterBodySource: false, layerOrFeatureName: 'DigitalEarthAustraliaWaterbodies',
-        TILED: true, layerDisplayName: 'Waterbodies Map', layerGroupName: 'Map Features'
+        TILED: true, layerDisplayName: 'Waterbodies Map', layerGroupName: 'Map Features', visible: false
       });
 
     this.setupWMSLayer(layerPromises, 'https://ows.services.dea.ga.gov.au/wms?',
       {
         createLayer: true, useAsWaterBodySource: false,  TILED: true,
-        layerOrFeatureName: 'wofs_filtered_summary', layerDisplayName: 'WOFS', visible: true, layerGroupName: 'Map Features'
+        layerOrFeatureName: 'wofs_filtered_summary', layerDisplayName: 'WOFS', visible: false, layerGroupName: 'Map Features'
       }); // minResolution: 0.00069,
 
     return Promise.all(layerPromises);

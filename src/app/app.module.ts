@@ -17,6 +17,7 @@ import {EowLayers} from './eow-layers';
 import {ApplicationLayers} from './layers';
 import {Popup} from './sidebar/popup';
 import LayerGeometries from './layers-geometries';
+import SideBarService from './sidebar/sidebar.service';
 
 @NgModule({
   declarations: [
@@ -33,7 +34,7 @@ import LayerGeometries from './layers-geometries';
       useFactory: function brologFactory() { return Brolog.instance(brologLevel); },
     },
     MeasurementStore, UserStore, EowDataGeometries, EowDataLayer, EowDataStruct, EowDataLayer, EowDataCharts, EOWMap,
-    EowLayers, ApplicationLayers, Popup, LayerGeometries
+    EowLayers, ApplicationLayers, Popup, LayerGeometries, SideBarService
   ],
   bootstrap: [AppComponent]
 })

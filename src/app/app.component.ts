@@ -26,6 +26,7 @@ import {combineLatest} from 'rxjs';
 import moment from 'moment';
 import {GisOps} from './gis-ops';
 import {isDebugLevel} from './globals';
+import SideBarService from './sidebar/sidebar.service';
 
 const theClass = 'AppComponent';
 
@@ -64,11 +65,9 @@ export class AppComponent implements OnInit {
   newWaterbodiesData = false;
   mapIsMovingState = false;
 
-  constructor(@Inject(DOCUMENT) private htmlDocument: Document, private http: HttpClient, private log: Brolog,
-              private userStore: UserStore, private eowMap: EOWMap, private popupObject: Popup, private measurementStore: MeasurementStore,
-              private eowData: EowDataLayer, private layers: ApplicationLayers, private eowLayers: EowLayers,
-              private eowDataGeometries: EowDataGeometries, private layersGeometries: LayerGeometries,
-              private eowDataCharts: EowDataCharts) { // , private sideBarService: SideBarService) {
+  constructor(@Inject(DOCUMENT) private htmlDocument: Document, private http: HttpClient, private log: Brolog, private eowMap: EOWMap, private popupObject: Popup,
+              private eowData: EowDataLayer, private layers: ApplicationLayers, private eowLayers: EowLayers, private eowDataGeometries: EowDataGeometries,
+              private layersGeometries: LayerGeometries, private eowDataCharts: EowDataCharts, private sideBarService: SideBarService) {
   }
 
   async ngOnInit() {
@@ -87,11 +86,11 @@ export class AppComponent implements OnInit {
       this.allDataSource = allDataSource;
       if (this.allDataSource) {
         // TODO - do this through sidebar
-        this.measurementStore.initialLoadMeasurements(this.userStore, this.allDataSource);
-        this.allDataSource.un('change', this.measurementStore.initialLoadMeasurements.bind(this, this.userStore, this.allDataSource));
+        // this.measurementStore.initialLoadMeasurements(this.userStore, this.allDataSource);
+        // this.allDataSource.un('change', this.measurementStore.initialLoadMeasurements.bind(this, this.userStore, this.allDataSource));
 
         // DEBUG
-        this.allDataSource.on('change', this.debug_compareUsersNMeasurements.bind(this));
+        // this.allDataSource.on('change', this.debug_compareUsersNMeasurements.bind(this));
         // this.allDataSource.on('change', this.debug_printFirstEOWData.bind(this));
         this.debug_printFirstEOWData();
       }
@@ -114,8 +113,9 @@ export class AppComponent implements OnInit {
 
     // this.popupObject.init(this.eowMap);
     this.eowDataCharts.init(this.eowMap, this.htmlDocument);
-    this.measurementStore.init(); // this.eowMap, this.eowData, this.userStore);
-    await this.userStore.init();  // this.eowData, this.measurementStore);
+    await this.sideBarService.init();
+    // this.measurementStore.init(); // this.eowMap, this.eowData, this.userStore);
+    // await this.userStore.init();  // this.eowData, this.measurementStore);
 
     this.setupObserversHandleNewData();
 
@@ -276,28 +276,6 @@ export class AppComponent implements OnInit {
     }
   }
 
-  private debug_compareUsersNMeasurements() {
-    if (false && isDebugLevel() && this.allDataSource) {
-      this.log.verbose(theClass, 'debug_compareUsersNMeasurements:');
-      Object.keys(this.userStore.userById).forEach(uid => {
-        const user = this.userStore.userById[uid];
-        this.log.verbose(theClass, `  user - Id: ${user.id}, nickName: ${user.nickname}, photo_count: ${user.photo_count}`);
-        const m = this.measurementStore.getByOwner(user.id);
-        if (m && m.length > 0) {
-          const images = m.map(m2 => m2.get('image'));
-          this.log.verbose(theClass, `    number of images: ${images.length} -> \n${JSON.stringify(images, null, 2)}`);
-        }
-      });
-      // Now print Measurements info
-      this.log.verbose(theClass, `measurementsByOwner: ${
-        JSON.stringify(this.measurementStore.measurementSummary(true, this.userStore), null, 2)}`);
-      this.log.verbose(theClass, `measurementsById: ${
-        JSON.stringify(this.measurementStore.measurementSummary(false, this.userStore), null, 2)}`);
-      this.log.verbose(theClass, `Number of measurements per user: ${
-        JSON.stringify(this.measurementStore.numberMeasurmentsPerUser(this.userStore), null, 2)}`);
-    }
-  }
-
   private setupEventHandlers() {
     // Pull tabs of Most Active Users and Recent Measurements
     // this.htmlDocument.querySelectorAll('.pull-tab').forEach(i => i.addEventListener('click', (event: Event) => {
@@ -305,44 +283,44 @@ export class AppComponent implements OnInit {
     //   element.classList.toggle('pulled');
     // }));
 
-    // Measurement List
-    document.querySelector('.measurement-list').addEventListener('click', (event) => {
-      const element = (event.target as HTMLElement).closest('.item');
-      if (!element) {
-        return;
-      }
+    // // Measurement List
+    // document.querySelector('.measurement-list').addEventListener('click', (event) => {
+    //   const element = (event.target as HTMLElement).closest('.item');
+    //   if (!element) {
+    //     return;
+    //   }
+    //
+    //   const coordinate = element.getAttribute('data-coordinate').split(',').map(c => parseInt(c, 10)) as Coordinate;
+    //   const id = element.getAttribute('data-key');
+    //   const view = this.map.getView();
+    //   view.cancelAnimations();
+    //   view.animate({
+    //     center: coordinate,
+    //     zoom: 8,
+    //     duration: 1300
+    //   } as AnimationOptions);
+    //   const features = [this.measurementStore.getById(id)];
+    //   this.popupObject.draw(features, coordinate);
+    // }, true);
+    //
+    // // User List
+    // // TODO - this should be being removed (???) when setup SideBar properly
+    // document.querySelector('.user-list').addEventListener('click', (event) => {
+    //   const element = (event.target as HTMLElement).closest('.item');
+    //   const selectedUserId = element.getAttribute('data-user');
+    //   console.log(`clicked on user-id: ${this.userStore.selectedUserId}`);
+    //   if (this.measurementStore.showMeasurements(selectedUserId)) {
+    //     this.userStore.clearSelectedUser();
+    //     this.userStore.selectedUserId = selectedUserId;
+    //     element.classList.add('selectedUser', 'box-shadow');
+    //     this.toggleFilterButton(true);
+    //   }
+    // }, true);
 
-      const coordinate = element.getAttribute('data-coordinate').split(',').map(c => parseInt(c, 10)) as Coordinate;
-      const id = element.getAttribute('data-key');
-      const view = this.map.getView();
-      view.cancelAnimations();
-      view.animate({
-        center: coordinate,
-        zoom: 8,
-        duration: 1300
-      } as AnimationOptions);
-      const features = [this.measurementStore.getById(id)];
-      this.popupObject.draw(features, coordinate);
-    }, true);
-
-    // User List
-    // TODO - this should be being removed (???) when setup SideBar properly
-    document.querySelector('.user-list').addEventListener('click', (event) => {
-      const element = (event.target as HTMLElement).closest('.item');
-      const selectedUserId = element.getAttribute('data-user');
-      console.log(`clicked on user-id: ${this.userStore.selectedUserId}`);
-      if (this.measurementStore.showMeasurements(selectedUserId)) {
-        this.userStore.clearSelectedUser();
-        this.userStore.selectedUserId = selectedUserId;
-        element.classList.add('selectedUser', 'box-shadow');
-        this.toggleFilterButton(true);
-      }
-    }, true);
-
-    this.htmlDocument.getElementById('clearFilterButton').addEventListener('click', (event) => {
-      this.clearFilter();
-    });
-
+    // this.htmlDocument.getElementById('clearFilterButton').addEventListener('click', (event) => {
+    //   this.clearFilter();
+    // });
+    //
     this.map.on('moveStart', () => {
       this.mapIsMovingState = true;
     });
@@ -352,20 +330,16 @@ export class AppComponent implements OnInit {
     });
   }
 
-  private clearFilter() {
-    this.userStore.clearSelectedUser();
-    this.measurementStore.clearFilter();
-    if (this.dataLayer) {
-      this.map.getView().fit(this.dataLayer.getSource().getExtent(), {duration: 1300});
-      if (this.allDataSource) {
-        this.dataLayer.setSource(this.allDataSource);
-      }
-    }
-    this.toggleFilterButton(false);
-  }
+  // private clearFilter() {
+  //   this.userStore.clearSelectedUser();
+  //   this.measurementStore.clearFilter();
+  //   if (this.dataLayer) {
+  //     this.map.getView().fit(this.dataLayer.getSource().getExtent(), {duration: 1300});
+  //     if (this.allDataSource) {
+  //       this.dataLayer.setSource(this.allDataSource);
+  //     }
+  //   }
+  //   this.toggleFilterButton(false);
+  // }
 
-  private toggleFilterButton(state = false) {
-    const element = this.htmlDocument.getElementById('clearFilterButton');
-    element.classList.toggle('hidden', !state);
-  }
 }

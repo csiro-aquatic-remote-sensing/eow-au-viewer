@@ -30,7 +30,7 @@ export class EOWMap {
   private _mapObs: BehaviorSubject<Map>;
   private map: Map;
 
-  constructor(private sideBarService: SideBarService, private log: Brolog) {  // private popupObject: Popup,
+  constructor(private log: Brolog) {  // private popupObject: Popup,
     this._mapObs = new BehaviorSubject<Map>(null);
   }
 
@@ -89,7 +89,8 @@ export class EOWMap {
 
       if (features.length) {
         this.log.verbose(theClass, `Clicked on map at: ${JSON.stringify(coordinate)}  - fix the call to display Popup (do through sidebar)`);
-        this.sideBarService.show('eow-dataPoint-information');
+        // TODO - can't use this in here - circular ref
+        // this.sideBarService.show('eow-dataPoint-information');
         // popupObject.draw(features, coordinate);
       }
     });
