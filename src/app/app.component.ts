@@ -68,7 +68,7 @@ export class AppComponent implements OnInit {
               private userStore: UserStore, private eowMap: EOWMap, private popupObject: Popup, private measurementStore: MeasurementStore,
               private eowData: EowDataLayer, private layers: ApplicationLayers, private eowLayers: EowLayers,
               private eowDataGeometries: EowDataGeometries, private layersGeometries: LayerGeometries,
-              private eowDataCharts: EowDataCharts, ) {
+              private eowDataCharts: EowDataCharts) { // , private sideBarService: SideBarService) {
   }
 
   async ngOnInit() {
@@ -85,8 +85,12 @@ export class AppComponent implements OnInit {
     this.eowData.init();
     this.eowData.allDataSourceObs.subscribe(allDataSource => {
       this.allDataSource = allDataSource;
-      // DEBUG
       if (this.allDataSource) {
+        // TODO - do this through sidebar
+        this.measurementStore.initialLoadMeasurements(this.userStore, this.allDataSource);
+        this.allDataSource.un('change', this.measurementStore.initialLoadMeasurements.bind(this, this.userStore, this.allDataSource));
+
+        // DEBUG
         this.allDataSource.on('change', this.debug_compareUsersNMeasurements.bind(this));
         // this.allDataSource.on('change', this.debug_printFirstEOWData.bind(this));
         this.debug_printFirstEOWData();
@@ -334,11 +338,6 @@ export class AppComponent implements OnInit {
         this.toggleFilterButton(true);
       }
     }, true);
-
-    if (this.allDataSource) {
-      this.measurementStore.initialLoadMeasurements(this.userStore);
-      this.allDataSource.un('change', this.measurementStore.initialLoadMeasurements.bind(this, this.userStore));
-    }
 
     this.htmlDocument.getElementById('clearFilterButton').addEventListener('click', (event) => {
       this.clearFilter();
