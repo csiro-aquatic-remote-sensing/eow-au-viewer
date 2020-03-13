@@ -6,17 +6,18 @@ import {
   calculateStats,
 } from '../utils';
 import Brolog from 'brolog';
-import {BehaviorSubject} from 'rxjs';
+import {BehaviorSubject, Subscription} from 'rxjs';
 import {MeasurementStore} from './measurement-store';
 import {EowDataLayer} from '../eow-data-layer';
 import VectorLayer from 'ol/layer/Vector';
 import {Inject, Injectable} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
+import {EowBaseService} from '../eow-base-service';
 
 const theClass = 'UserStore';
 
 @Injectable()
-export class UserStore {
+export class UserStore extends EowBaseService {
   // htmlDocument: Document;
   users: [];
   userById: {};
@@ -25,15 +26,20 @@ export class UserStore {
 
   constructor(@Inject(DOCUMENT) private htmlDocument: Document, private log: Brolog,
               private eowData: EowDataLayer) { // }, private measurementStore: MeasurementStore) {
+    super();
+  }
+
+  destroy() {
+    super.destroy();
   }
 
   // async init(eowData: EowDataLayer, measurementStore: MeasurementStore): Promise<UserStore> {
   async init(): Promise<UserStore> {
     const USER_SERVICE = 'https://www.eyeonwater.org/api/users';
 
-    this.eowData.dataLayerObs.subscribe(dataLayer => {
+    this.subscriptions.push(this.eowData.dataLayerObs.subscribe(dataLayer => {
       this.dataLayer = dataLayer;
-    });
+    }));
 
     async function loadUsers() {
       const response = await window.fetch(USER_SERVICE);

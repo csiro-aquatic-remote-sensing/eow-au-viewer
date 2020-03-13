@@ -9,7 +9,7 @@ import TileLayer from 'ol/layer/Tile';
 import {Brolog} from 'brolog';
 import IconAnchorUnits from 'ol/style/IconAnchorUnits';
 import {EOWMap} from './eow-map';
-import {BehaviorSubject} from 'rxjs';
+import {BehaviorSubject, Subscription} from 'rxjs';
 import Feature from 'ol/Feature';
 import Stroke from 'ol/style/Stroke';
 import {bbox as bboxStrategy} from 'ol/loadingstrategy';
@@ -22,6 +22,7 @@ import Collection from 'ol/Collection';
 import LayerGroup from 'ol/layer/Group';
 import Icon from 'ol/style/Icon';
 import {Injectable} from '@angular/core';
+import {EowBaseService} from './eow-base-service';
 
 const theClass = 'Layers';
 const lookInGroups = true;
@@ -44,13 +45,18 @@ export const redLines = new Style({
 });
 
 @Injectable()
-export class ApplicationLayers {
+export class ApplicationLayers extends EowBaseService {
   private map: Map;
 
   constructor(private eowMap: EOWMap, private log: Brolog) {
-    this.eowMap.getMap().subscribe(map => {
+    super();
+    this.subscriptions.push(this.eowMap.getMap().subscribe(map => {
       this.map = map;
-    });
+    }));
+  }
+
+  destroy() {
+    super.destroy();
   }
 
   public getMapLayers(): Collection<BaseLayer> {

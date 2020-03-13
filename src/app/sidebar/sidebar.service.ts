@@ -11,29 +11,39 @@ import {AnimationOptions} from 'ol/View';
 import {DOCUMENT} from '@angular/common';
 import VectorLayer from 'ol/layer/Vector';
 import {EOWMap} from '../eow-map';
+import {EowBaseService} from '../eow-base-service';
 
 @Injectable()
+export default class SideBarService extends EowBaseService {
 export default class SideBarService {
   dataLayer: VectorLayer;
   map: Map;
 
   constructor(private eowData: EowDataLayer, private eowMap: EOWMap, private measurementStore: MeasurementStore, private userStore: UserStore, private log: Brolog,
               @Inject(DOCUMENT) private htmlDocument: Document) {
+    super();
   }
 
+  destroy() {
+    super.destroy();
+  }
   async init(): Promise<SideBarService> {
     this.measurementStore.init(); // this.eowMap, this.eowData, this.userStore);
     await this.userStore.init();  // this.eowData, this.measurementStore);
 
+    this.subscriptions.push(this.sideBarMessagingService.asObservable().subscribe(msg => {
+      this.handleMessage(msg);
+    }));
+    this.subscriptions.push(this.eowData.dataLayerObs.subscribe(dataLayer => {
     this.eowData.dataLayerObs.subscribe(dataLayer => {
       this.dataLayer = dataLayer;
-    });
+    }));
 
-    this.eowMap.getMap().subscribe(async map => {
+    this.subscriptions.push(this.eowMap.getMap().subscribe(async map => {
       this.map = map;
-    });
+    }));
 
-    this.eowData.allDataSourceObs.subscribe(allDataSource => {
+    this.subscriptions.push(this.eowData.allDataSourceObs.subscribe(allDataSource => {
       // TODO - do this through sidebar
       if (allDataSource) {
         // TODO - do this through sidebar
@@ -45,7 +55,7 @@ export default class SideBarService {
 
         this.setupEventHandlers(allDataSource);
       }
-    });
+    }));
 
     return this;
   }

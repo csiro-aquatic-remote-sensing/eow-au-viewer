@@ -19,6 +19,7 @@ import LayerSwitcher from 'ol-layerswitcher';
 import {defaults} from 'ol/control';
 import {Injectable} from '@angular/core';
 import SideBarService from './sidebar/sidebar.service';
+import {EowBaseService} from './eow-base-service';
 
 const theClass = 'EOWMap';
 const defaultCoord = [133.945313, -26.431228];
@@ -26,14 +27,19 @@ const canberra = [149.130005, -35.280937];
 const theZoom = 12;
 
 @Injectable()
+export class EOWMap extends EowBaseService {
 export class EOWMap {
   private _mapObs: BehaviorSubject<Map>;
   private map: Map;
 
   constructor(private log: Brolog) {  // private popupObject: Popup,
+    super();
     this._mapObs = new BehaviorSubject<Map>(null);
   }
 
+  destroy() {
+    super.destroy();
+  }
   init() { // popupObject: Popup) {
     const mainMap = new TileLayer({
       source: new OSM(),

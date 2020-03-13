@@ -1,4 +1,4 @@
-import {Component, OnInit, Inject} from '@angular/core';
+import {Component, OnInit, Inject, OnDestroy} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
 import {AnimationOptions} from 'ol/View';
 import Feature from 'ol/Feature';
@@ -22,11 +22,12 @@ import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import Map from 'ol/Map';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
-import {combineLatest} from 'rxjs';
+import {combineLatest, Subject, Subscription} from 'rxjs';
 import moment from 'moment';
 import {GisOps} from './gis-ops';
 import {isDebugLevel} from './globals';
 import SideBarService from './sidebar/sidebar.service';
+import {SideBarMessage} from './types';
 
 const theClass = 'AppComponent';
 
@@ -38,7 +39,7 @@ type WaterBodyFeatures = { [name: string]: Feature[] }; // tslint:disable-line
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
   title = 'Eye On Water';
   // eowMap: EOWMap;
   // popupObject: Popup;
@@ -64,6 +65,9 @@ export class AppComponent implements OnInit {
   totalNumberWaterBodyFeatures = 0;
   newWaterbodiesData = false;
   mapIsMovingState = false;
+  // Use this to asyncronously 'call' SideBar methods - mitigates Circular Refs
+  sideBarMessagingService = new Subject<SideBarMessage>();
+  private subscriptions: Subscription[] = [];
 
   constructor(@Inject(DOCUMENT) private htmlDocument: Document, private http: HttpClient, private log: Brolog, private eowMap: EOWMap, private popupObject: Popup,
               private eowData: EowDataLayer, private layers: ApplicationLayers, private eowLayers: EowLayers, private eowDataGeometries: EowDataGeometries,
@@ -75,14 +79,14 @@ export class AppComponent implements OnInit {
     // this.userStore = new UserStore(this.htmlDocument, this.log);
     // this.popupObject = new Popup(this.htmlDocument, this.userStore);
     // this.eowMap = new EOWMap(this, this.log).init(this.popupObject);
-    this.eowMap.init();
-    this.eowMap.getMap().subscribe(async map => {
+    this.eowMap.init(this.sideBarMessagingService);
+    this.subscriptions.push(this.eowMap.getMap().subscribe(async map => {
       this.map = map;
-    });
+    }));
 
     // this.eowData = new EowDataLayer().init(this.eowMap);
     this.eowData.init();
-    this.eowData.allDataSourceObs.subscribe(allDataSource => {
+    this.subscriptions.push(this.eowData.allDataSourceObs.subscribe(allDataSource => {
       this.allDataSource = allDataSource;
       if (this.allDataSource) {
         // TODO - do this through sidebar
@@ -94,10 +98,10 @@ export class AppComponent implements OnInit {
         // this.allDataSource.on('change', this.debug_printFirstEOWData.bind(this));
         this.debug_printFirstEOWData();
       }
-    });
-    this.eowData.dataLayerObs.subscribe(dataLayer => {
+    }));
+    this.subscriptions.push(this.eowData.dataLayerObs.subscribe(dataLayer => {
       this.dataLayer = dataLayer;
-    });
+    }));
 
     // this.layers = new ApplicationLayers(this.eowMap, this.log);
     // this.eowLayers = await new EowLayers(this.layers, this.log).init(); // this.eowMap);
@@ -126,6 +130,19 @@ export class AppComponent implements OnInit {
     // this.calculateWaterBodiesCentroidsPlot();  // DEBUG
   }
 
+  ngOnDestroy() {
+    this.subscriptions.forEach(s => s.unsubscribe());
+    this.eowMap.destroy();
+    this.popupObject.destroy();
+    this.eowData.destroy();
+    this.layers.destroy();
+    this.eowLayers.destroy();
+    this.eowDataGeometries.destroy();
+    this.layersGeometries.destroy();
+    this.eowDataCharts.destroy();
+    this.sideBarService.destroy();
+  }
+
   private setupObserversHandleNewData() {
     const uberObserver = combineLatest([
       this.eowDataGeometries.getPoints(),
@@ -133,7 +150,7 @@ export class AppComponent implements OnInit {
       this.eowDataGeometries.getAllPointsMap(),
       this.eowDataGeometries.getPointsErrorMargin(),
     ]);
-    uberObserver.subscribe(async (value) => {
+    this.subscriptions.push(uberObserver.subscribe(async (value) => {
       this.log.verbose(theClass, `uberObserver - value length: ${value.filter(v => v !== null).length}`);
       const [points, allPoints, allPointsMap, errorMarginPoints] = value;
       if (points && allPoints && allPointsMap && errorMarginPoints) {
@@ -147,24 +164,24 @@ export class AppComponent implements OnInit {
           await this.calculateIntersectionsPlot();
         }
       }
-    });
-    this.eowLayers.waterBodiesLayers.getLayersInfo().subscribe(layersInfo => {
+    }));
+    this.subscriptions.push(this.eowLayers.waterBodiesLayers.getLayersInfo().subscribe(layersInfo => {
       // I want to subscribe to layer's VectorSource observer and when triggers call calculateIntersectionsPlot()
       // with that new data.  When data points change, as per above subscription, it will call calculateIntersectionsPlot()
       // with no arguments and that means 'apply new data to existing layers'.
       // PERHAPS use collectWaterBodyFeatures()
       this.waterBodiesLayers = layersInfo;
       for (const layerInfo of layersInfo) {
-        layerInfo.observable.subscribe(async vectorSource => {
+        this.subscriptions.push(layerInfo.observable.subscribe(async vectorSource => {
           // New map vector data
           const passedData = {};
           passedData[layerInfo.name] = vectorSource.getFeatures();
           // accumulate / update global data
           this.waterBodyFeatures[layerInfo.name] = vectorSource.getFeatures();
           await this.calculateIntersectionsPlot(passedData);
-        });
+        }));
       }
-    });
+    }));
 
     const handlePointsObserver = (points: FeatureCollection<Point>) => {
       this.points = points;

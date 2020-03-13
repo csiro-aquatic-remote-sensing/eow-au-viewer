@@ -5,6 +5,7 @@ import VectorSource from 'ol/source/Vector';
 import { interval } from 'rxjs';
 import { debounce } from 'rxjs/operators';
 import {Injectable} from '@angular/core';
+import {EowBaseService} from './eow-base-service';
 
 const theClass = 'Layers';
 
@@ -91,7 +92,7 @@ export class LayersInfoManager {
   public addInfo(name, index, url, options, observable?) {
     this.layersInfo.push({name, index, url, options, observable});
     // subscribers will get the lot each time the subscription updates.  Nutsack69(
-    // NnnnkdkdUsing Object.assign to send a copy.
+    // Using Object.assign to send a copy.
     this._layersInfo.next(Object.assign([], this.layersInfo));
   }
 
@@ -113,10 +114,15 @@ export class LayersInfoManager {
 }
 
 @Injectable()
-export class EowLayers {
+export class EowLayers extends EowBaseService {
   waterBodiesLayers = new LayersInfoManager();
 
   constructor(private layers: ApplicationLayers, private log: Brolog) {
+    super();
+  }
+
+  destroy() {
+    super.destroy();
   }
 
   async init() {

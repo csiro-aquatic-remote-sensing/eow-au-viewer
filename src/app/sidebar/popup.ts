@@ -12,9 +12,10 @@ import moment = require('moment');
 import {Inject, Injectable} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
 import {UserStore} from './user-store';
+import {EowBaseService} from '../eow-base-service';
 
 @Injectable()
-export class Popup {
+export class Popup extends EowBaseService {
   elementId = 'popup';
   popup: any;
   // htmlDocument: Document;
@@ -22,8 +23,13 @@ export class Popup {
   pieChart: PieChart;
 
   constructor(@Inject(DOCUMENT) private htmlDocument: Document, private userStore: UserStore) { // }, private eowMap: EOWMap) {
+    super();
     // this.htmlDocument = htmlDocument;
     // this.userStore = userStore;
+  }
+
+  destroy() {
+    super.destroy();
   }
 
   /**

@@ -13,11 +13,13 @@ import {EOWMap} from '../eow-map';
 import {Feature} from 'ol';
 import VectorLayer from 'ol/layer/Vector';
 import {Injectable} from '@angular/core';
+import {EowBaseService} from '../eow-base-service';
+import {Subscription} from 'rxjs';
 
 let performOnce = true;
 
 @Injectable()
-export class MeasurementStore {
+export class MeasurementStore extends EowBaseService {
   measurements: Feature[];
   measurementsById: {};
   measurementsByOwner: {};
@@ -27,22 +29,27 @@ export class MeasurementStore {
   map: Map;
 
   constructor(private eowMap: EOWMap, private eowData: EowDataLayer, private log: Brolog) { // , private userStore: UserStore
+    super();
+  }
+
+  destroy() {
+    super.destroy();
   }
 
   // init(eowMap: EOWMap, eowData: EowDataLayer, userStore: UserStore) {
   init() {
     // this.eowMap = eowMap;
     // this.eowData = eowData;
-    this.eowData.allDataSourceObs.subscribe(allDataSource => {
+    this.subscriptions.push(this.eowData.allDataSourceObs.subscribe(allDataSource => {
       this.allDataSource = allDataSource;
       // this.setupEventHandling();  // this.userStore);
-    });
-    this.eowMap.getMap().subscribe(map => {
+    }));
+    this.subscriptions.push(this.eowMap.getMap().subscribe(map => {
       this.map = map;
-    });
-    this.eowData.dataLayerObs.subscribe(dataLayer => {
+    }));
+    this.subscriptions.push(this.eowData.dataLayerObs.subscribe(dataLayer => {
       this.dataLayer = dataLayer;
-    });
+    }));
 
     return this;
   }

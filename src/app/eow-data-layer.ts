@@ -17,13 +17,14 @@ import {
 import colors from './colors.json';
 import {UserStore} from './sidebar/user-store';
 import {MeasurementStore} from './sidebar/measurement-store';
-import {BehaviorSubject} from 'rxjs';
+import {BehaviorSubject, Subscription} from 'rxjs';
 import {EOWMap} from './eow-map';
 import Feature from 'ol/Feature';
 import {bbox as bboxStrategy} from 'ol/loadingstrategy';
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import {writeAllEOWDataImageUrls} from './globals';
 import {Injectable} from '@angular/core';
+import {EowBaseService} from './eow-base-service';
 
 const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia'; // ?service=WFS';
 // + '&version=1.0.0&request=GetFeature&typeName=eow_australia&maxFeatures=5000&outputFormat=application%2Fjson&srsName=epsg:3587';
@@ -34,7 +35,7 @@ const LOG2 = Math.log2(2);
  * This is for drawing the EOW Data on the map.
  */
 @Injectable()
-export class EowDataLayer {
+export class EowDataLayer extends EowBaseService {
   private _allDataSourceObs: BehaviorSubject<VectorSource> = new BehaviorSubject<VectorSource>(null);  // Observers that outside subscribers can use to know when data ready
   private _allDataSourceNumber = 0;
   private _dataLayerObs: BehaviorSubject<VectorLayer> = new BehaviorSubject<VectorLayer>(null);
@@ -42,6 +43,11 @@ export class EowDataLayer {
   private styleCache = {};
 
   constructor(private eowMap: EOWMap) { // , htmlDocument: Document) {
+    super();
+  }
+
+  destroy() {
+    super.destroy();
   }
 
   init() { // eowMap: EOWMap) { // , htmlDocument: Document) {
@@ -93,7 +99,7 @@ export class EowDataLayer {
       }, 2000); // yes, a hack
     });
 
-    this.eowMap.getMap().subscribe(map => {
+    this.subscriptions.push(this.eowMap.getMap().subscribe(map => {
       const basicStyle = (feature, resolution) => {
         const fuValue = feature.get('fu_value');
         const styleKey = `${fuValue}_${resolution}`;
@@ -124,7 +130,7 @@ export class EowDataLayer {
       dataLayer.set('title', 'EOW Data');
       this._dataLayerObs.next(dataLayer);
       map.addLayer(dataLayer);
-    });
+    }));
 
     this.setupEventHandlers();
 
