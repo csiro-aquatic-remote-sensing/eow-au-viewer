@@ -79,25 +79,28 @@ body {
   display: block;
 }
 
-#popup .title {
+/*#popup */
+.title {
   border-bottom: 1px solid #bebebe;
-
 }
 
-#popup .content {
+/*#popup */
+.content {
   overflow: auto;
   max-height: 300px;
   padding: 1em;
 }
 
-#popup .close {
+/*#popup */
+.close {
   float: right;
-  position: absolute;
-  top: 4px;
-  right: 8px;
+  /*position: absolute;*/
+  /*top: 4px;*/
+  /*right: 8px;*/
 }
 
-#popup .close::before {
+/*#popup */
+.close::before {
   content: '\00d7'
 }
 

@@ -53,13 +53,15 @@ export class Popup extends EowBaseService {
     // }
   }
 
-  private setupEventHandlers() {
+  private setupEventHandlers(elementId) {
     // Popup dialog close button
-    this.htmlDocument.getElementById(this.elementId).addEventListener('click', (event: Event) => {
+    this.htmlDocument.getElementById(elementId).addEventListener('click', (event: Event) => {
       const element = (event.target as HTMLElement);
       if (element.matches('.close')) {
         // this.popup.setVisible(false);
         // this.popup.getElement().classList.remove('active');
+        console.log(`close`);
+        send message to sidebar to close and reopen
       } else if (element.matches('.more-info-btn')) {
         const popupElement = element.closest('.popup-item');
         popupElement.classList.toggle('active');
@@ -99,6 +101,8 @@ export class Popup extends EowBaseService {
     // } else {
     //   this.popup.setVisible(false);
     }
+
+    this.setupEventHandlers(elementId);
   }
 
   private printDetails(feature) {
