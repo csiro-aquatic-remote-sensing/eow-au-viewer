@@ -11,15 +11,19 @@ import {AnimationOptions} from 'ol/View';
 import {DOCUMENT} from '@angular/common';
 import VectorLayer from 'ol/layer/Vector';
 import {EOWMap} from '../eow-map';
+import {Subject, Subscription} from 'rxjs';
+import {SideBarMessage} from '../types';
 import {EowBaseService} from '../eow-base-service';
+import {Popup} from './popup';
 
 @Injectable()
 export default class SideBarService extends EowBaseService {
-export default class SideBarService {
   dataLayer: VectorLayer;
   map: Map;
+  private sideBarMessagingService: Subject<SideBarMessage>;
 
-  constructor(private eowData: EowDataLayer, private eowMap: EOWMap, private measurementStore: MeasurementStore, private userStore: UserStore, private log: Brolog,
+  constructor(private eowData: EowDataLayer, private eowMap: EOWMap, private measurementStore: MeasurementStore, private userStore: UserStore, private popup: Popup,
+              private log: Brolog,
               @Inject(DOCUMENT) private htmlDocument: Document) {
     super();
   }
@@ -27,15 +31,17 @@ export default class SideBarService {
   destroy() {
     super.destroy();
   }
-  async init(): Promise<SideBarService> {
+
+  async init(sideBarMessagingService: Subject<SideBarMessage>): Promise<SideBarService> {
+    this.sideBarMessagingService = sideBarMessagingService;
     this.measurementStore.init(); // this.eowMap, this.eowData, this.userStore);
     await this.userStore.init();  // this.eowData, this.measurementStore);
 
     this.subscriptions.push(this.sideBarMessagingService.asObservable().subscribe(msg => {
       this.handleMessage(msg);
     }));
+
     this.subscriptions.push(this.eowData.dataLayerObs.subscribe(dataLayer => {
-    this.eowData.dataLayerObs.subscribe(dataLayer => {
       this.dataLayer = dataLayer;
     }));
 
@@ -60,8 +66,19 @@ export default class SideBarService {
     return this;
   }
 
-  show(menu: string) {
+  show(menu: string, {features, coordinate}: {[name: string]: any}) {
+    console.log(`sidebar - show ${menu}`);
+    this.popup.draw(features, coordinate, 'eow-dataPoint-information');
+    const measurements = this.htmlDocument.getElementById('measurements');
+    const users = this.htmlDocument.getElementById('users');
+    measurements.style.display = 'none';
+    users.style.display = 'none';
+  }
 
+  private handleMessage(msg: SideBarMessage) {
+    if (msg.action === 'show') {
+      this.show(msg.message, msg.data);
+    }
   }
 
   private setupEventHandlers(allDataSource) {
