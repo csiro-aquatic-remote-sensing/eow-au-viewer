@@ -13,6 +13,8 @@ import {Inject, Injectable} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
 import {UserStore} from './user-store';
 import {EowBaseService} from '../eow-base-service';
+import {Subject} from 'rxjs';
+import {SideBarMessage} from '../types';
 
 @Injectable()
 export class Popup extends EowBaseService {
@@ -21,6 +23,7 @@ export class Popup extends EowBaseService {
   // htmlDocument: Document;
   // userStore: any;
   pieChart: PieChart;
+  sideBarMessagingService: Subject<SideBarMessage>
 
   constructor(@Inject(DOCUMENT) private htmlDocument: Document, private userStore: UserStore) { // }, private eowMap: EOWMap) {
     super();
@@ -36,7 +39,8 @@ export class Popup extends EowBaseService {
    * Create the map overlay.
    * @param elementId to draw into
    */
-  init() { // eowMap: EOWMap) {
+  init(sideBarMessagingService: Subject<SideBarMessage>) { // eowMap: EOWMap) {
+    this.sideBarMessagingService = sideBarMessagingService;
     // TODO now becoming part of sidebar change this
     // if (!this.popup) {
     //   this.eowMap.getMap().subscribe(map => {
@@ -61,7 +65,8 @@ export class Popup extends EowBaseService {
         // this.popup.setVisible(false);
         // this.popup.getElement().classList.remove('active');
         console.log(`close`);
-        send message to sidebar to close and reopen
+        this.sideBarMessagingService.next({action: 'close', message: 'eow-dataPoint-information'});
+        // send message to sidebar to close and reopen
       } else if (element.matches('.more-info-btn')) {
         const popupElement = element.closest('.popup-item');
         popupElement.classList.toggle('active');

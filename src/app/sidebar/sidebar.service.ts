@@ -16,6 +16,9 @@ import {SideBarMessage} from '../types';
 import {EowBaseService} from '../eow-base-service';
 import {Popup} from './popup';
 
+const show = true;
+const hide = false;
+
 @Injectable()
 export default class SideBarService extends EowBaseService {
   dataLayer: VectorLayer;
@@ -50,9 +53,7 @@ export default class SideBarService extends EowBaseService {
     }));
 
     this.subscriptions.push(this.eowData.allDataSourceObs.subscribe(allDataSource => {
-      // TODO - do this through sidebar
       if (allDataSource) {
-        // TODO - do this through sidebar
         this.measurementStore.initialLoadMeasurements(this.userStore, allDataSource);
         allDataSource.un('change', this.measurementStore.initialLoadMeasurements.bind(this, this.userStore, allDataSource));
 
@@ -66,18 +67,47 @@ export default class SideBarService extends EowBaseService {
     return this;
   }
 
-  show(menu: string, {features, coordinate}: {[name: string]: any}) {
-    console.log(`sidebar - show ${menu}`);
-    this.popup.draw(features, coordinate, 'eow-dataPoint-information');
-    const measurements = this.htmlDocument.getElementById('measurements');
-    const users = this.htmlDocument.getElementById('users');
-    measurements.style.display = 'none';
-    users.style.display = 'none';
+  private handleMessage(msg: SideBarMessage) {
+    switch (msg.action) {
+      case 'show':
+        this.show(msg.message, msg.data);
+        break;
+      case 'close':
+        this.close(msg.message);
+        break;
+      default:
+        this.log.warn(this.constructor.name, `Unknown sidebarMessage action: ${msg.action}`);
+    }
   }
 
-  private handleMessage(msg: SideBarMessage) {
-    if (msg.action === 'show') {
-      this.show(msg.message, msg.data);
+  private show(menuId: string, {features, coordinate}: { [name: string]: any }) {
+    switch (menuId) {
+      case 'eow-dataPoint-information':
+        console.log(`sidebar - show ${menuId}`);
+        this.popup.draw(features, coordinate, 'eow-dataPoint-information');
+        this.showHideMenu('measurements', hide);
+        this.showHideMenu('users', hide);
+        this.showHideMenu('eow-dataPoint-information', show);
+        break;
+      default:
+        this.log.warn(this.constructor.name, `Unknown menId to show: ${menuId}`);
+    }
+  }
+
+  private showHideMenu(menuId: string, showIt: boolean) {
+    const menuItem = this.htmlDocument.getElementById(menuId);
+    menuItem.style.display = showIt ? 'block' : 'none';
+  }
+
+  private close(menuId: string) {
+    switch (menuId) {
+      case 'eow-dataPoint-information':
+        this.showHideMenu('measurements', show);
+        this.showHideMenu('users', show);
+        this.showHideMenu('eow-dataPoint-information', hide);
+        break;
+      default:
+        this.log.warn(this.constructor.name, `Unknown menId to close: ${menuId}`);
     }
   }
 
