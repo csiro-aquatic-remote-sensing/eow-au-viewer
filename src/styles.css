@@ -18,7 +18,7 @@ body {
 
 .application {
   display: grid;
-  grid-template: 35px 1fr / 82% 1fr;
+  grid-template: 35px 1fr / 80% 1fr;
   height: 100vh;
   min-height: 100%;
 }

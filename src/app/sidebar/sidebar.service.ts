@@ -15,6 +15,8 @@ import {Subject, Subscription} from 'rxjs';
 import {SideBarMessage} from '../types';
 import {EowBaseService} from '../eow-base-service';
 import {Popup} from './popup';
+import {TimeSeriesChartMap} from '../charts/time-series-chart-map';
+import {TimeSeriesChartHTML} from '../charts/time-series-chart-html';
 
 const show = true;
 const hide = false;
@@ -75,6 +77,9 @@ export default class SideBarService extends EowBaseService {
       case 'close':
         this.close(msg.message);
         break;
+      case 'draw':
+        this.draw(msg.message, msg.data);
+        break;
       default:
         this.log.warn(this.constructor.name, `Unknown sidebarMessage action: ${msg.action}`);
     }
@@ -108,6 +113,22 @@ export default class SideBarService extends EowBaseService {
         break;
       default:
         this.log.warn(this.constructor.name, `Unknown menId to close: ${menuId}`);
+    }
+  }
+
+  /**
+   * Draw charts in to the sidebar
+   *
+   * @param message about what to draw
+   * @param data for what to draw
+   */
+  private draw(message: string, data: { [p: string]: any }) {
+    switch (message) {
+      case 'timeSeriesChart':
+        new TimeSeriesChartHTML(data.rawData).draw('eow-timeline', data.scale);
+        break;
+      default:
+        this.log.warn(this.constructor.name, `Unknown Item to draw: ${message}`);
     }
   }
 
@@ -189,5 +210,4 @@ export default class SideBarService extends EowBaseService {
         JSON.stringify(this.measurementStore.numberMeasurmentsPerUser(this.userStore), null, 2)}`);
     }
   }
-
 }

@@ -116,7 +116,7 @@ export class AppComponent implements OnInit, OnDestroy {
     // this.eowDataCharts = new EowDataCharts(this.layers, this.log);
 
     this.popupObject.init(this.sideBarMessagingService);
-    this.eowDataCharts.init(this.eowMap, this.htmlDocument);
+    this.eowDataCharts.init(this.eowMap, this.htmlDocument, this.sideBarMessagingService);
     await this.sideBarService.init(this.sideBarMessagingService);
     // this.measurementStore.init(); // this.eowMap, this.eowData, this.userStore);
     // await this.userStore.init();  // this.eowData, this.measurementStore);

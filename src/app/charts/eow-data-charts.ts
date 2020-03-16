@@ -16,15 +16,16 @@ import {EowDataStruct, EowWaterBodyIntersection, SourcePointMarginsType} from '.
 import {PieChartContainer} from './pie-chart-container';
 import {TimeSeriesChartContainer} from './time-series-chart-container';
 import {Injectable} from '@angular/core';
-import {Subscription} from 'rxjs';
+import {Subject, Subscription} from 'rxjs';
 import {EowBaseService} from '../eow-base-service';
+import {SideBarMessage} from '../types';
 
 const theClass = `EOWDataCharts`;
 
 type Coords = [number, number];
 
 @Injectable()
-export default class EowDataCharts extends EowBaseService{
+export default class EowDataCharts extends EowBaseService {
   /**
    * Only create pie charts once.
    */
@@ -32,6 +33,7 @@ export default class EowDataCharts extends EowBaseService{
   map: Map;
   htmlDocument: Document;
   ids: { [id: string]: boolean } = {};
+  private sideBarMessagingService: Subject<SideBarMessage>;
 
   constructor(private layers: ApplicationLayers, private log: Brolog) {
     super();
@@ -41,8 +43,9 @@ export default class EowDataCharts extends EowBaseService{
     super.destroy();
   }
 
-  init(eowMap: EOWMap, htmlDocument) {
+  init(eowMap: EOWMap, htmlDocument, sideBarMessagingService) {
     this.htmlDocument = htmlDocument;
+    this.sideBarMessagingService = sideBarMessagingService;
     this.subscriptions.push(eowMap.getMap().subscribe(map => {
       this.map = map;
     }));
@@ -122,8 +125,8 @@ export default class EowDataCharts extends EowBaseService{
         const idPie = this.createId('pieChart-');
         const idTime = this.createId('timeSeriesChart-');
         this.log.verbose(theClass, `Draw pieChart ${idPie} at ${JSON.stringify(point)}`);
-        new PieChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, point, map, idPie, validData).draw();
-        new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.offSet(point, 1), map, idTime, validData).draw();
+        new PieChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.sideBarMessagingService, point, map, idPie, validData).draw();
+        // new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.offSet(point, 1), map, idTime, validData).draw();
         this.chartMap[uniqueChartIdForPosition] = true;
       } else {
         this.log.verbose(theClass, `NOT Drawing pieChart at ${JSON.stringify(point)})} - data not valid or complete`);

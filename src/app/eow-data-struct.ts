@@ -131,15 +131,23 @@ export class EowDataStruct {
         return {fu: f.values_.fu_value, date: f.values_.date_photo};
       });
     };
+    const uniqArray = (a) => {
+      const seen = {};
+      return a.filter(item => {
+        return seen.hasOwnProperty(item.date) ? false : (seen[item.date] = true);
+      });
+    };
     const fuDateComparator = (a, b) => {
       const dA = moment(a.date);
-      const dB = moment(b.data);
+      const dB = moment(b.date);
 
+      let result;
       if (dA.isSame(dB)) {
-        return a.fu - b.fu;
+        result = a.fu - b.fu;
       } else {
-        return dA.isBefore(dB);
+        result = dA.isBefore(dB) ? -1 : 1;
       }
+      return result;
     };
 
     /**
@@ -158,9 +166,10 @@ export class EowDataStruct {
     // const arrayFUValuesObj = arrayToObject(eowDataFUValues);
     const sortedFUDates = eowDataFUValues.sort(fuDateComparator);
     const withOrdinal = addOrdinal(sortedFUDates);
+    const deDupe = uniqArray(withOrdinal);
 
-    log.silly(theClass, `EOWData: ${JSON.stringify(withOrdinal)}`);
-    return withOrdinal;
+    log.silly(theClass, `EOWData: ${JSON.stringify(deDupe)}`);
+    return deDupe;
   }
 
   /**
