@@ -2,7 +2,7 @@ import {EowDataStruct, TimeSeriesItem, TimeSeriesItems} from '../eow-data-struct
 import {select} from 'd3-selection';
 import {scaleTime, scaleLinear} from 'd3-scale';
 import {extent} from 'd3-array';
-import {timeParse} from 'd3-time-format';
+import {timeParse, timeFormat} from 'd3-time-format';
 import {line} from 'd3-shape';
 import {axisLeft, axisBottom} from 'd3-axis';
 import colors from '../colors.json';
@@ -20,7 +20,7 @@ export class TimeSeriesChartHTML {
    */
   private timeSeriesData: TimeSeriesItems;
 
-  constructor(private data: any) {
+  constructor(private htmlDocument: Document, private data: any) {
     this.timeSeriesData = EowDataStruct.prepareTimeSeriesChartData(data);
   }
 
@@ -41,22 +41,27 @@ export class TimeSeriesChartHTML {
     const fontWeight = 20;
     const theFUColours = TimeSeriesChartHTML.getFUColours();
 
+    const dateTimeFormat = '%Y-%m-%dT%H:%M:%SZ';
     const dateParser = timeParse('%Y-%m-%dT%H:%M:%SZ');
+    const dateFormatter = timeFormat(dateTimeFormat);
     const xAccessor = d => dateParser(d.date);
     // const metricAccessor = d => d.date;
     const yAccessor = d => d.fu;
+
+    const container = this.htmlDocument.getElementById(elementId);
+    const rect = container.getBoundingClientRect();
 
     // Delete any existing pie-chart that existed in the elementId
     select('#' + elementId).select('svg').remove();
 
     const dimensions = {
-      width,
-      height: 150,
+      width: rect.width,
+      height: rect.width * 0.4,
       margin: {
         top: 15,
         right: 15,
-        bottom: 40,
-        left: 60
+        bottom: 20,
+        left: 20
       },
       boundedWidth: 0,
       boundedHeight: 0
@@ -68,7 +73,13 @@ export class TimeSeriesChartHTML {
     const wrapper = select('#' + elementId)
       .append('svg')
       .attr('width', dimensions.width)
-      .attr('height', dimensions.height + 20);
+      .attr('height', dimensions.height)
+      // .attr('width', '100%')
+      // .attr('height', '100%')
+      // .attr('viewBox', '0 0 ' + Math.min(dimensions.width, dimensions.height) + ' ' + Math.min(dimensions.width, dimensions.height))
+      // .attr('preserveAspectRatio', 'none')
+      // .append('g')
+      // .attr('transform', 'translate(' + Math.min(dimensions.width, dimensions.height) / 2 + ',' + Math.min(dimensions.width, dimensions.height) / 2 + ')');
 
     const bounds = wrapper.append('g').style('transform', `translate(${dimensions.margin.left}px, ${dimensions.margin.top}px`);
 
@@ -91,7 +102,7 @@ export class TimeSeriesChartHTML {
       .attr('stroke', 'red')
       .attr('stroke-width', 1);
 
-    const yAxisGenerator = axisLeft<any>(yScale); // .tickValues([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]); // .scale();
+    const yAxisGenerator = axisLeft<any>(yScale);
     const yAxis = bounds.append('g').call(yAxisGenerator)
       .style('transform', `translateX(0px)`)
       .attr('fill', 'none')
@@ -105,13 +116,16 @@ export class TimeSeriesChartHTML {
       .attr('stroke', 'black')
       .attr('stroke-width', 0.5);
 
-    console.log(`dimensions.boundedHeight: ${dimensions.boundedHeight}`);
-    console.log(`  translateY(${dimensions.boundedHeight}px)`)
-
+    const labelFU = wrapper.append('text')
+      .style('transform', `translate(${dimensions.boundedWidth / 2 - 10}px, 15px)`)
+      .style('text-anchor', 'middle')
+      .attr('fill', 'black')
+      .style('font-size', '12px')
+      .style('font-family', 'sans-serif')      .text('FU over time');
     const out = lineGenerator(this.timeSeriesData);
     console.log(`dataOut: ${JSON.stringify(out)}`);
 
-    this.timeSeriesData.forEach(d => console.log(`  date: ${xAccessor(d)}, fu: ${yAccessor(d)}`));
+    this.timeSeriesData.forEach(d => console.log(`  date: ${dateFormatter(xAccessor(d))}, fu: ${yAccessor(d)}`));
 
     // --------------------
     // const group = bounds.append('g');
