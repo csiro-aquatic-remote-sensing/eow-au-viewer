@@ -6,6 +6,7 @@ import {timeParse, timeFormat} from 'd3-time-format';
 import {line} from 'd3-shape';
 import {axisLeft, axisBottom} from 'd3-axis';
 import colors from '../colors.json';
+import Brolog from 'brolog';
 
 const widthFactor = 80;
 const pieWidth = 1.0;
@@ -20,7 +21,7 @@ export class TimeSeriesChartHTML {
    */
   private timeSeriesData: TimeSeriesItems;
 
-  constructor(private htmlDocument: Document, private data: any) {
+  constructor(private htmlDocument: Document, private data: any, private log: Brolog) {
     this.timeSeriesData = EowDataStruct.prepareTimeSeriesChartData(data);
   }
 
@@ -34,17 +35,14 @@ export class TimeSeriesChartHTML {
   }
 
   draw(elementId: string, sizeScaleFactor: number) {
-    console.log(`time series chart - draw at ${elementId} - ${this.timeSeriesData}`);
-
-    const width = widthFactor * sizeScaleFactor;
-    const fontSize = 0.8 * sizeScaleFactor;
-    const fontWeight = 20;
-    const theFUColours = TimeSeriesChartHTML.getFUColours();
+    this.log.verbose(this.constructor.name, `time series chart - draw at ${elementId} - data length: ${this.timeSeriesData.length}`);
 
     const dateTimeFormat = '%Y-%m-%dT%H:%M:%SZ';
-    const dateParser = timeParse('%Y-%m-%dT%H:%M:%SZ');
-    const dateFormatter = timeFormat(dateTimeFormat);
-    const xAccessor = d => dateParser(d.date);
+    const dateFormat = '%Y-%m-%d';
+    const dateTimeParser = timeParse(dateTimeFormat);
+    const dateTimeFormatter = timeFormat(dateTimeFormat);
+    const dateFormatter = timeFormat(dateFormat);
+    const xAccessor = d => dateTimeParser(d.date);
     // const metricAccessor = d => d.date;
     const yAccessor = d => d.fu;
 
@@ -110,28 +108,42 @@ export class TimeSeriesChartHTML {
       .attr('stroke-width', 0.5);
 
     const xAxisGenerator = axisBottom(xScale);
-    const xAxis = bounds.append('g').call(xAxisGenerator)
-      .style('transform', `translateY(${dimensions.boundedHeight}px)`)
-      .attr('fill', 'none')
-      .attr('stroke', 'black')
-      .attr('stroke-width', 0.5)
-      .selectAll('text')
-      .attr('y', 0)
-      .attr('x', 9)
-      .attr('dy', '.35em')
-      .attr('transform', 'rotate(90)')
-      .style('text-anchor', 'start');
+
+    // If created an 'artificial' 2nd entry (as only 1) then only write the date as the x-axis
+    if (! (this.timeSeriesData.length === 2 && this.timeSeriesData[0].hasOwnProperty('comment') && this.timeSeriesData[0].comment === 'artificial')) {
+      const xAxis = bounds.append('g').call(xAxisGenerator)
+        .style('transform', `translateY(${dimensions.boundedHeight}px)`)
+        .attr('fill', 'none')
+        .attr('stroke', 'black')
+        .attr('stroke-width', 0.5)
+        .selectAll('text')
+        .attr('y', 0)
+        .attr('x', 9)
+        .attr('dy', '.35em')
+        .attr('transform', 'rotate(90)')
+        .style('text-anchor', 'start');
+    } else {
+      const xAxisLine = bounds.append('g').append('line');
+      const xAxisLabel = bounds.append('text').text('some date')
+        .style('transform', `translate(${dimensions.boundedWidth / 2 - 10}px, ${dimensions.boundedHeight}px)`)
+        .style('text-anchor', 'middle')
+        .attr('fill', 'black')
+        .style('font-size', '12px')
+        .style('font-family', 'sans-serif')
+        .text('date: ' + dateFormatter(dateTimeParser(this.timeSeriesData[0].date)));
+    }
 
     const labelFU = wrapper.append('text')
       .style('transform', `translate(${dimensions.boundedWidth / 2 - 10}px, 15px)`)
       .style('text-anchor', 'middle')
       .attr('fill', 'black')
       .style('font-size', '12px')
-      .style('font-family', 'sans-serif')      .text('FU over time');
+      .style('font-family', 'sans-serif')
+      .text('FU over time');
     const out = lineGenerator(this.timeSeriesData);
     console.log(`dataOut: ${JSON.stringify(out)}`);
 
-    this.timeSeriesData.forEach(d => console.log(`  date: ${dateFormatter(xAccessor(d))}, fu: ${yAccessor(d)}`));
+    this.timeSeriesData.forEach(d => console.log(`  date: ${dateTimeFormatter(xAccessor(d))}, fu: ${yAccessor(d)}`));
 
     // --------------------
     // const group = bounds.append('g');

@@ -1,7 +1,7 @@
 import Brolog from 'brolog';
-import {Feature, FeatureCollection, Point, point as turfPoint, Polygon} from '@turf/helpers';
-import {Position} from 'geojson';
-import moment from 'moment';
+import {Feature as TurfFeature, FeatureCollection, Point, point as turfPoint, Polygon} from '@turf/helpers';
+import {Position, Feature} from 'geojson';
+import moment from 'moment-timezone';
 import {brologLevel} from './globals';
 
 const theClass = 'EowDataStruct';
@@ -13,6 +13,7 @@ export interface TimeSeriesItem {
   fu: string;
   date: string;
   index: number;
+  comment?: string;
 }
 
 export type TimeSeriesItems = TimeSeriesItem[];
@@ -34,7 +35,7 @@ export type PieItems = PieItem[];
  */
 export interface WaterBody {
   name: string;
-  polygon: Feature<Polygon>;
+  polygon: TurfFeature<Polygon>;
 }
 
 /**
@@ -49,11 +50,13 @@ export interface EowWaterBodyIntersection {
  * For every EOWData point, generate a circle of 'error margin' points around it
  */
 export interface SourcePointMarginsType {
-  sourcePoint: Feature<Point>;
+  sourcePoint: TurfFeature<Point>;
   margins: FeatureCollection<Point>;
 }
 
-export type PointsMap = { [pointString: string]: Feature<Point> };  // tslint:disable-line
+export type PointsMap = { [pointString: string]: TurfFeature<Point> };  // tslint:disable-line
+
+moment.tz.add('Etc/UTC|UTC|0|0||');
 
 export class EowDataStruct {
   /**
@@ -126,7 +129,7 @@ export class EowDataStruct {
    * @param features - the EOWdata that is all located in the same waterbody
    */
   static prepareTimeSeriesChartData(features): TimeSeriesItems {
-    const aggregateFUValues = (theFeatures) => {
+    const aggregateFUValues = (theFeatures: any[]) => {
       return theFeatures.map(f => {
         return {fu: f.values_.fu_value, date: f.values_.date_photo};
       });
@@ -134,7 +137,10 @@ export class EowDataStruct {
     const uniqArray = (a) => {
       const seen = {};
       return a.filter(item => {
-        return seen.hasOwnProperty(item.date) ? false : (seen[item.date] = true);
+        const s = seen.hasOwnProperty(item.date) ? false : (seen[item.date] = true);
+        console.log(`in loop - s: ${s} seen:`);
+        console.table(seen);
+        return s;
       });
     };
     const fuDateComparator = (a, b) => {
@@ -162,14 +168,34 @@ export class EowDataStruct {
       });
     };
 
+    /**
+     * If there is only one entry then the graph can't be drawn (since it is a line graph).  In which case double up that single point and
+     * thus make the line a point.  Doesn't quite work so I will add a slight offset.
+     * It adds a 'comment' field to indicate it is artificial.
+     * @param items to check
+     */
+    const doubleUpSingleEntryFn = (items: any) => {
+      if (items.length === 1) {
+        // Alter data of 2nd data point to 'create a line'
+        const m = moment(items[0].date).add(1, 'H');
+        const dateTimeFormat = 'YYYY-MM-DDTHH:mm:ssZZ';
+
+        const newItem = {fu: items[0].fu, date: m.tz('Etc/UTC').format(dateTimeFormat).replace(/\+0+/, 'Z'), comment: 'artificial'};
+        items.push(newItem);
+        items[0].comment = 'artificial';
+      }
+      return items;
+    };
+
     const eowDataFUValues = aggregateFUValues(features);
     // const arrayFUValuesObj = arrayToObject(eowDataFUValues);
     const sortedFUDates = eowDataFUValues.sort(fuDateComparator);
-    const withOrdinal = addOrdinal(sortedFUDates);
-    const deDupe = uniqArray(withOrdinal);
+    const deDupe = uniqArray(sortedFUDates);
+    const doubleUpSingleEntry = doubleUpSingleEntryFn(deDupe);
+    const withOrdinal = addOrdinal(doubleUpSingleEntry);
 
-    log.silly(theClass, `EOWData: ${JSON.stringify(deDupe)}`);
-    return deDupe;
+    log.verbose(theClass, `EOWData: ${JSON.stringify(withOrdinal)}`);
+    return withOrdinal;
   }
 
   /**
@@ -177,7 +203,7 @@ export class EowDataStruct {
    *
    * @param intersection - the data from the Turfjs pointsWithinPolygon()
    */
-  static createEoWFormat(intersection: FeatureCollection<Point>, waterBody: Feature<Polygon>): EowWaterBodyIntersection {
+  static createEoWFormat(intersection: FeatureCollection<Point>, waterBody: TurfFeature<Polygon>): EowWaterBodyIntersection {
     if (intersection.features.length === 0) {
       return {
         waterBody: {
@@ -203,7 +229,7 @@ export class EowDataStruct {
    *
    * @param point to create string version of required when the point used as an Object key
    */
-  static createPointMapString(point: Feature<Point>): string {
+  static createPointMapString(point: TurfFeature<Point>): string {
     const c = point.geometry.coordinates;
     return EowDataStruct.createPointSting(c);
   }
@@ -212,7 +238,7 @@ export class EowDataStruct {
     return '' + c[0] + '+' + c[1];
   }
 
-  static recreatePointFromString(pointString: string): Feature<Point> {
+  static recreatePointFromString(pointString: string): TurfFeature<Point> {
     const parts = pointString.split('+');
     return turfPoint([parseInt(parts[0], 10), parseInt(parts[1], 10)]);
   }

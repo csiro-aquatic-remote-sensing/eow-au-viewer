@@ -28,8 +28,7 @@ export default class SideBarService extends EowBaseService {
   private sideBarMessagingService: Subject<SideBarMessage>;
 
   constructor(private eowData: EowDataLayer, private eowMap: EOWMap, private measurementStore: MeasurementStore, private userStore: UserStore, private popup: Popup,
-              private log: Brolog,
-              @Inject(DOCUMENT) private htmlDocument: Document) {
+              private log: Brolog, @Inject(DOCUMENT) private htmlDocument: Document) {
     super();
   }
 
@@ -132,7 +131,7 @@ export default class SideBarService extends EowBaseService {
         this.showHideMenu('eow-dataPoint-information', show);
         this.showHideMenu('eow-timeline', show);
 
-        new TimeSeriesChartHTML(this.htmlDocument, data.rawData).draw('eow-timeline', data.scale);
+        new TimeSeriesChartHTML(this.htmlDocument, data.rawData, this.log).draw('eow-timeline', data.scale);
         break;
       default:
         this.log.warn(this.constructor.name, `Unknown Item to draw: ${message}`);
