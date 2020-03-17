@@ -107,9 +107,11 @@ export default class SideBarService extends EowBaseService {
   private close(menuId: string) {
     switch (menuId) {
       case 'eow-dataPoint-information':
+      case 'eow-timeline':
         this.showHideMenu('measurements', show);
         this.showHideMenu('users', show);
         this.showHideMenu('eow-dataPoint-information', hide);
+        this.showHideMenu('eow-timeline', hide);
         break;
       default:
         this.log.warn(this.constructor.name, `Unknown menId to close: ${menuId}`);
@@ -127,6 +129,7 @@ export default class SideBarService extends EowBaseService {
       case 'timeSeriesChart':
         this.showHideMenu('measurements', hide);
         this.showHideMenu('users', hide);
+        this.showHideMenu('eow-dataPoint-information', show);
         this.showHideMenu('eow-timeline', show);
 
         new TimeSeriesChartHTML(this.htmlDocument, data.rawData).draw('eow-timeline', data.scale);
@@ -173,6 +176,13 @@ export default class SideBarService extends EowBaseService {
 
     this.htmlDocument.getElementById('clearFilterButton').addEventListener('click', (event) => {
       this.clearFilter(allDataSource);
+    });
+
+    this.htmlDocument.getElementById('eow-timeline').addEventListener('click', (event: Event) => {
+      const element = (event.target as HTMLElement);
+      if (element.matches('.close')) {
+        this.sideBarMessagingService.next({action: 'close', message: 'eow-timeline'});
+      }
     });
   }
 
