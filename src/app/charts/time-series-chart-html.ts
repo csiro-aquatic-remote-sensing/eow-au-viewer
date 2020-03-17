@@ -56,11 +56,11 @@ export class TimeSeriesChartHTML {
 
     const dimensions = {
       width: rect.width,
-      height: rect.width * 0.4,
+      height: rect.width * 0.45,
       margin: {
         top: 15,
         right: 15,
-        bottom: 20,
+        bottom: 40,
         left: 20
       },
       boundedWidth: 0,
@@ -114,7 +114,13 @@ export class TimeSeriesChartHTML {
       .style('transform', `translateY(${dimensions.boundedHeight}px)`)
       .attr('fill', 'none')
       .attr('stroke', 'black')
-      .attr('stroke-width', 0.5);
+      .attr('stroke-width', 0.5)
+      .selectAll('text')
+      .attr('y', 0)
+      .attr('x', 9)
+      .attr('dy', '.35em')
+      .attr('transform', 'rotate(90)')
+      .style('text-anchor', 'start');
 
     const labelFU = wrapper.append('text')
       .style('transform', `translate(${dimensions.boundedWidth / 2 - 10}px, 15px)`)
