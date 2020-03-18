@@ -245,7 +245,7 @@ export class AppComponent implements OnInit, OnDestroy {
     const layerName = 'DigitalEarthAustraliaWaterbodies';
     if (this.waterBodyFeatures.hasOwnProperty(layerName)) {
       const eowWaterbodyPoints: EowWaterBodyIntersection[] = await GeometryOps.convertLayerToDataFormat(this.waterBodyFeatures[layerName]);
-      this.eowDataCharts.plotCharts(eowWaterbodyPoints, layerName);
+      await this.eowDataCharts.plotCharts(eowWaterbodyPoints, layerName);
     }
   }
 

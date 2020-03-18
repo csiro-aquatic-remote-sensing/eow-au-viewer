@@ -18,6 +18,7 @@ import {Injectable} from '@angular/core';
 import {Subject} from 'rxjs';
 import {EowBaseService} from '../eow-base-service';
 import {SideBarMessage} from '../types';
+import {forEachOf} from 'async-es';
 
 const theClass = `EOWDataCharts`;
 
@@ -62,7 +63,7 @@ export default class EowDataCharts extends EowBaseService {
    * @param layerName is the name of the layer
    */
   // TODO - this should be async
-  plotCharts(eowDataInWaterbodies: EowWaterBodyIntersection[], layerName: string) { // FeatureCollection<Point>[]) {
+  async plotCharts(eowDataInWaterbodies: EowWaterBodyIntersection[], layerName: string) { // FeatureCollection<Point>[]) {
     /*
       1. Loop through array of Waterbody polygons
       2. If the FeatureCollection has property 'geometry'
@@ -70,7 +71,7 @@ export default class EowDataCharts extends EowBaseService {
       4. Draw something at that point
      */
     let waterBodyIndex = 0;
-    for (const eowDataInWaterbody of eowDataInWaterbodies) {
+    forEachOf(eowDataInWaterbodies, eowDataInWaterbody => {
       // These EowWaterBodyIntersection are between the EOW Data Points and the polygons in the chosen layer (selected outside of here with
       //  the result being passed in as EowWaterBodyIntersection[].
       // Each Object is:
@@ -100,7 +101,7 @@ export default class EowDataCharts extends EowBaseService {
           this.log.verbose(theClass + '.plot', 'No Centroid to draw at');
         }
       }
-    }
+    });
     this.log.verbose(theClass, `finished going through waterbodies`);
   }
 

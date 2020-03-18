@@ -91,12 +91,12 @@ export class EowDataLayer extends EowBaseService {
     });
 
     allDataSource.on('addfeature', (evt) => {
-      setTimeout(() => {  // TODO get rid of the timeout
+      // setTimeout(() => {  // TODO get rid of the timeout
         if (this._allDataSourceNumber !== allDataSource.getFeatures().length) {
           this._allDataSourceNumber = allDataSource.getFeatures().length;
           this._allDataSourceObs.next(allDataSource);
         }
-      }, 2000); // yes, a hack
+      // }, 2000); // yes, a hack
     });
 
     this.subscriptions.push(this.eowMap.getMap().subscribe(map => {
