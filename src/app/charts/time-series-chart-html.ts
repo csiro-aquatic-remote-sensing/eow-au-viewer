@@ -115,7 +115,6 @@ export class TimeSeriesChartHTML {
         .attr('transform', 'rotate(90)')
         .style('text-anchor', 'start');
     } else {
-      const xAxisLine = bounds.append('g').append('line');
       const xAxisLabel = bounds.append('text').text('some date')
         .style('transform', `translate(${dimensions.boundedWidth / 2 - 10}px, ${dimensions.boundedHeight}px)`)
         .style('text-anchor', 'middle')
@@ -132,20 +131,8 @@ export class TimeSeriesChartHTML {
       .style('font-size', '12px')
       .style('font-family', 'sans-serif')
       .text('FU over time');
-    const out = lineGenerator(this.timeSeriesData);
-    console.log(`dataOut: ${JSON.stringify(out)}`);
 
-    this.timeSeriesData.forEach(d => console.log(`  date: ${dateTimeFormatter(xAccessor(d))}, fu: ${yAccessor(d)}`));
-
-    // --------------------
-    // const group = bounds.append('g');
-    //
-    // const groups = group.selectAll('g')
-    //   .data(this.timeSeriesData)
-    //   .enter()
-    //   .append('g');
-
-
+    this.timeSeriesData.forEach(d => this.log.verbose(this.constructor.name, `  date: ${dateTimeFormatter(xAccessor(d))}, fu: ${yAccessor(d)}`));
   }
 
   /**

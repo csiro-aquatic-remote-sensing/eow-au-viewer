@@ -11,11 +11,10 @@ import {AnimationOptions} from 'ol/View';
 import {DOCUMENT} from '@angular/common';
 import VectorLayer from 'ol/layer/Vector';
 import {EOWMap} from '../eow-map';
-import {Subject, Subscription} from 'rxjs';
+import {Subject} from 'rxjs';
 import {SideBarMessage} from '../types';
 import {EowBaseService} from '../eow-base-service';
 import {Popup} from './popup';
-import {TimeSeriesChartMap} from '../charts/time-series-chart-map';
 import {TimeSeriesChartHTML} from '../charts/time-series-chart-html';
 
 const show = true;
@@ -38,8 +37,8 @@ export default class SideBarService extends EowBaseService {
 
   async init(sideBarMessagingService: Subject<SideBarMessage>): Promise<SideBarService> {
     this.sideBarMessagingService = sideBarMessagingService;
-    this.measurementStore.init(); // this.eowMap, this.eowData, this.userStore);
-    await this.userStore.init();  // this.eowData, this.measurementStore);
+    this.measurementStore.init();
+    await this.userStore.init();
 
     this.subscriptions.push(this.sideBarMessagingService.asObservable().subscribe(msg => {
       this.handleMessage(msg);
@@ -149,7 +148,6 @@ export default class SideBarService extends EowBaseService {
       }
 
       const coordinate = element.getAttribute('data-coordinate').split(',').map(c => parseInt(c, 10)) as Coordinate;
-      const id = element.getAttribute('data-key');
       const view = this.map.getView();
       view.cancelAnimations();
       view.animate({
@@ -157,9 +155,6 @@ export default class SideBarService extends EowBaseService {
         zoom: 8,
         duration: 1300
       } as AnimationOptions);
-      const features = [this.measurementStore.getById(id)];
-      // TODO - fix up this popup
-      // this.popupObject.draw(features, coordinate);
     }, true);
 
     // User List

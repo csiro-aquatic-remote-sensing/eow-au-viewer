@@ -3,6 +3,7 @@ import {Feature as TurfFeature, FeatureCollection, Point, point as turfPoint, Po
 import {Position} from 'geojson';
 import moment from 'moment-timezone';
 import {brologLevel} from './globals';
+import DurationConstructor = moment.unitOfTime.DurationConstructor;
 
 const theClass = 'EowDataStruct';
 const log = Brolog.instance(brologLevel);
@@ -136,10 +137,7 @@ export class EowDataStruct {
     const uniqArray = (a) => {
       const seen = {};
       return a.filter(item => {
-        const s = seen.hasOwnProperty(item.date) ? false : (seen[item.date] = true);
-        console.log(`in loop - s: ${s} seen:`);
-        console.table(seen);
-        return s;
+        return seen.hasOwnProperty(item.date) ? false : (seen[item.date] = true);
       });
     };
     const fuDateComparator = (a, b) => {
@@ -176,7 +174,7 @@ export class EowDataStruct {
     const doubleUpSingleEntryFn = (items: any) => {
       if (items.length === 1) {
         // Alter data of 2nd data point to 'create a line'
-        const m = moment(items[0].date).add(1, 'H');
+        const m = moment(items[0].date).add(1, 'h' as DurationConstructor);
         const dateTimeFormat = 'YYYY-MM-DDTHH:mm:ssZZ';
 
         const newItem = {fu: items[0].fu, date: m.tz('Etc/UTC').format(dateTimeFormat).replace(/\+0+/, 'Z'), comment: 'artificial'};

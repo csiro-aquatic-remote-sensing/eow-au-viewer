@@ -1,11 +1,8 @@
-import Overlay from 'ol/Overlay';
 import {
   printStats,
   calculateStats,
 } from '../utils';
 import colors from '../colors.json';
-import OverlayPositioning from 'ol/OverlayPositioning';
-import {EOWMap} from '../eow-map';
 import {PieChart} from '../charts/pie-chart';
 import {EowDataStruct} from '../eow-data-struct';
 import moment = require('moment');
@@ -20,15 +17,11 @@ import {SideBarMessage} from '../types';
 export class Popup extends EowBaseService {
   elementId = 'popup';
   popup: any;
-  // htmlDocument: Document;
-  // userStore: any;
   pieChart: PieChart;
   sideBarMessagingService: Subject<SideBarMessage>
 
   constructor(@Inject(DOCUMENT) private htmlDocument: Document, private userStore: UserStore) { // }, private eowMap: EOWMap) {
     super();
-    // this.htmlDocument = htmlDocument;
-    // this.userStore = userStore;
   }
 
   destroy() {
@@ -41,20 +34,6 @@ export class Popup extends EowBaseService {
    */
   init(sideBarMessagingService: Subject<SideBarMessage>) { // eowMap: EOWMap) {
     this.sideBarMessagingService = sideBarMessagingService;
-    // TODO now becoming part of sidebar change this
-    // if (!this.popup) {
-    //   this.eowMap.getMap().subscribe(map => {
-    //     this.popup = new Overlay({
-    //       element: this.htmlDocument.getElementById(this.elementId),
-    //       position: [0, 0],
-    //       autoPan: true,
-    //       autoPanMargin: 275,
-    //       positioning: OverlayPositioning.CENTER_LEFT
-    //     });
-    //     map.addOverlay(this.popup);
-    //     this.setupEventHandlers();
-    //   });
-    // }
   }
 
   private setupEventHandlers(elementId) {
@@ -62,8 +41,6 @@ export class Popup extends EowBaseService {
     this.htmlDocument.getElementById(elementId).addEventListener('click', (event: Event) => {
       const element = (event.target as HTMLElement);
       if (element.matches('.close')) {
-        // this.popup.setVisible(false);
-        // this.popup.getElement().classList.remove('active');
         console.log(`close`);
         this.sideBarMessagingService.next({action: 'close', message: 'eow-dataPoint-information'});
         // send message to sidebar to close and reopen
@@ -72,19 +49,6 @@ export class Popup extends EowBaseService {
         popupElement.classList.toggle('active');
       }
     });
-  }
-
-  getOverlay(): Overlay {
-    // if (!this.popup) {
-    //   throw new Error('Popup / getOverlay - popup is null - it has not been initialised.');
-    // }
-    //
-    // return this.popup;
-    return null;
-  }
-
-  setVisible(visible: boolean) {
-    // this.popup.setVisible(visible);
   }
 
   // Draw the popup at element using data from features at the given coordinate clickec on
@@ -99,12 +63,8 @@ export class Popup extends EowBaseService {
       content.innerHTML = features.map(f => this.printDetails(f)).join('');
       stats.innerHTML = PieChart.fixForThisPieChart(printStats(calculateStats(features), this.userStore));
       element.classList.add('active');
-      // this.popup.setPosition(coordinate); // [28468637.79432749, 5368841.526355445]);  //
-      // this.popup.setVisible(true);
       const preparedFeatures = EowDataStruct.preparePieChartData(features);
       PieChart.drawD3(preparedFeatures, 'pieChart', 8);
-    // } else {
-    //   this.popup.setVisible(false);
     }
 
     this.setupEventHandlers(elementId);

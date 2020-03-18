@@ -6,7 +6,6 @@ import GeoJSON from 'ol/format/GeoJSON';
 import {lineString as turfLineString} from '@turf/helpers';
 import Brolog from 'brolog';
 import {ApplicationLayers} from '../layers';
-import {TimeSeriesChartContainer} from './time-series-chart-container';
 import {Subject} from 'rxjs';
 import {SideBarMessage} from '../types';
 
@@ -48,7 +47,7 @@ export class PieChartContainer extends ChartContainer {
    *
    * @param point where the Pie Chart is drawn (the centroid of the EOW Data points)
    * @param preparedChartData that contains the points of hte EOWData
-   * @param index as may get lots of the same name
+   * @param layerName is the name of the layer
    */
   private async drawDebugLines(point: Coords, preparedChartData: any, layerName: string) {
     if (debugDrawLines) {
@@ -59,13 +58,11 @@ export class PieChartContainer extends ChartContainer {
       const lineFeatures = allEOWDataPoints().map(p => {
         this.log.silly(theClass, `Draw chart to EOWData line: ${JSON.stringify(point)}, ${JSON.stringify(p)}`);
         const ls = turfLineString([point, p], {name: 'FUChart to EOWData line'});
-        const lsFeature = format.readFeature(ls, {
+        return format.readFeature(ls, {
           dataProjection: 'EPSG:4326',
           featureProjection: 'EPSG:4326'
         });
-        return lsFeature;
       });
-      // console.log(`drawDebugLines - ${JSON.stringify(lineFeatures, null, 2)}`);
       await this.layers.createLayerFromWFSFeatures(lineFeatures, {
         visible: true, layerDisplayName: `Lines for ${layerName}`, layerGroupName: 'Dev features'
       }, null);
