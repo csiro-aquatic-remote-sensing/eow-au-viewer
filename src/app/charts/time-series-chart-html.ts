@@ -115,10 +115,10 @@ export class TimeSeriesChartHTML {
         .attr('transform', 'rotate(90)')
         .style('text-anchor', 'start');
     } else {
-      const xAxisLabel = bounds.append('text').text('some date')
+      const xAxisLabel = bounds.append('text')
         .style('transform', `translate(${dimensions.boundedWidth / 2 - 10}px, ${dimensions.boundedHeight}px)`)
         .style('text-anchor', 'middle')
-        .attr('fill', 'black')
+        .style('fill', 'black')
         .style('font-size', '12px')
         .style('font-family', 'sans-serif')
         .text('date: ' + dateFormatter(dateTimeParser(this.timeSeriesData[0].date)));
