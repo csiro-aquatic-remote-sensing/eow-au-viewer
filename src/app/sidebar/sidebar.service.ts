@@ -100,7 +100,9 @@ export default class SideBarService extends EowBaseService {
 
   private showHideMenu(menuId: string, showIt: boolean) {
     const menuItem = this.htmlDocument.getElementById(menuId);
-    menuItem.style.display = showIt ? 'block' : 'none';
+    // menuItem.style.display = showIt ? 'block' : 'none';
+    menuItem.classList.remove(showIt ? 'hidden' : 'show');
+    menuItem.classList.add(showIt ? 'show' : 'hidden');
   }
 
   private close(menuId: string) {

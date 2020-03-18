@@ -303,9 +303,9 @@ li.item {
   cursor: pointer;
 }
 
-.hidden {
-  display:none;
-}
+/*.hidden {*/
+/*  display:none;*/
+/*}*/
 
 #clearFilterButton {
   float:right;
@@ -349,4 +349,22 @@ td, th {
 .thead {
   font-weight: bold;
   border-left: 0.5px solid #bebebe;
+}
+
+#measurements, #users {
+  /*display: block;*/
+  opacity: 1;
+  max-height: 420px;
+  visibility: visible;
+  -webkit-transition: all 500ms ease-out 1s;
+  -moz-transition: all 500ms ease-out 1s;
+  -o-transition: all 500ms ease-out 1s;
+  transition: all 500ms ease-out 1s;
+}
+
+#measurements.hidden, #users.hidden {
+  opacity: 0;
+  overflow: hidden;
+  max-height: 0;
+  visibility: hidden;
 }
