@@ -133,7 +133,7 @@ export default class SideBarService extends EowBaseService {
         this.showHideMenu('eow-dataPoint-information', show);
         this.showHideMenu('eow-timeline', show);
 
-        new TimeSeriesChartHTML(this.htmlDocument, data.rawData, this.log).draw('eow-timeline', data.scale);
+        new TimeSeriesChartHTML(this.htmlDocument, data.rawData, this.log).draw('eow-timeline');
         break;
       default:
         this.log.warn(this.constructor.name, `Unknown Item to draw: ${message}`);

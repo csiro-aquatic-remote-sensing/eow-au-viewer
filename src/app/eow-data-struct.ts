@@ -1,11 +1,11 @@
 import Brolog from 'brolog';
 import {Feature as TurfFeature, FeatureCollection, Point, point as turfPoint, Polygon} from '@turf/helpers';
-import {Position, Feature} from 'geojson';
+import {Position} from 'geojson';
 import moment from 'moment-timezone';
 import {brologLevel} from './globals';
 
 const theClass = 'EowDataStruct';
-const log = Brolog.instance(brologLevel);  // InjectorInstance.get<Brolog>(Brolog);
+const log = Brolog.instance(brologLevel);
 
 export type Coords = [number, number];
 
@@ -74,7 +74,7 @@ export class EowDataStruct {
    * @param features - the EOWdata that is all located in the same waterbody
    */
   static preparePieChartData(features): PieItems {
-    const aggregateFUValues = (fuValuesInFeatures) => {
+    const aggregateFUValues = () => {
       const eowDataReducer = (acc, currentValue) => {
         if (currentValue.values_ && currentValue.values_.fu_value) {
           if (acc.hasOwnProperty(currentValue.values_.fu_value)) {
@@ -93,7 +93,6 @@ export class EowDataStruct {
     };
     // Add zeros for all the other FUs since the colours in the pie charts are from the ordinal number of the data, NOT the value
     // of it's "name" attribute
-    // TODO - i don't believe this is necessary, or it should be renamed 'objectToArray'
     const setMissingFUsToZero = (fUValuesObj) => {
       return Object.keys(fUValuesObj).map(i => {
         return parseInt(i, 10);
@@ -105,7 +104,7 @@ export class EowDataStruct {
         return obj;
       }, {});
 
-    const eowDataFUValues = aggregateFUValues(features);
+    const eowDataFUValues = aggregateFUValues();
     const arrayFUValues = setMissingFUsToZero(eowDataFUValues);
     const arrayFUValuesObj = arrayToObject(arrayFUValues);
 
@@ -199,9 +198,10 @@ export class EowDataStruct {
   }
 
   /**
-   * Modify in to format as specified in calculateLayerIntersections().
+   * Modify to be in the format as specified in calculateLayerIntersections().
    *
    * @param intersection - the data from the Turfjs pointsWithinPolygon()
+   * @param waterBody - polygons data
    */
   static createEoWFormat(intersection: FeatureCollection<Point>, waterBody: TurfFeature<Polygon>): EowWaterBodyIntersection {
     if (intersection.features.length === 0) {

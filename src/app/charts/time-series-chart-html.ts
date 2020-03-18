@@ -8,8 +8,6 @@ import {axisLeft, axisBottom} from 'd3-axis';
 import colors from '../colors.json';
 import Brolog from 'brolog';
 
-const widthFactor = 80;
-const pieWidth = 1.0;
 const opaqueness = 0.7;
 
 export class TimeSeriesChartHTML {
@@ -19,7 +17,7 @@ export class TimeSeriesChartHTML {
    * @param data to massage and draw chart from
    * @param elementId to draw in to
    */
-  private timeSeriesData: TimeSeriesItems;
+  readonly timeSeriesData: TimeSeriesItems;
 
   constructor(private htmlDocument: Document, private data: any, private log: Brolog) {
     this.timeSeriesData = EowDataStruct.prepareTimeSeriesChartData(data);
@@ -34,7 +32,7 @@ export class TimeSeriesChartHTML {
     });
   }
 
-  draw(elementId: string, sizeScaleFactor: number) {
+  draw(elementId: string) {
     this.log.verbose(this.constructor.name, `time series chart - draw at ${elementId} - data length: ${this.timeSeriesData.length}`);
 
     const dateTimeFormat = '%Y-%m-%dT%H:%M:%SZ';
@@ -71,13 +69,7 @@ export class TimeSeriesChartHTML {
     const wrapper = select('#' + elementId)
       .append('svg')
       .attr('width', dimensions.width)
-      .attr('height', dimensions.height)
-      // .attr('width', '100%')
-      // .attr('height', '100%')
-      // .attr('viewBox', '0 0 ' + Math.min(dimensions.width, dimensions.height) + ' ' + Math.min(dimensions.width, dimensions.height))
-      // .attr('preserveAspectRatio', 'none')
-      // .append('g')
-      // .attr('transform', 'translate(' + Math.min(dimensions.width, dimensions.height) / 2 + ',' + Math.min(dimensions.width, dimensions.height) / 2 + ')');
+      .attr('height', dimensions.height);
 
     const bounds = wrapper.append('g').style('transform', `translate(${dimensions.margin.left}px, ${dimensions.margin.top}px`);
 
@@ -97,7 +89,7 @@ export class TimeSeriesChartHTML {
     const graphLine = bounds.append('path')
       .attr('d', lineGenerator(this.timeSeriesData))
       .attr('fill', 'none')
-      .attr('stroke', 'red')
+      .attr('stroke', TimeSeriesChartHTML.getFUColours()[this.averageColour()])
       .attr('stroke-width', 1);
 
     const yAxisGenerator = axisLeft<any>(yScale);
@@ -154,6 +146,15 @@ export class TimeSeriesChartHTML {
     //   .append('g');
 
 
+  }
+
+  /**
+   * Return the average FU colour across the given timeSeries data
+   */
+  private averageColour() {
+    const reducer = (acc, current) => acc + current.fu;
+    const total = this.timeSeriesData.reduce(reducer, 0);
+    return Math.round(total / this.timeSeriesData.length);
   }
 
 
