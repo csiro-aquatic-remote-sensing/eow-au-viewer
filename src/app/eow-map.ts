@@ -1,7 +1,7 @@
 import Map from 'ol/Map';
 import GeoJSON from 'ol/format/GeoJSON';
 import Feature from 'ol/Feature';
-import {BehaviorSubject} from 'rxjs';
+import {BehaviorSubject, Subject, Subscription} from 'rxjs';
 import Brolog from 'brolog';
 import {Popup} from './sidebar/popup';
 import TileLayer from 'ol/layer/Tile';
@@ -19,6 +19,7 @@ import LayerSwitcher from 'ol-layerswitcher';
 import {defaults} from 'ol/control';
 import {Injectable} from '@angular/core';
 import SideBarService from './sidebar/sidebar.service';
+import {SideBarMessage} from './types';
 import {EowBaseService} from './eow-base-service';
 
 const theClass = 'EOWMap';
@@ -28,9 +29,9 @@ const theZoom = 12;
 
 @Injectable()
 export class EOWMap extends EowBaseService {
-export class EOWMap {
   private _mapObs: BehaviorSubject<Map>;
   private map: Map;
+  private sideBarMessagingService: Subject<SideBarMessage>;
 
   constructor(private log: Brolog) {  // private popupObject: Popup,
     super();
@@ -40,7 +41,10 @@ export class EOWMap {
   destroy() {
     super.destroy();
   }
-  init() { // popupObject: Popup) {
+
+  // popupObject: Popup) {
+  init(sideBarMessagingService: Subject<SideBarMessage>) {
+    this.sideBarMessagingService = sideBarMessagingService;
     const mainMap = new TileLayer({
       source: new OSM(),
     });
@@ -95,8 +99,7 @@ export class EOWMap {
 
       if (features.length) {
         this.log.verbose(theClass, `Clicked on map at: ${JSON.stringify(coordinate)}  - fix the call to display Popup (do through sidebar)`);
-        // TODO - can't use this in here - circular ref
-        // this.sideBarService.show('eow-dataPoint-information');
+        this.sideBarMessagingService.next({action: 'show', message: 'eow-dataPoint-information', data: {features, coordinate}});
         // popupObject.draw(features, coordinate);
       }
     });

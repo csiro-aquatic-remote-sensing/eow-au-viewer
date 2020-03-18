@@ -18,6 +18,7 @@ import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import {EowLayers, LayersInfo} from './eow-layers';
 import GeoJSON from 'ol/format/GeoJSON';
 import {Injectable} from '@angular/core';
+import {EowBaseService} from './eow-base-service';
 
 /**
  * We need to determine the Waterbodies (defined through various other layers) and the contained EOW Data so we can perform actions on
@@ -25,10 +26,15 @@ import {Injectable} from '@angular/core';
  */
 // TODO i don't think this is being used anymore
 @Injectable()
-export default class LayerGeometries {
+export default class LayerGeometries extends EowBaseService {
   layerFeatures: { [name: string]: TurfFeature<Polygon>[] } = {};  // Each Layer passed to createGeometry() has multiple polygons
 
   constructor(private eowLayers: EowLayers, private log: Brolog) {
+    super();
+  }
+
+  destroy() {
+    super.destroy();
   }
 
   private mapNames(name: string): string {

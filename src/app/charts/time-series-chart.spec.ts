@@ -1,7 +1,7 @@
-import { TimeSeriesChart } from './time-series-chart';
+import { TimeSeriesChartMap } from './time-series-chart-map';
 
 describe('TimeSeriesChart', () => {
   it('should create an instance', () => {
-    expect(new TimeSeriesChart()).toBeTruthy();
+    expect(new TimeSeriesChartMap()).toBeTruthy();
   });
 });

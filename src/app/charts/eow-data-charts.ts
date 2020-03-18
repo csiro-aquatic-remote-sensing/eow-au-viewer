@@ -14,17 +14,17 @@ import {EOWMap} from '../eow-map';
 import {ApplicationLayers, redLines} from '../layers';
 import {EowDataStruct, EowWaterBodyIntersection, SourcePointMarginsType} from '../eow-data-struct';
 import {PieChartContainer} from './pie-chart-container';
-import {TimeSeriesChartContainer} from './time-series-chart-container';
 import {Injectable} from '@angular/core';
-import {Subscription} from 'rxjs';
+import {Subject} from 'rxjs';
 import {EowBaseService} from '../eow-base-service';
+import {SideBarMessage} from '../types';
 
 const theClass = `EOWDataCharts`;
 
 type Coords = [number, number];
 
 @Injectable()
-export default class EowDataCharts extends EowBaseService{
+export default class EowDataCharts extends EowBaseService {
   /**
    * Only create pie charts once.
    */
@@ -32,6 +32,7 @@ export default class EowDataCharts extends EowBaseService{
   map: Map;
   htmlDocument: Document;
   ids: { [id: string]: boolean } = {};
+  private sideBarMessagingService: Subject<SideBarMessage>;
 
   constructor(private layers: ApplicationLayers, private log: Brolog) {
     super();
@@ -41,11 +42,14 @@ export default class EowDataCharts extends EowBaseService{
     super.destroy();
   }
 
-  init(eowMap: EOWMap, htmlDocument) {
+  init(eowMap: EOWMap, htmlDocument, sideBarMessagingService) {
     this.htmlDocument = htmlDocument;
+    this.sideBarMessagingService = sideBarMessagingService;
     this.subscriptions.push(eowMap.getMap().subscribe(map => {
       this.map = map;
     }));
+
+    this.setupEventHandlers();
   }
 
   private setupEventHandlers() {
@@ -55,6 +59,7 @@ export default class EowDataCharts extends EowBaseService{
    * Perform some action on the EOW Data in waterbodies.  For example, draw charts at the centroid of the polygon that
    * represents the water body.  The charts are for the FU values in that water body.
    * @param eowDataInWaterbodies - Polygons of waterbodies and EOWData in that waterbody
+   * @param layerName is the name of the layer
    */
   // TODO - this should be async
   plotCharts(eowDataInWaterbodies: EowWaterBodyIntersection[], layerName: string) { // FeatureCollection<Point>[]) {
@@ -102,7 +107,7 @@ export default class EowDataCharts extends EowBaseService{
   /**
    * Draw an overlay with pie chart at the point given for the data point representing FU values.
    *
-   * @param eowDataInWaterbodies - array of EOW Data that belongs to same water body
+   * @param eowDataInWaterbody - array of EOW Data that belongs to same water body
    * @param point where to draw - centroid of data (EOW Data points or Waterbody polygon points - I may change which is used sometime)
    * @param map to draw on
    * @param waterBodyIndex for DEBUG when line groups are drawn
@@ -120,10 +125,8 @@ export default class EowDataCharts extends EowBaseService{
     if (! this.chartMap.hasOwnProperty(uniqueChartIdForPosition)) {
       if (validData.length > 0 && point[0] && point[1] && !isNaN(point[0]) && !isNaN(point[1])) {
         const idPie = this.createId('pieChart-');
-        const idTime = this.createId('timeSeriesChart-');
         this.log.verbose(theClass, `Draw pieChart ${idPie} at ${JSON.stringify(point)}`);
-        new PieChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, point, map, idPie, validData).draw();
-        new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.offSet(point, 1), map, idTime, validData).draw();
+        new PieChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.sideBarMessagingService, point, map, idPie, validData).draw();
         this.chartMap[uniqueChartIdForPosition] = true;
       } else {
         this.log.verbose(theClass, `NOT Drawing pieChart at ${JSON.stringify(point)})} - data not valid or complete`);
@@ -149,18 +152,9 @@ export default class EowDataCharts extends EowBaseService{
   }
 
   /**
-   * Offset subsequent charts so they don't appear on exactly the same spot.
-   *
-   * @param amount as multiplier
-   */
-  private offSet(point: Coords, amount: number): Coords {
-    return point.map(p => p + (amount * .02)) as Coords;
-  }
-
-  /**
    * ErrorMarginPoints are points around the EOW Data points.  Draw them so can see this is working.
    *
-   * @param errorMarginPoints to draw
+   * @param pointsMap to draw
    */
   async drawErrorMarginPoints(pointsMap: SourcePointMarginsType[]) {
     const format = new GeoJSON();

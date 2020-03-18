@@ -6,7 +6,9 @@ import GeoJSON from 'ol/format/GeoJSON';
 import {lineString as turfLineString} from '@turf/helpers';
 import Brolog from 'brolog';
 import {ApplicationLayers} from '../layers';
-import {TimeSeriesChart} from './time-series-chart';
+import {TimeSeriesChartMap} from './time-series-chart-map';
+import {Subject} from 'rxjs';
+import {SideBarMessage} from '../types';
 
 const theClass = 'PieChartContainer';
 
@@ -17,8 +19,8 @@ export class TimeSeriesChartContainer extends ChartContainer {
     super(layerName, layers, log);
   }
 
-  init(htmlDocument: Document, point: Coords, map: Map, id: string, data: any[]) {
-    return super.init(htmlDocument, point, map, id, data);
+  init(htmlDocument: Document, sideBarMessagingService: Subject<SideBarMessage>, point: Coords, map: Map, id: string, data: any[]) {
+    return super.init(htmlDocument, sideBarMessagingService, point, map, id, data);
   }
 
   // TODO type this data
@@ -27,6 +29,6 @@ export class TimeSeriesChartContainer extends ChartContainer {
   }
 
   drawChartOfType() {
-    TimeSeriesChart.draw(this.preparedData, this.id, this.map.getView().getZoom() * LOG2);
+    TimeSeriesChartMap.draw(this.preparedData, this.id, this.map.getView().getZoom() * LOG2);
   }
 }

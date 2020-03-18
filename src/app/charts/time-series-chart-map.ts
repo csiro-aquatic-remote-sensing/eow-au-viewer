@@ -10,13 +10,13 @@ import {brologLevel} from '../globals';
 
 const log = Brolog.instance(brologLevel);  // InjectorInstance.get<Brolog>(Brolog);
 
-const theClass = 'TimeSeriesChart';
+const theClass = 'TimeSeriesChartMap';
 
 const widthFactor = 10;
 const pieWidth = 1.0;
 const opaqueness = 0.7;
 
-export class TimeSeriesChart {
+export class TimeSeriesChartMap {
   /**
    * Draw pie chart of features (FU Values) at elementId
    *
@@ -28,7 +28,7 @@ export class TimeSeriesChart {
     const width = widthFactor * sizeScaleFactor;
     const fontSize = 0.8 * sizeScaleFactor;
     const fontWeight = 20;
-    const theFUColours = TimeSeriesChart.getFUColours();
+    const theFUColours = TimeSeriesChartMap.getFUColours();
 
     const metricAccessor = d => d.date;
 
@@ -81,7 +81,7 @@ export class TimeSeriesChart {
       .attr('height', 20)
       .attr('fill', d => '' + theFUColours[d.fu]);
 
-    // TimeSeriesChart.debugBarRects(barRects);
+    // TimeSeriesChartMap.debugBarRects(barRects);
   }
 
   static debugBarRects(barRects) {

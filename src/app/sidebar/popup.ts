@@ -1,11 +1,8 @@
-import Overlay from 'ol/Overlay';
 import {
   printStats,
   calculateStats,
 } from '../utils';
 import colors from '../colors.json';
-import OverlayPositioning from 'ol/OverlayPositioning';
-import {EOWMap} from '../eow-map';
 import {PieChart} from '../charts/pie-chart';
 import {EowDataStruct} from '../eow-data-struct';
 import moment = require('moment');
@@ -13,19 +10,18 @@ import {Inject, Injectable} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
 import {UserStore} from './user-store';
 import {EowBaseService} from '../eow-base-service';
+import {Subject} from 'rxjs';
+import {SideBarMessage} from '../types';
 
 @Injectable()
 export class Popup extends EowBaseService {
   elementId = 'popup';
   popup: any;
-  // htmlDocument: Document;
-  // userStore: any;
   pieChart: PieChart;
+  sideBarMessagingService: Subject<SideBarMessage>
 
   constructor(@Inject(DOCUMENT) private htmlDocument: Document, private userStore: UserStore) { // }, private eowMap: EOWMap) {
     super();
-    // this.htmlDocument = htmlDocument;
-    // this.userStore = userStore;
   }
 
   destroy() {
@@ -36,30 +32,18 @@ export class Popup extends EowBaseService {
    * Create the map overlay.
    * @param elementId to draw into
    */
-  init() { // eowMap: EOWMap) {
-    // TODO now becoming part of sidebar change this
-    // if (!this.popup) {
-    //   this.eowMap.getMap().subscribe(map => {
-    //     this.popup = new Overlay({
-    //       element: this.htmlDocument.getElementById(this.elementId),
-    //       position: [0, 0],
-    //       autoPan: true,
-    //       autoPanMargin: 275,
-    //       positioning: OverlayPositioning.CENTER_LEFT
-    //     });
-    //     map.addOverlay(this.popup);
-    //     this.setupEventHandlers();
-    //   });
-    // }
+  init(sideBarMessagingService: Subject<SideBarMessage>) { // eowMap: EOWMap) {
+    this.sideBarMessagingService = sideBarMessagingService;
   }
 
-  private setupEventHandlers() {
+  private setupEventHandlers(elementId) {
     // Popup dialog close button
-    this.htmlDocument.getElementById(this.elementId).addEventListener('click', (event: Event) => {
+    this.htmlDocument.getElementById(elementId).addEventListener('click', (event: Event) => {
       const element = (event.target as HTMLElement);
       if (element.matches('.close')) {
-        this.popup.setVisible(false);
-        this.popup.getElement().classList.remove('active');
+        console.log(`close`);
+        this.sideBarMessagingService.next({action: 'close', message: 'eow-dataPoint-information'});
+        // send message to sidebar to close and reopen
       } else if (element.matches('.more-info-btn')) {
         const popupElement = element.closest('.popup-item');
         popupElement.classList.toggle('active');
@@ -67,20 +51,9 @@ export class Popup extends EowBaseService {
     });
   }
 
-  getOverlay(): Overlay {
-    if (!this.popup) {
-      throw new Error('Popup / getOverlay - popup is null - it has not been initialised.');
-    }
-
-    return this.popup;
-  }
-
-  setVisible(visible: boolean) {
-    this.popup.setVisible(visible);
-  }
-
-  draw(features: any, coordinate: any) {
-    const element = this.popup.getElement();
+  // Draw the popup at element using data from features at the given coordinate clickec on
+  draw(features: any, coordinate: any, elementId: string) {
+    const element = this.htmlDocument.getElementById(elementId);  // this.popup.getElement();
     const content = element.querySelector('.content');
     const stats = element.querySelector('.stats');
     content.innerHTML = '';
@@ -90,13 +63,11 @@ export class Popup extends EowBaseService {
       content.innerHTML = features.map(f => this.printDetails(f)).join('');
       stats.innerHTML = PieChart.fixForThisPieChart(printStats(calculateStats(features), this.userStore));
       element.classList.add('active');
-      this.popup.setPosition(coordinate); // [28468637.79432749, 5368841.526355445]);  //
-      this.popup.setVisible(true);
       const preparedFeatures = EowDataStruct.preparePieChartData(features);
       PieChart.drawD3(preparedFeatures, 'pieChart', 8);
-    } else {
-      this.popup.setVisible(false);
     }
+
+    this.setupEventHandlers(elementId);
   }
 
   private printDetails(feature) {

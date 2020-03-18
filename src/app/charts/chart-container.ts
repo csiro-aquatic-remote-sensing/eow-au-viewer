@@ -7,6 +7,8 @@ import {Coords} from '../eow-data-struct';
 import Brolog from 'brolog';
 import {ApplicationLayers} from '../layers';
 import {EowBaseService} from '../eow-base-service';
+import {Subject} from 'rxjs';
+import {SideBarMessage} from '../types';
 
 const htmlElementId = 'waterbody';
 export const LOG2 = Math.log(2);
@@ -15,13 +17,15 @@ export abstract class ChartContainer extends EowBaseService {
   // TODO - define this type
   protected preparedData: any[];
 
-  private htmlDocument: Document;
+  protected htmlDocument: Document;
   protected point: Coords;
   protected map: Map;
   protected id: string;
   protected log: Brolog;
   protected layerName: string;
   protected layers: ApplicationLayers;
+  protected data: any;
+  protected sideBarMessagingService: Subject<SideBarMessage>;
 
   /**
    * Abstract class for the business related functions surrounding drawing charts on map.
@@ -39,12 +43,14 @@ export abstract class ChartContainer extends EowBaseService {
     this.layers = layers;
   }
 
-  init(htmlDocument: Document, point: Coords, map: Map, id: string, data: any[]) {
+  init(htmlDocument: Document, sideBarMessagingService: Subject<SideBarMessage>, point: Coords, map: Map, id: string, data: any[]) {
     this.htmlDocument = htmlDocument;
+    this.sideBarMessagingService = sideBarMessagingService;
     this.point = point;
     this.map = map;
     this.id = id;
 
+    this.data = data;
     this.preparedData = this.getBuildPrepareData(data);
 
     return this;
