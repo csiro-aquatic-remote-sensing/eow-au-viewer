@@ -39,6 +39,7 @@ export class PieChartContainer extends ChartContainer {
       console.log(`Clicked pieChart with id: ${elementId}`);
       // new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.offSet(point, 1), map, idTime, validData).draw();
       this.sideBarMessagingService.next({action: 'draw', message: 'timeSeriesChart', data: {rawData: this.data, scale: this.map.getView().getZoom() * LOG2}});
+      this.sideBarMessagingService.next({action: 'show', message: 'eow-dataPoint-information', data: {features: this.data, coordinate: null}});
     });
   }
 
