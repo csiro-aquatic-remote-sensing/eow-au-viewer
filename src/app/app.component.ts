@@ -1,18 +1,14 @@
 import {Component, OnInit, Inject, OnDestroy} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
-import {AnimationOptions} from 'ol/View';
 import Feature from 'ol/Feature';
 import {HttpClient} from '@angular/common/http';
 import {Popup} from './sidebar/popup';
 import {ApplicationLayers} from './layers';
-import {MeasurementStore} from './sidebar/measurement-store';
-import {UserStore} from './sidebar/user-store';
 import {EowDataLayer} from './eow-data-layer';
 import EowDataGeometries from './eow-data-geometries';
 import LayerGeometries from './layers-geometries';
 import GeometryOps from './geometry-ops';
 import {Brolog} from 'brolog';
-import {Coordinate} from 'ol/coordinate';
 import {EOWMap} from './eow-map';
 import {EowLayers, LayersInfo} from './eow-layers';
 import {EowWaterBodyIntersection, PointsMap, SourcePointMarginsType} from './eow-data-struct';
@@ -41,17 +37,6 @@ type WaterBodyFeatures = { [name: string]: Feature[] }; // tslint:disable-line
 })
 export class AppComponent implements OnInit, OnDestroy {
   title = 'Eye On Water';
-  // eowMap: EOWMap;
-  // popupObject: Popup;
-  // measurementStore: MeasurementStore;
-  // userStore: UserStore;
-  // eowData: EowDataLayer;
-  // layers: ApplicationLayers;
-  // eowLayers: EowLayers;
-  // eowDataGeometries: EowDataGeometries;
-  // layersGeometries: LayerGeometries;
-  geometryOps: GeometryOps;
-  // eowDataCharts: EowDataCharts;
   waterBodiesLayers: LayersInfo[];
   map: Map;
   points: FeatureCollection<Point>;
@@ -62,8 +47,6 @@ export class AppComponent implements OnInit, OnDestroy {
   dataLayer: VectorLayer;
   newPoints = false;
   waterBodyFeatures: WaterBodyFeatures = {};
-  totalNumberWaterBodyFeatures = 0;
-  newWaterbodiesData = false;
   mapIsMovingState = false;
   // Use this to asyncronously 'call' SideBar methods - mitigates Circular Refs
   sideBarMessagingService = new Subject<SideBarMessage>();
@@ -75,24 +58,15 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit() {
-    // this.loopLastCalled = -(this.loopCallIntervalMS + 1);
-    // this.userStore = new UserStore(this.htmlDocument, this.log);
-    // this.popupObject = new Popup(this.htmlDocument, this.userStore);
-    // this.eowMap = new EOWMap(this, this.log).init(this.popupObject);
     this.eowMap.init(this.sideBarMessagingService);
     this.subscriptions.push(this.eowMap.getMap().subscribe(async map => {
       this.map = map;
     }));
 
-    // this.eowData = new EowDataLayer().init(this.eowMap);
     this.eowData.init();
     this.subscriptions.push(this.eowData.allDataSourceObs.subscribe(allDataSource => {
       this.allDataSource = allDataSource;
       if (this.allDataSource) {
-        // TODO - do this through sidebar
-        // this.measurementStore.initialLoadMeasurements(this.userStore, this.allDataSource);
-        // this.allDataSource.un('change', this.measurementStore.initialLoadMeasurements.bind(this, this.userStore, this.allDataSource));
-
         // DEBUG
         // this.allDataSource.on('change', this.debug_compareUsersNMeasurements.bind(this));
         // this.allDataSource.on('change', this.debug_printFirstEOWData.bind(this));
@@ -103,23 +77,13 @@ export class AppComponent implements OnInit, OnDestroy {
       this.dataLayer = dataLayer;
     }));
 
-    // this.layers = new ApplicationLayers(this.eowMap, this.log);
-    // this.eowLayers = await new EowLayers(this.layers, this.log).init(); // this.eowMap);
     await this.eowLayers.init();
 
-    // this.measurementStore = await new MeasurementStore(this.log);
-    // this.eowDataGeometries = await new EowDataGeometries(this.log).init(this.eowData);  // TODO this seems to do similar to EowDataLayer - combine
     await this.eowDataGeometries.init();
-
-    // this.layersGeometries = new LayerGeometries(this.eowLayers, this.log);
-    // GeometryOps = new GeometryOps(this.log);
-    // this.eowDataCharts = new EowDataCharts(this.layers, this.log);
 
     this.popupObject.init(this.sideBarMessagingService);
     this.eowDataCharts.init(this.eowMap, this.htmlDocument, this.sideBarMessagingService);
     await this.sideBarService.init(this.sideBarMessagingService);
-    // this.measurementStore.init(); // this.eowMap, this.eowData, this.userStore);
-    // await this.userStore.init();  // this.eowData, this.measurementStore);
 
     this.setupObserversHandleNewData();
 
@@ -281,7 +245,7 @@ export class AppComponent implements OnInit, OnDestroy {
     const layerName = 'DigitalEarthAustraliaWaterbodies';
     if (this.waterBodyFeatures.hasOwnProperty(layerName)) {
       const eowWaterbodyPoints: EowWaterBodyIntersection[] = await GeometryOps.convertLayerToDataFormat(this.waterBodyFeatures[layerName]);
-      this.eowDataCharts.plotCharts(eowWaterbodyPoints, layerName);
+      await this.eowDataCharts.plotCharts(eowWaterbodyPoints, layerName);
     }
   }
 
@@ -294,50 +258,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private setupEventHandlers() {
-    // Pull tabs of Most Active Users and Recent Measurements
-    // this.htmlDocument.querySelectorAll('.pull-tab').forEach(i => i.addEventListener('click', (event: Event) => {
-    //   const element = (event.target as HTMLElement).closest('.panel');
-    //   element.classList.toggle('pulled');
-    // }));
 
-    // // Measurement List
-    // document.querySelector('.measurement-list').addEventListener('click', (event) => {
-    //   const element = (event.target as HTMLElement).closest('.item');
-    //   if (!element) {
-    //     return;
-    //   }
-    //
-    //   const coordinate = element.getAttribute('data-coordinate').split(',').map(c => parseInt(c, 10)) as Coordinate;
-    //   const id = element.getAttribute('data-key');
-    //   const view = this.map.getView();
-    //   view.cancelAnimations();
-    //   view.animate({
-    //     center: coordinate,
-    //     zoom: 8,
-    //     duration: 1300
-    //   } as AnimationOptions);
-    //   const features = [this.measurementStore.getById(id)];
-    //   this.popupObject.draw(features, coordinate);
-    // }, true);
-    //
-    // // User List
-    // // TODO - this should be being removed (???) when setup SideBar properly
-    // document.querySelector('.user-list').addEventListener('click', (event) => {
-    //   const element = (event.target as HTMLElement).closest('.item');
-    //   const selectedUserId = element.getAttribute('data-user');
-    //   console.log(`clicked on user-id: ${this.userStore.selectedUserId}`);
-    //   if (this.measurementStore.showMeasurements(selectedUserId)) {
-    //     this.userStore.clearSelectedUser();
-    //     this.userStore.selectedUserId = selectedUserId;
-    //     element.classList.add('selectedUser', 'box-shadow');
-    //     this.toggleFilterButton(true);
-    //   }
-    // }, true);
-
-    // this.htmlDocument.getElementById('clearFilterButton').addEventListener('click', (event) => {
-    //   this.clearFilter();
-    // });
-    //
     this.map.on('moveStart', () => {
       this.mapIsMovingState = true;
     });
@@ -346,17 +267,4 @@ export class AppComponent implements OnInit, OnDestroy {
       this.mapIsMovingState = false;
     });
   }
-
-  // private clearFilter() {
-  //   this.userStore.clearSelectedUser();
-  //   this.measurementStore.clearFilter();
-  //   if (this.dataLayer) {
-  //     this.map.getView().fit(this.dataLayer.getSource().getExtent(), {duration: 1300});
-  //     if (this.allDataSource) {
-  //       this.dataLayer.setSource(this.allDataSource);
-  //     }
-  //   }
-  //   this.toggleFilterButton(false);
-  // }
-
 }
