@@ -138,40 +138,43 @@ export default class EowDataGeometries extends EowBaseService {
    *
    * @returns object - {sourcePoint: <centre point>, margins: FeatureCollection<Point>(<points around centre point>)}
    */
-  private calculatePointsErrorMargin() {
-    this.subscriptions.push(this.getPoints().subscribe(eowPoints => {
-      const errorMarginPoints: SourcePointMarginsType[] = [];
-      const allPoints: FeatureCollection<Point> = {
-        features: [],  // Array<Feature<Point, Properties>>,
-        type: 'FeatureCollection'
-      };
-      featureEach(eowPoints, f => {
-        const circleAround: Feature<Polygon> = circle(f, EXPANDING_POINTS_RADIUS_METRES / 1000, {
-          steps: EXPANDING_POINTS_NUMBER,
-          units: 'kilometers'
+  private calculatePointsErrorMargin(): Promise<void> {
+    return new Promise(resolve => {
+      this.subscriptions.push(this.getPoints().subscribe(eowPoints => {
+        const errorMarginPoints: SourcePointMarginsType[] = [];
+        const allPoints: FeatureCollection<Point> = {
+          features: [],  // Array<Feature<Point, Properties>>,
+          type: 'FeatureCollection'
+        };
+        featureEach(eowPoints, f => {
+          const circleAround: Feature<Polygon> = circle(f, EXPANDING_POINTS_RADIUS_METRES / 1000, {
+            steps: EXPANDING_POINTS_NUMBER,
+            units: 'kilometers'
+          });
+          const p = circleAround.geometry.coordinates[0];
+          const points = featureCollection(p.map(c => turfPoint(c)));
+          const circlePoints = {sourcePoint: f, margins: points};
+          allPoints.features.push(...points.features);
+
+          errorMarginPoints.push(circlePoints);
         });
-        const p = circleAround.geometry.coordinates[0];
-        const points = featureCollection(p.map(c => turfPoint(c)));
-        const circlePoints = {sourcePoint: f, margins: points};
-        allPoints.features.push(...points.features);
 
-        errorMarginPoints.push(circlePoints);
-      });
+        if (errorMarginPoints.length !== this.pointsErrorMarginNumber) {
+          this.pointsErrorMargin = errorMarginPoints;
+          this.log.verbose(theClass, `update pointsErrorMarginObs - items#: ${errorMarginPoints.length}`);
+          this.pointsErrorMarginNumber = errorMarginPoints.length;
+          this._pointsErrorMarginObs.next(errorMarginPoints);
+        }
 
-      if (errorMarginPoints.length !== this.pointsErrorMarginNumber) {
-        this.pointsErrorMargin = errorMarginPoints;
-        this.log.verbose(theClass, `update pointsErrorMarginObs - items#: ${errorMarginPoints.length}`);
-        this.pointsErrorMarginNumber = errorMarginPoints.length;
-        this._pointsErrorMarginObs.next(errorMarginPoints);
-      }
-
-      if (allPoints.features.length !== this.allPointsNumber) {
-        this.allPoints = allPoints;
-        this.log.verbose(theClass, `update allPointsObs - items#: ${allPoints.features.length}`);
-        this.allPointsNumber = allPoints.features.length;
-        this._allPointsObs.next(allPoints);
-      }
-    }));
+        if (allPoints.features.length !== this.allPointsNumber) {
+          this.allPoints = allPoints;
+          this.log.verbose(theClass, `update allPointsObs - items#: ${allPoints.features.length}`);
+          this.allPointsNumber = allPoints.features.length;
+          this._allPointsObs.next(allPoints);
+        }
+      }));
+      resolve();
+    });
   }
 
   /**
@@ -183,22 +186,25 @@ export default class EowDataGeometries extends EowBaseService {
    *
    * @param errorMarginPoints with the sourcePoint feature and marginPoints FeatureCollection.
    */
-  private async generatePointsMap() {
-    this.subscriptions.push(this.getPointsErrorMargin().subscribe(errorMarginPoints => {
-      const pointsMap: PointsMap = {};
+  private async generatePointsMap(): Promise<void> {
+    return new Promise(resolve => {
+      this.subscriptions.push(this.getPointsErrorMargin().subscribe(errorMarginPoints => {
+        const pointsMap: PointsMap = {};
 
-      errorMarginPoints.forEach(emp => {
-        pointsMap[EowDataStruct.createPointMapString(emp.sourcePoint)] = emp.sourcePoint;
-        emp.margins.features.forEach(margin => {
-          pointsMap[EowDataStruct.createPointMapString(margin)] = emp.sourcePoint;
+        errorMarginPoints.forEach(emp => {
+          pointsMap[EowDataStruct.createPointMapString(emp.sourcePoint)] = emp.sourcePoint;
+          emp.margins.features.forEach(margin => {
+            pointsMap[EowDataStruct.createPointMapString(margin)] = emp.sourcePoint;
+          });
         });
-      });
 
-      if (Object.keys(pointsMap).length !== this.pointsErrorMarginNumber) {
-        this.log.verbose(theClass, `update allPointsMapObs - items#: ${Object.keys(pointsMap).length}`);
-        this.pointsErrorMarginNumber = Object.keys(pointsMap).length;
-        this._allPointsMapObs.next(pointsMap);
-      }
-    }));
+        if (Object.keys(pointsMap).length !== this.pointsErrorMarginNumber) {
+          this.log.verbose(theClass, `update allPointsMapObs - items#: ${Object.keys(pointsMap).length}`);
+          this.pointsErrorMarginNumber = Object.keys(pointsMap).length;
+          this._allPointsMapObs.next(pointsMap);
+        }
+      }));
+      resolve();
+    });
   }
 }

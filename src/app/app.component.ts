@@ -208,7 +208,7 @@ export class AppComponent implements OnInit, OnDestroy {
           // const clippedFeatures = bboxClip(waterBodyFeatures, this.map.getView().calculateExtent(this.map.getSize()));
           this.log.verbose(theClass, `     waterBodyLayer loop for: ${waterBodyLayerName} - # Features in View unfiltered: ${waterBodyFeatures.length}`);
           // Convert to polygons
-          const waterBodyFeatureFiltered: FeatureCollection<Polygon> = GisOps.filterFromClusteredEOWDataBbox(waterBodyFeatures,
+          const waterBodyFeatureFiltered: FeatureCollection<Polygon> = await GisOps.filterFromClusteredEOWDataBbox(waterBodyFeatures,
             this.points, this.layers, 'EOW Points box');  // filterFromClusteredEOWDataBbox
           this.log.verbose(theClass, `     waterBodyLayer loop for: ${waterBodyLayerName} - # Features in View FILTERED: ${waterBodyFeatureFiltered.features.length}`);
           // intersectAndDraw EOWData in polygons

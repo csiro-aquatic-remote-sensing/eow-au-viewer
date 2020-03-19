@@ -83,11 +83,11 @@ export default class SideBarService extends EowBaseService {
     }
   }
 
-  private show(menuId: string, {features, coordinate}: { [name: string]: any }) {
+  private async show(menuId: string, {features, coordinate}: { [name: string]: any }) {
     switch (menuId) {
       case 'eow-dataPoint-information':
         console.log(`sidebar - show ${menuId}`);
-        this.popup.draw(features, coordinate, 'eow-dataPoint-information');
+        await this.popup.draw(features, coordinate, 'eow-dataPoint-information');
         this.showHideMenu('measurements', hide);
         this.showHideMenu('users', hide);
         this.showHideMenu('eow-dataPoint-information', show);

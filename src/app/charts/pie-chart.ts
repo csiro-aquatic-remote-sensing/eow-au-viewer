@@ -25,7 +25,7 @@ export class PieChart {
   static drawD3(preparedChartData: PieItems, elementId: string, sizeScaleFactor: number) {
     const width = widthFactor * sizeScaleFactor;
     const fontSize = 0.8 * sizeScaleFactor;
-    const fontWeight = 20;
+    const fontWeight = 15;
     const theFUColours = PieChart.getFUColours();
 
     // Delete any existing pie-chart that existed in the elementId
