@@ -29,7 +29,7 @@ export default class EowDataCharts extends EowBaseService {
   /**
    * Only create pie charts once.
    */
-  chartMap: {[name: string]: boolean} = {};
+  chartMap: { [name: string]: boolean } = {};
   map: Map;
   htmlDocument: Document;
   ids: { [id: string]: boolean } = {};
@@ -63,46 +63,50 @@ export default class EowDataCharts extends EowBaseService {
    * @param layerName is the name of the layer
    */
   // TODO - this should be async
-  async plotCharts(eowDataInWaterbodies: EowWaterBodyIntersection[], layerName: string) { // FeatureCollection<Point>[]) {
-    /*
-      1. Loop through array of Waterbody polygons
-      2. If the FeatureCollection has property 'geometry'
-      3. Get the centroid of the polygon
-      4. Draw something at that point
-     */
-    let waterBodyIndex = 0;
-    forEachOf(eowDataInWaterbodies, eowDataInWaterbody => {
-      // These EowWaterBodyIntersection are between the EOW Data Points and the polygons in the chosen layer (selected outside of here with
-      //  the result being passed in as EowWaterBodyIntersection[].
-      // Each Object is:
-      //  waterBody: <the polygon that represents the waterbody>
-      //  eowData: <the EOW Data points within that waterbody>
-      //
-      // If there is no EOWData points within the waterbody, the eowData field will be null
-      const points: Coords[] = [];
-      if (eowDataInWaterbody.eowData) {
-        this.log.silly(theClass + '.plot', `EowWaterBodyIntersection.waterBody: ${JSON.stringify(eowDataInWaterbody.eowData, null, 2)}`);
-        featureEach(eowDataInWaterbody.eowData, (feature: Feature<Point>) => {
-          if (feature.hasOwnProperty('geometry')) {
-            points.push(feature.geometry.coordinates as Coords);
+  async plotCharts(eowDataInWaterbodies: EowWaterBodyIntersection[], layerName: string): Promise<void> { // FeatureCollection<Point>[]) {
+    return new Promise(resolve => {
+      /*
+        1. Loop through array of Waterbody polygons
+        2. If the FeatureCollection has property 'geometry'
+        3. Get the centroid of the polygon
+        4. Draw something at that point
+       */
+      let waterBodyIndex = 0;
+      forEachOf(eowDataInWaterbodies, async eowDataInWaterbody => {
+        // These EowWaterBodyIntersection are between the EOW Data Points and the polygons in the chosen layer (selected outside of here with
+        //  the result being passed in as EowWaterBodyIntersection[].
+        // Each Object is:
+        //  waterBody: <the polygon that represents the waterbody>
+        //  eowData: <the EOW Data points within that waterbody>
+        //
+        // If there is no EOWData points within the waterbody, the eowData field will be null
+        const points: Coords[] = [];
+        if (eowDataInWaterbody.eowData) {
+          this.log.silly(theClass + '.plot', `EowWaterBodyIntersection.waterBody: ${JSON.stringify(eowDataInWaterbody.eowData, null, 2)}`);
+          featureEach(eowDataInWaterbody.eowData, (feature: Feature<Point>) => {
+            if (feature.hasOwnProperty('geometry')) {
+              points.push(feature.geometry.coordinates as Coords);
+            }
+          });
+          let centroid;
+          if (points.length > 1) {
+            this.log.silly(theClass + '.plot', `EOWDatum points: ${JSON.stringify(points)}`);
+            const centrodData = await GeometryOps.calculateCentroidFromPoints(points);
+            centroid = centrodData.geometry.coordinates;
+          } else if (points.length === 1) {
+            centroid = points[0];
           }
-        });
-        let centroid;
-        if (points.length > 1) {
-          this.log.silly(theClass + '.plot', `EOWDatum points: ${JSON.stringify(points)}`);
-          centroid = GeometryOps.calculateCentroidFromPoints(points).geometry.coordinates;
-        } else if (points.length === 1) {
-          centroid = points[0];
+          if (centroid) {
+            this.log.verbose(theClass + '.plot', `Centroid: ${JSON.stringify(centroid)}`);
+            await this.drawCharts(eowDataInWaterbody.eowData, centroid, this.map, waterBodyIndex++, layerName);
+          } else {
+            this.log.verbose(theClass + '.plot', 'No Centroid to draw at');
+          }
         }
-        if (centroid) {
-          this.log.verbose(theClass + '.plot', `Centroid: ${JSON.stringify(centroid)}`);
-          this.drawCharts(eowDataInWaterbody.eowData, centroid, this.map, waterBodyIndex++, layerName);
-        } else {
-          this.log.verbose(theClass + '.plot', 'No Centroid to draw at');
-        }
-      }
+      });
+      this.log.verbose(theClass, `finished going through waterbodies`);
+      resolve();
     });
-    this.log.verbose(theClass, `finished going through waterbodies`);
   }
 
   /**
@@ -113,7 +117,7 @@ export default class EowDataCharts extends EowBaseService {
    * @param map to draw on
    * @param waterBodyIndex for DEBUG when line groups are drawn
    */
-  drawCharts(eowDataInWaterbody: FeatureCollection<Point>, point: Coords, map: Map, waterBodyIndex: number, layerName: string) {
+  async drawCharts(eowDataInWaterbody: FeatureCollection<Point>, point: Coords, map: Map, waterBodyIndex: number, layerName: string) {
     // TODO - type this data (all the way through)
     const validData: any[] = [];
     featureEach(eowDataInWaterbody, eowDataPoint => {
@@ -123,11 +127,13 @@ export default class EowDataCharts extends EowBaseService {
     });
     // Using pointToPrecision to make unique Id from 6 decimal places as sometimes the maths can be ~ .0000001 off
     const uniqueChartIdForPosition = EowDataStruct.createPointSting(EowDataStruct.pointToPrecision(point));
-    if (! this.chartMap.hasOwnProperty(uniqueChartIdForPosition)) {
+    if (!this.chartMap.hasOwnProperty(uniqueChartIdForPosition)) {
       if (validData.length > 0 && point[0] && point[1] && !isNaN(point[0]) && !isNaN(point[1])) {
         const idPie = this.createId('pieChart-');
         this.log.verbose(theClass, `Draw pieChart ${idPie} at ${JSON.stringify(point)}`);
-        new PieChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.sideBarMessagingService, point, map, idPie, validData).draw();
+        const pie = new PieChartContainer(layerName, this.layers, this.log);
+        pie.init(this.htmlDocument, this.sideBarMessagingService, point, map, idPie, validData);
+        pie.draw();
         this.chartMap[uniqueChartIdForPosition] = true;
       } else {
         this.log.verbose(theClass, `NOT Drawing pieChart at ${JSON.stringify(point)})} - data not valid or complete`);

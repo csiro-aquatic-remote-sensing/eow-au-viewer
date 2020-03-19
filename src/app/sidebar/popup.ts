@@ -52,7 +52,7 @@ export class Popup extends EowBaseService {
   }
 
   // Draw the popup at element using data from features at the given coordinate clickec on
-  draw(features: any, coordinate: any, elementId: string) {
+  async draw(features: any, coordinate: any, elementId: string) {
     const element = this.htmlDocument.getElementById(elementId);  // this.popup.getElement();
     const content = element.querySelector('.content');
     const stats = element.querySelector('.stats');
@@ -63,7 +63,7 @@ export class Popup extends EowBaseService {
       content.innerHTML = features.map(f => this.printDetails(f)).join('');
       stats.innerHTML = PieChart.fixForThisPieChart(printStats(calculateStats(features), this.userStore));
       element.classList.add('active');
-      const preparedFeatures = EowDataStruct.preparePieChartData(features);
+      const preparedFeatures = await EowDataStruct.preparePieChartData(features);
       PieChart.drawD3(preparedFeatures, 'pieChart', 8);
     }
 

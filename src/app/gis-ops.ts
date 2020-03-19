@@ -32,10 +32,12 @@ const theClass = 'GisOps';
 const log = Brolog.instance(brologLevel);
 
 export class GisOps {
-  public static createFeatureCollection(features: Feature[]): FeatureCollection<Polygon> {
-    const theTurfFeatures: GeoJsonFeature<Polygon>[] = GisOps.createTurfFeatures(features);
-    const featureCollection: FeatureCollection<Polygon> = turfFeatureCollection<Polygon>(theTurfFeatures);
-    return featureCollection;
+  public static createFeatureCollection(features: Feature[]): Promise<FeatureCollection<Polygon>> {
+    return new Promise(resolve => {
+      const theTurfFeatures: GeoJsonFeature<Polygon>[] = GisOps.createTurfFeatures(features);
+      const featureCollection: FeatureCollection<Polygon> = turfFeatureCollection<Polygon>(theTurfFeatures);
+      resolve(featureCollection);
+    });
   }
 
   public static turfFeaturesToOlFeatures(features: TurfFeature<Polygon>[]): Feature[] {
@@ -168,10 +170,10 @@ export class GisOps {
    * @param points are the EOWData points that are most likely those in the map view extent
    * @return waterBodyFeatureCollection filtered to be those in the bbox created around the given points
    */
-  static filterFromClusteredEOWDataBbox(waterBodyFeatures: Feature[], points: FeatureCollection<Point>,
-                                        layers: ApplicationLayers, layerName: string): FeatureCollection<Polygon> {
+  static async filterFromClusteredEOWDataBbox(waterBodyFeatures: Feature[], points: FeatureCollection<Point>,
+                                              layers: ApplicationLayers, layerName: string): Promise<FeatureCollection<Polygon>> {
     // Get clusters of EOWPoints, bbox each one and filter on these
-    const waterBodyFeatureCollection: FeatureCollection<Polygon> = GisOps.createFeatureCollection(waterBodyFeatures);
+    const waterBodyFeatureCollection: FeatureCollection<Polygon> = await GisOps.createFeatureCollection(waterBodyFeatures);
     const clusteredPoints: FeatureCollection<Point> = clustersKmeans(points);
     const features: TurfFeature<Polygon>[] = [];
     const seenPolygons: { [name: string]: boolean } = {};

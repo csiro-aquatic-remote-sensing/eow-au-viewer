@@ -120,22 +120,24 @@ export default class GeometryOps {
     return centroid(featurePoints);
   }
 
-  static calculateCentroidTurfVerUsingPoints(points: number[][]): TurfFeature<Point> {
-    const featurePoints = turfFeatureCollection(points.map(c => turfPoint(c)));
-    return centroid(featurePoints);
+  static async calculateCentroidTurfVerUsingPoints(points: number[][]): Promise<TurfFeature<Point>> {
+    return new Promise(resolve => {
+      const featurePoints = turfFeatureCollection(points.map(c => turfPoint(c)));
+      resolve(centroid(featurePoints));
+    });
   }
 
   /**
    * https://en.wikipedia.org/wiki/Centroid#Of_a_polygon
    * @param featurePoints of points forming a polygon to return the centroid for
    */
-  static calculateCentroidFromFeatureCollection(featurePoints: FeatureCollection<Point>): TurfFeature<Point> {
+  static calculateCentroidFromFeatureCollection(featurePoints: FeatureCollection<Point>): Promise<TurfFeature<Point>> {
     log.silly(`calculateCentroidFromFeatureCollection - featurePoints: FeatureCollection<Point>: ${JSON.stringify(featurePoints)}`);
     const points = featurePoints.features.map(f => f.geometry.coordinates);
     return GeometryOps.calculateCentroidFromPoints(points);
   }
 
-  static calculateCentroidFromPoints(points: number[][]): TurfFeature<Point> {
+  static calculateCentroidFromPoints(points: number[][]): Promise<TurfFeature<Point>> {
     log.verbose('calculateCentroidFromPoints', `  points length: ${points.length}`);
     return GeometryOps.calculateCentroidTurfVerUsingPoints(points);
 
@@ -147,10 +149,10 @@ export default class GeometryOps {
     let cy = 0;
     // Although the input is meant to be a polygon (3+ points), error handle to return correct values for points and lines
     if (points.length === 1) {
-      return turfPoint(points[0]);
+      return Promise.resolve(turfPoint(points[0]));
     }
     if (points.length === 2) {
-      return turfPoint([(points[0][0] + points[1][0]) / 2, (points[0][1] + points[1][1]) / 2]);
+      return Promise.resolve(turfPoint([(points[0][0] + points[1][0]) / 2, (points[0][1] + points[1][1]) / 2]));
     }
     for (let i = 0; i < points.length; ++i) {
       const iP1 = (i + 1) % points.length;
@@ -168,7 +170,7 @@ export default class GeometryOps {
     cx = Math.round(cx / (6 * area));
     cy = Math.round(cy / (6 * area));
     log.verbose('calculateCentroidFromPoints', `finished - area: ${area}, (centroid) cx: ${cx}, cy: ${cy}`);
-    return turfPoint([cx, cy]);
+    return Promise.resolve(turfPoint([cx, cy]));
   }
 
 
