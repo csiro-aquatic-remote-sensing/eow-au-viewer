@@ -87,7 +87,7 @@ body {
 /*#popup */
 .content {
   overflow: auto;
-  max-height: 300px;
+  max-height: 350px;
   padding: 1em;
 }
 
@@ -142,7 +142,8 @@ body {
 }
 
 .more-info-btn::after {
-  content: 'More details'
+  content: 'More details';
+  font-weight: bold;
 }
 
 .popup-item.active .more-info-btn::after {
