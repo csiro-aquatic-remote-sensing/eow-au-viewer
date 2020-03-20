@@ -18,7 +18,7 @@ export class Popup extends EowBaseService {
   elementId = 'popup';
   popup: any;
   pieChart: PieChart;
-  sideBarMessagingService: Subject<SideBarMessage>
+  sideBarMessagingService: Subject<SideBarMessage>;
 
   constructor(@Inject(DOCUMENT) private htmlDocument: Document, private userStore: UserStore) { // }, private eowMap: EOWMap) {
     super();
@@ -44,10 +44,15 @@ export class Popup extends EowBaseService {
         console.log(`close`);
         this.sideBarMessagingService.next({action: 'close', message: 'eow-dataPoint-information'});
         // send message to sidebar to close and reopen
-      } else if (element.matches('.more-info-btn')) {
-        const popupElement = element.closest('.popup-item');
-        popupElement.classList.toggle('active');
       }
+    });
+
+    const moreInfoButton = this.htmlDocument.querySelectorAll('.more-info-btn');
+    moreInfoButton.forEach(mib => {
+      mib.addEventListener('click', (event: Event) => {
+        const popupElement = mib.closest('.popup-item');
+        popupElement.classList.toggle('active');
+      });
     });
   }
 
