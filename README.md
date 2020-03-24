@@ -1,23 +1,19 @@
 # EyeOnWater: Australia - WFS Viewer
 
-A simple viewer to visualize EOW:AU data.
+A map of the Australian EOW data.
 
-## Fixes
-- Fixed most active user sorting
-
-## New Features
-- Sliding side panels with User information and Recent Measurements
+## Features
+- Sidebar with User information and Recent Measurements
 - Click on user to see their measurements and statistics
 - Click on a recent measurement to see more details
 - Retrieve data from EyeOnWater.org Users API
-
-## Features
 - Click on map to get features in a popup
 - Click on results for more details
 - Statistics for the whole feature collection
 - Statistics for the result set
 - Colors based on FU value
 - Pie chart showing FU values across water bodies.
+- Time series graph of FU values for a water body over time.
 
 ## Installation
 - clone this repository
@@ -32,11 +28,15 @@ A simple viewer to visualize EOW:AU data.
   
 ## Deploy (CSIRO)
 
+### TLDR;
+
     cd ng-eow  # this project
     npm run deploy
     # Open https://research.csiro.au/static/eyeonwater/ in browswer
 
-See `Developer notes` below for more information.
+### More detailed information
+
+See [Developer notes](#developers-notes) below for more information.
 
 ## Running unit tests
 
@@ -85,14 +85,14 @@ For production equivalent use `eyeonwater` instead of `eyeonwater-dev`.
 
 # Developers notes
 
-Always work on branches made from the `develop` branch.  The `Master` branch should always remain stable with releases being performed from it.
+Always work on branches made from the `develop` branch.  Make *development* releases from this.  The `Master` branch should always remain stable with *production* releases being performed from it.
 
     git checkout develop
     git checkout -b <bug_or_feature_branch>
     # Push to the git server BUT ONLY WHEN THE FEATURE / BUG FIX IS COMPLETE AND TESTED
     git push origin/<bug_or_feature_branch> <bug_or_feature_branch>
     # For pushing it may be easier to use a client such as 'git gui' (part of git - start from the command line)
-    # since it will make it easier
+    # since it will makes such push operations easier
     # Then on the git server (the origin), create a pull request to merge your branch in to 'develop' branch
     # Back in the developer's environment pull the develop branch.  
     # Any new bug_or_feature_branches will be branced from this (go to the start and repeat).  
@@ -101,28 +101,47 @@ Always work on branches made from the `develop` branch.  The `Master` branch sho
     git pull
     git branch -d bug_or_feature_branch  # Delete it
 
-The develop branch can be used to perform a development deploy (see below). When the develop branch is complete with all features / bug fixes for the next release,  perform a pull request on the git server, in to the master branch
+The develop branch can be used to perform a *development* release / deploy (see below). When the develop branch is complete with all features / bug fixes for the next release,  perform a pull request on the git server, in to the master branch and perform a *production* release / deploy from it.
 
-# Deploying development version
+# New releases
 
-After you have merged all applicable work to the `develop` branch you can deploy it to the development server to demonstrate to others - https://research.csiro.au/static/eyeonwater-dev/.
+The basic strategy is this:
+1. Only release new code as `pre-release` versions and from the `develop` branch.  It should be tagged as a release first.  
+2. Deploy this to the development site.  
+2. Announce the new development release to your small set of test users and the business representative(s)
+2. Have them test it
+2. Once happy, merge the code from `develop` to `master` using a github pull request.  This will add the tag to the `master` branch also
+3. Update the release in github, moving it from `pre-release` to a production release.
+4. Check out this release in your local git repository.
+5. Deploy this to the production site.
+6. Announce the new release to your users
 
-You should tag it with a release name and log that describes the changes since last production release.  This development release may build on a previous development release that also came after the last production release.  The work log for this next release should include the changes listed in that previous one.
+## Pre-release version
 
-You can find the tags with 
+After you have merged all applicable work to the `develop` branch, you can deploy it to the development server at https://research.csiro.au/static/eyeonwater-dev/.
 
-    git tag # show all
-    
-    git tag -l "v1.2*"  # For example to list all tags that start with 'v1.2' such as 'v1.2.0, v1.2.1, ...'
-    
-    git show v1.2.1     # To show the commit log for that tag
+You should tag it with a release name and log that describes the changes since last release (development or production).  The format `release_<date>` is the easiest for this simple project (more complex applications should use semantic versioning).
 
     git checkout development
-    git tag -a <release>   # An editor will open allowing you to detail the changes this release includes
+
+    git tag # show all exist tags
+    
+    git tag -l "*_release"  # For example to list all tags that ends with '_release'
+    
+    git show 2020-03-03_release     # To show the commit log for that tag
+
+    git tag -a yyyymmdd_release   # An editor will open allowing you to detail the changes this release includes.  Be detailed.
     
     git push origin --tags
     
-Now run a deploy.  This happens from the currently checked out code, not the tag.
+You need to formally make this a release in github.  Go to (https://github.com/csiro-aquatic-remote-sensing/eow-au-viewer) `github >  csiro-aquatic-remote-sensing / eow-au-viewer > code`.
+
+In here are listed the releases and tags.  You need to convert the tag you just created in to a release:
+1. Click on `Draft a new release`
+2. Choose the tag you just created and the `develop` branch
+3. Click `This is a pre-release` box
+
+Now run a deploy.  This happens from the currently checked out code, not the tag.  You can check out a specific release with `git checkout <tag>`.
 
     npm run deploy:csiro:dev # Development
 
@@ -130,27 +149,25 @@ After a minute or two it should be at https://research.csiro.au/static/eyeonwate
 
 # Deploying production version
 
-    # You will need to have a copy of the code - skip if you've already been devloping it
-    git clone git@github.com:csiro-aquatic-remote-sensing/eow-au-viewer.git
-    git checkout master
+If  you haven't been following the release process and have come in here needing to run a production release from master perform this:
+1. Choose a location to check out the repository
+2. `git clone git@github.com:csiro-aquatic-remote-sensing/eow-au-viewer.git`
+3. `git checkout master`
 
-If you've been performing development and the changes are on the `develop` branch then they need to be merged in to the `master` branch.  On the origin server, create a pull request from `develop` to `master`.
+If you have been following the release process, continue from here.
+
+Deployment to *production* should be from the `master` branch.  The only code modifications to `master` should come via pull requests from the `develop` branch.  *No code changes should be made directly to `master` without going to `develop` first, released and tested.  The `master` branch should always be stable code.*  
+
+## Create pull request - develop to master
+ 
+On the origin server, create a pull request from `develop` to `master`.  Merge it.
+
+This will also bring the release tag from `develop` (ie. pre-release) to `master` (ie. production).  You need to let github know this.
+
+In github, find the release (tag) under code.  Uncheck the `This is a pre-release` box.
+
+It is possible that more than one development `pre-production` releases had been made between production release.  The production release in github should be updated with the previous pre-production release notes so as to give a complete picture of the full extent of the changes. 
   
-You should tag the release.  It is more than likely that no code has changed (no commits have been performed) since the last development release was done.  In which case you just want to move the tag to the current commit on `master` (the merge of `develop` in to `master`).
-
-    git pull
-
-According to https://stackoverflow.com/a/8044605/1019307, to move tags do:
-
-    git push origin :refs/tags/<tagname>    # Delete the tag on any remote before you push
-    git tag -fa <tagname>   # The -f forces reusing an existing tag
-    git push origin --tags
-
-Or if it has new changes that wasn't tagged on `develop` just add a new tag (this strategy should be avoided - always perform development releases first):
-
-    git tag -a <next version> # And type in the changes since the last production release
-    git push origin --tags
-
-Then deploy - https://research.csiro.au/static/eyeonwater
+Deploy to the production site - https://research.csiro.au/static/eyeonwater
 
     npm run deploy:csiro
