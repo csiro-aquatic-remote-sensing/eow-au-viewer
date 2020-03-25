@@ -5,6 +5,6 @@ const expect = chai.expect;
 
 describe('EowData', () => {
   it('should create an instance', () => {
-    expect(new EowDataLayer()).is.not.undefined;  // tslint:disable-line
+    expect(new EowDataLayer(null)).is.not.undefined;  // tslint:disable-line
   });
 });

@@ -171,3 +171,20 @@ It is possible that more than one development `pre-production` releases had been
 Deploy to the production site - https://research.csiro.au/static/eyeonwater
 
     npm run deploy:csiro
+
+# Testing
+
+To run all tests type this on the command-line:
+
+    npm test
+    
+The tests are run with the [Karma](https://karma-runner.github.io) runner and the [Jasmine](https://jasmine.github.io/) testing framework.  A browser will open to run the testing code and display the results.
+  
+To run individual tests (especially those that have failed), click on their title in the browser page.
+
+## Debugging
+
+One typical way to debug the test and the tested code is to use your Integrated Development Environment (IDE).  The simplest way is to perform the analysis through the browser.  Editing will still need to be through the IDE, however when you save the tests will be re-run giving you immediate feedback.
+
+In the browser open the Developer Tools.  Find the source under the source tab (Chrome) or Debugger tab (Firefox).  Set breakpoints and run the test by clicking on it in the main part of the browser.
+

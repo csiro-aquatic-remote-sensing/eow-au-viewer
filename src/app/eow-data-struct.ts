@@ -59,6 +59,19 @@ export type PointsMap = { [pointString: string]: TurfFeature<Point> };  // tslin
 
 moment.tz.add('Etc/UTC|UTC|0|0||');
 
+/**
+ * Take a date string and return formatted as 'YYYY-MM-DDTHH:mm:ssZZ' with '+00...' replaced with 'Z' (zulu time)
+ *
+ * @param dateString to format
+ * @returns formatted date
+ */
+const formatTheDate = (dateString) => {
+  const m = moment(dateString);
+  const dateTimeFormat = 'YYYY-MM-DDTHH:mm:ssZZ';
+
+  return m.tz('Etc/UTC').format(dateTimeFormat).replace(/\+0+/, 'Z');
+};
+
 export class EowDataStruct {
   /**
    * @Return Aggregated FU data as an array of objects:
@@ -131,13 +144,15 @@ export class EowDataStruct {
   static prepareTimeSeriesChartData(features): TimeSeriesItems {
     const aggregateFUValues = (theFeatures: any[]) => {
       return theFeatures.map(f => {
-        return {fu: f.values_.fu_value, date: f.values_.date_photo};
+        return {fu: f.values_.fu_value, date: formatTheDate(f.values_.date_photo)};
       });
     };
+    const buildItem = (item) => ( item.date + '_' + item.fu );
+
     const uniqArray = (a) => {
       const seen = {};
       return a.filter(item => {
-        return seen.hasOwnProperty(item.date) ? false : (seen[item.date] = true);
+        return seen.hasOwnProperty(buildItem(item)) ? false : (seen[buildItem(item)] = true);
       });
     };
     const fuDateComparator = (a, b) => {

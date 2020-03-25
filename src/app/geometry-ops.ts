@@ -131,7 +131,7 @@ export default class GeometryOps {
    * https://en.wikipedia.org/wiki/Centroid#Of_a_polygon
    * @param featurePoints of points forming a polygon to return the centroid for
    */
-  static calculateCentroidFromFeatureCollection(featurePoints: FeatureCollection<Point>): Promise<TurfFeature<Point>> {
+  static async calculateCentroidFromFeatureCollection(featurePoints: FeatureCollection<Point>): Promise<TurfFeature<Point>> {
     log.silly(`calculateCentroidFromFeatureCollection - featurePoints: FeatureCollection<Point>: ${JSON.stringify(featurePoints)}`);
     const points = featurePoints.features.map(f => f.geometry.coordinates);
     return GeometryOps.calculateCentroidFromPoints(points);

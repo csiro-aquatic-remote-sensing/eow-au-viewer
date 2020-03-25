@@ -5,6 +5,6 @@ const expect = chai.expect;
 
 describe('MeasurementStore', () => {
   it('should create an instance', () => {
-    expect(new MeasurementStore(null)).is.not.undefined;  // tslint:disable-line
+    expect(new MeasurementStore(null, null, null)).is.not.undefined;  // tslint:disable-line
   });
 });

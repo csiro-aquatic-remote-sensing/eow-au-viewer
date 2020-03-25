@@ -40,7 +40,7 @@ describe('Layers', () => {
     sinon.stub(mockMap, 'addLayer').callsFake((layer: BaseLayer) => {
       mapLayers.push(layer);
     });
-    const mockEOWMap = new EOWMap(null, log);
+    const mockEOWMap = new EOWMap(log);
     const mockEOWMapStub = sinon.stub(mockEOWMap, 'getMap').callsFake(() => {
       return of(mockMap);
     });

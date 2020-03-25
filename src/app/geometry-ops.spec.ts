@@ -54,23 +54,23 @@ describe('geometry-ops', () => {
    */
   describe('centroid', () => {
     describe('using calculateCentroidFromFeatureCollection()', () => {
-      it('centroid of only 1 point is the point itself', () => {
+      it('centroid of only 1 point is the point itself', async () => {
         const coordinates = [[-1000, 1000]];
 
         const points = turfFeatureCollection(coordinates.map(c => turfPoint(c)));
-        const value = GeometryOps.calculateCentroidFromFeatureCollection(points);
+        const value = await GeometryOps.calculateCentroidFromFeatureCollection(points);
         const centroid = value.geometry.coordinates;
 
         expect(centroid[0]).to.equal(coordinates[0][0]);
         expect(centroid[1]).to.equal(coordinates[0][1]);
       });
 
-      it('centroid of only 2 points is the middle of the line', () => {
+      it('centroid of only 2 points is the middle of the line', async () => {
         const coordinates = [[-1000, 1000], [-1000, 2000]];
         const expectedCentroid = [-1000, 1500];
 
         const points = turfFeatureCollection(coordinates.map(c => turfPoint(c)));
-        const value = GeometryOps.calculateCentroidFromFeatureCollection(points);
+        const value = await GeometryOps.calculateCentroidFromFeatureCollection(points);
         const centroid = value.geometry.coordinates;
 
         expect(centroid[0]).to.equal(expectedCentroid[0]);
@@ -78,39 +78,39 @@ describe('geometry-ops', () => {
       });
 
       // Used https://brilliant.org/wiki/triangles-centroid/
-      it('centroid of 3 points is the middle of the triangle', () => {
+      it('centroid of 3 points is the middle of the triangle', async () => {
         const coordinates = [[0, 0], [2000, 0], [1000, 1732]];
 
         const expectedCentroid = [Math.round((0 + 2000 + 1000) / 3), Math.round((0 + 0 + 1732) / 3)]; // 1000, 1732
 
         const points = turfFeatureCollection(coordinates.map(c => turfPoint(c)));
-        const value = GeometryOps.calculateCentroidFromFeatureCollection(points);
+        const value = await GeometryOps.calculateCentroidFromFeatureCollection(points);
         const centroid = value.geometry.coordinates;
 
         expect(Math.round(centroid[0])).to.equal(expectedCentroid[0]);
         expect(Math.round(centroid[1])).to.equal(expectedCentroid[1]);
       });
 
-      it('centroid of 4 points is the middle of the square', () => {
+      it('centroid of 4 points is the middle of the square', async () => {
         const coordinates = [[0, 0], [2000, 0], [2000, 2000], [0, 2000]];
 
         const expectedCentroid = [1000, 1000];
 
         const points = turfFeatureCollection(coordinates.map(c => turfPoint(c)));
-        const value = GeometryOps.calculateCentroidFromFeatureCollection(points);
+        const value = await GeometryOps.calculateCentroidFromFeatureCollection(points);
         const centroid = value.geometry.coordinates;
 
         expect(centroid[0]).to.equal(expectedCentroid[0]);
         expect(centroid[1]).to.equal(expectedCentroid[1]);
       });
 
-      it('centroid of 8 points is the middle of the octogon', () => {
+      it('centroid of 8 points is the middle of the octogon', async () => {
         const coordinates = [[4000, 3200], [3200, 4000], [800, 4000], [0, 3200], [0, 800], [800, 0], [3200, 0], [4000, 800]];
 
         const expectedCentroid = [2000, 2000];
 
         const points = turfFeatureCollection(coordinates.map(c => turfPoint(c)));
-        const value = GeometryOps.calculateCentroidFromFeatureCollection(points);
+        const value = await GeometryOps.calculateCentroidFromFeatureCollection(points);
         const centroid = value.geometry.coordinates;
 
         log.silly(`Centroid of polygon: ${JSON.stringify(centroid)}`);
@@ -120,13 +120,13 @@ describe('geometry-ops', () => {
         expect(centroid[1]).to.equal(expectedCentroid[1]);
       });
 
-      it('centroid of 5 points is the middle of the pentagram', () => {
+      it('centroid of 5 points is the middle of the pentagram', async () => {
         const coordinates = [[2000, 0], [4000, 2000], [2200, 4000], [1800, 4000], [0, 2000]];
 
         const expectedCentroid = [2000, 2400];  // My method or others has the y at 2063];  I'm happy to accept Turf's answer.
 
         const points = turfFeatureCollection(coordinates.map(c => turfPoint(c)));
-        const value = GeometryOps.calculateCentroidFromFeatureCollection(points);
+        const value = await GeometryOps.calculateCentroidFromFeatureCollection(points);
         const centroid = value.geometry.coordinates;
 
         log.silly(`Centroid of polygon: ${JSON.stringify(centroid)}`);
@@ -138,20 +138,20 @@ describe('geometry-ops', () => {
     });
 
     describe('using calculateCentroidFromPoints()', () => {
-      it('centroid of only 1 point is the point itself', () => {
+      it('centroid of only 1 point is the point itself', async () => {
         const coordinates = [[-1000, 1000]];
-        const value = GeometryOps.calculateCentroidFromPoints(coordinates);
+        const value = await GeometryOps.calculateCentroidFromPoints(coordinates);
         const centroid = value.geometry.coordinates;
 
         expect(centroid[0]).to.equal(coordinates[0][0]);
         expect(centroid[1]).to.equal(coordinates[0][1]);
       });
 
-      it('centroid of only 2 points is the middle of the line', () => {
+      it('centroid of only 2 points is the middle of the line', async () => {
         const coordinates = [[-1000, 1000], [-1000, 2000]];
         const expectedCentroid = [-1000, 1500];
 
-        const value = GeometryOps.calculateCentroidFromPoints(coordinates);
+        const value = await GeometryOps.calculateCentroidFromPoints(coordinates);
         const centroid = value.geometry.coordinates;
 
         expect(centroid[0]).to.equal(expectedCentroid[0]);
@@ -159,36 +159,36 @@ describe('geometry-ops', () => {
       });
 
       // Used https://brilliant.org/wiki/triangles-centroid/
-      it('centroid of 3 points is the middle of the triangle', () => {
+      it('centroid of 3 points is the middle of the triangle', async () => {
         const coordinates = [[0, 0], [2000, 0], [1000, 1732]];
 
         const expectedCentroid = [Math.round((0 + 2000 + 1000) / 3), Math.round((0 + 0 + 1732) / 3)]; // 1000, 1732
 
-        const value = GeometryOps.calculateCentroidFromPoints(coordinates);
+        const value = await GeometryOps.calculateCentroidFromPoints(coordinates);
         const centroid = value.geometry.coordinates;
 
         expect(centroid[0]).to.equal(expectedCentroid[0]);
         expect(Math.round(centroid[1])).to.equal(expectedCentroid[1]);
       });
 
-      it('centroid of 4 points is the middle of the square', () => {
+      it('centroid of 4 points is the middle of the square', async () => {
         const coordinates = [[0, 0], [2000, 0], [2000, 2000], [0, 2000]];
 
         const expectedCentroid = [1000, 1000];
 
-        const value = GeometryOps.calculateCentroidFromPoints(coordinates);
+        const value = await GeometryOps.calculateCentroidFromPoints(coordinates);
         const centroid = value.geometry.coordinates;
 
         expect(centroid[0]).to.equal(expectedCentroid[0]);
         expect(centroid[1]).to.equal(expectedCentroid[1]);
       });
 
-      it('centroid of 8 points is the middle of the octogon', () => {
+      it('centroid of 8 points is the middle of the octogon', async () => {
         const coordinates = [[4000, 3200], [3200, 4000], [800, 4000], [0, 3200], [0, 800], [800, 0], [3200, 0], [4000, 800]];
 
         const expectedCentroid = [2000, 2000];
 
-        const value = GeometryOps.calculateCentroidFromPoints(coordinates);
+        const value = await GeometryOps.calculateCentroidFromPoints(coordinates);
         const centroid = value.geometry.coordinates;
 
         log.silly(`Centroid of polygon: ${JSON.stringify(centroid)}`);
@@ -198,12 +198,12 @@ describe('geometry-ops', () => {
         expect(centroid[1]).to.equal(expectedCentroid[1]);
       });
 
-      it('centroid of 5 points is the middle of the pentagram', () => {
+      it('centroid of 5 points is the middle of the pentagram', async () => {
         const coordinates = [[2000, 0], [4000, 2000], [2200, 4000], [1800, 4000], [0, 2000]];
 
         const expectedCentroid = [2000, 2400];  // My calculation was y=2063]; but happy to accept Turf's answer
 
-        const value = GeometryOps.calculateCentroidFromPoints(coordinates); // calculateCentroidTurfVer
+        const value = await GeometryOps.calculateCentroidFromPoints(coordinates); // calculateCentroidTurfVer
         const centroid = value.geometry.coordinates;
 
         log.silly(`Centroid of polygon: ${JSON.stringify(centroid)}`);
@@ -213,7 +213,7 @@ describe('geometry-ops', () => {
         expect(centroid[1]).to.equal(expectedCentroid[1]);
       });
 
-      it('centroid from lots and lots of real world data - one polygon', () => {
+      it('centroid from lots and lots of real world data - one polygon', async () => {
         const coordinates = [[16545469.349959834, -4163881.1440642932], [16547576.627920548, -4163881.1440642932],
           [16547544.34526822, -4163920.553975751], [16547508.723031165, -4164148.8624180704], [16547567.722361283, -4164242.633314922],
           [16547748.05993637, -4164354.072220663], [16547761.418275267, -4164431.5365082906], [16547636.740445577, -4164551.1315559973],
@@ -291,7 +291,7 @@ describe('geometry-ops', () => {
 
         const expectedCentroid = [16548320, -4169418];
 
-        const value = GeometryOps.calculateCentroidFromPoints(coordinates);
+        const value = await GeometryOps.calculateCentroidFromPoints(coordinates);
         // const points = turfFeatureCollection(coordinates.map(c => turfPoint(c)));
         // const value = GeometryOps.calculateCentroidFromFeatureCollection(points);
         const centroid = value.geometry.coordinates;
@@ -497,7 +497,7 @@ describe('geometry-ops', () => {
         pointsMap[EowDataStruct.createPointMapString(f)] = f;
       });
       return pointsMap;
-    }
+    };
 
     const testIsInside = async (waterBodiesData, theLayerName, eowPoints, index) => {
       const eowDataPoints: FeatureCollection<Point> = turfFeatureCollection(eowPoints.map(c => turfPoint(c, {testEowData: true})));
@@ -572,12 +572,12 @@ describe('geometry-ops', () => {
           getArray: () => ([])
         };
       });
-      const mockEOWMap = new EOWMap(null, log);
+      const mockEOWMap = new EOWMap(log);
       const mockEOWMapStub = sinon.stub(mockEOWMap, 'getMap').callsFake(() => {
         return of(mockMap);
       });
       const layers = new ApplicationLayers(mockEOWMap, log); // this.eowMap, this.htmlDocument, this.http, this.log);
-      sinon.stub(layers, 'drawLayerInMenu');  // Want it to be a NOOP
+      // sinon.stub(layers, 'drawLayerInMenu');  // Want it to be a NOOP
       const eowLayers = await new EowLayers(layers, this.log).init(); // this.eowMap);
       // layerData = new LayerGeometries(eowLayers, log);
     });
