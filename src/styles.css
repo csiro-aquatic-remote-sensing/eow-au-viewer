@@ -88,7 +88,6 @@ body {
 .content {
   overflow: auto;
   max-height: 350px;
-  padding: 1em;
 }
 
 /*#popup */
@@ -124,6 +123,7 @@ body {
   display: inline-block;
   height: 20px;
   width: 100px;
+  margin-left: 1px;
 }
 
 .raw-details {
@@ -142,12 +142,14 @@ body {
 }
 
 .more-info-btn::after {
-  content: 'More details';
+  content: 'More';
+  /*details';*/
   font-weight: bold;
 }
 
 .popup-item.active .more-info-btn::after {
-  content: 'Less details'
+  content: 'Less';
+  /*details'*/
 }
 
 .sub-header-stats {
@@ -167,6 +169,7 @@ body {
 .stats ul {
   list-style: none;
   margin: 0;
+  padding-inline-start: 0;
 }
 
 .sub-header-stats ul li,
@@ -214,14 +217,24 @@ body {
 .popup-item .image, .popup-item .metadata {
   display: inline-block;
 }
+
+.image {
+  margin-right: 1px;
+}
+
 .metadata-row {
   display: flex;
   flex-direction: row;
 }
 .popup-item .metadata  {
-  margin-left: 1em;
+  /*margin-left: 1em;*/
   flex-grow: 3
 }
+
+.metadata {
+  font-size: 8pt;
+}
+
 .popup-item img {
   width: 75px;
   height: 75px;
@@ -270,7 +283,7 @@ pre {
 }
 
 .panel-body {
-  margin: 0.6em;
+  margin: 0.1em;
 }
 
 .icon-thumb {
@@ -344,7 +357,7 @@ li.item {
 
 td, th {
   /*border: 1px solid #999;*/
-  padding: 0.5rem;
+  padding: 0.1rem;
 }
 
 .thead {
@@ -368,4 +381,9 @@ td, th {
   overflow: hidden;
   max-height: 0;
   visibility: hidden;
+}
+
+h5 {
+  margin-block-start: 5px;
+  margin-block-end: 0;
 }

@@ -87,9 +87,9 @@ export class Popup extends EowBaseService {
           <div class="metadata">
             <div class="fu-preview"  style="background:${colors[properties.fu_value]}"></div>
             <div class="more-info-btn"></div>
-            <div> FU value: ${properties.fu_value}</div>
-            <div> Date: ${formatDate(properties.date_photo)}</div>
-            <div> Device:  ${properties.device_model}</div>
+            <div class="thead"> FU value: ${properties.fu_value}</div>
+            <div class="thead"> Date: ${formatDate(properties.date_photo)}</div>
+            <div class="thead"> Device:  ${properties.device_model}</div>
           </div>
         </div>
         <div class="raw-details">${details}</div>
@@ -101,17 +101,17 @@ export class Popup extends EowBaseService {
     return `<table>
               <tr><td class="thead">Lon, Lat</td><td colspan="5">${properties.lng}, ${properties.lat}</td></tr>
               <tr><td class="thead">Device</td><td>${formatNull(properties.device_platform)}</td>
-                   <td class="thead">Model</td><td>${formatNull(properties.device_model)}</td></tr>
+                  <td class="thead">Model</td><td>${formatNull(properties.device_model)}</td></tr>
               <tr><td class="thead">Viewing angle</td><td>${formatNull(properties.viewing_angle)}</td>
-                  <td class="thead">Raining?</td><td>${formatNull(properties.rain)}</td>
-                  <td class="thead">See bottom?</td><td>${formatNull(properties.bottom)}</td></tr>
+                  <td class="thead">Cloud cover</td><td colspan="1">${formatNull(properties.p_cloud_cover)}</td></tr>
               <tr><td class="thead">FU Value</td><td colspan="1">${formatNull(properties.fu_value)}</td>
-                  <td class="thead">Observed</td><td colspan="1">${formatNull(properties.fu_observed)}</td>
-                  <td class="thead">Processed</td><td colspan="1">${formatNull(properties.fu_processed)}</td></tr>
+                    <td class="thead">Raining?</td><td>${formatNull(properties.rain)}</td></tr>
+              <tr><td class="thead">FU Observed</td><td colspan="1">${formatNull(properties.fu_observed)}</td>
+                    <td class="thead">See bottom?</td><td>${formatNull(properties.bottom)}</td></tr>
+              <tr><td class="thead">FU Processed</td><td colspan="1">${formatNull(properties.fu_processed)}</td>
+                     <td class="thead">Sechi depth</td><td colspan="1">${formatNull(properties.sd_depth)}</td></tr>
               <tr><td class="thead">PH</td><td colspan="1">${formatNull(properties.p_ph)}</td>
                   <td class="thead">Conductivity</td><td colspan="1">${formatNull(properties.p_conductivity)}</td></tr>
-              <tr><td class="thead">Cloud cover</td><td colspan="1">${formatNull(properties.p_cloud_cover)}</td>
-                  <td class="thead">Sechi depth</td><td colspan="1">${formatNull(properties.sd_depth)}</td></tr>
         </table>`;
   }
 }
