@@ -1,4 +1,4 @@
-import {Component, OnInit, Inject, OnDestroy} from '@angular/core';
+import {Component, OnInit, Inject, OnDestroy, ElementRef, ViewChild, AfterViewInit} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
 import Feature from 'ol/Feature';
 import {HttpClient} from '@angular/common/http';
@@ -24,6 +24,7 @@ import {GisOps} from './gis-ops';
 import {isDebugLevel} from './globals';
 import SideBarService from './sidebar/sidebar.service';
 import {SideBarMessage} from './types';
+import {jqxWindowComponent} from 'jqwidgets-framework/jqwidgets-ng/jqxwindow';
 
 const theClass = 'AppComponent';
 
@@ -35,7 +36,10 @@ type WaterBodyFeatures = { [name: string]: Feature[] }; // tslint:disable-line
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
 })
-export class AppComponent implements OnInit, OnDestroy {
+export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
+  @ViewChild('windowReference', { static: false }) window: jqxWindowComponent;
+  @ViewChild('jqxWidget', { static: false }) jqxWidget: ElementRef;
+
   title = 'Eye On Water';
   waterBodiesLayers: LayersInfo[];
   map: Map;
@@ -55,6 +59,37 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(@Inject(DOCUMENT) private htmlDocument: Document, private http: HttpClient, private log: Brolog, private eowMap: EOWMap, private popupObject: Popup,
               private eowData: EowDataLayer, private layers: ApplicationLayers, private eowLayers: EowLayers, private eowDataGeometries: EowDataGeometries,
               private layersGeometries: LayerGeometries, private eowDataCharts: EowDataCharts, private sideBarService: SideBarService) {
+  }
+
+  ngAfterViewInit(): void {
+    const offsetLeft = this.jqxWidget.nativeElement.offsetLeft;
+    const offsetTop = this.jqxWidget.nativeElement.offsetTop;
+    this.window.position({x: offsetLeft + 50, y: offsetTop + 50});
+    this.window.focus();
+  }
+
+  onResizeCheckBox(event: any): void {
+    if (event.args.checked) {
+      this.window.resizable(true);
+    } else {
+      this.window.resizable(false);
+    }
+  }
+
+  onDragCheckBox(event: any): void {
+    if (event.args.checked) {
+      this.window.draggable(true);
+    } else {
+      this.window.draggable(false);
+    }
+  }
+
+  onShowButton(): void {
+    this.window.open();
+  }
+
+  onHideButton(): void {
+    this.window.close();
   }
 
   async ngOnInit() {

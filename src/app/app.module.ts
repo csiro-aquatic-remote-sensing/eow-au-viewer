@@ -18,6 +18,10 @@ import {ApplicationLayers} from './layers';
 import {Popup} from './sidebar/popup';
 import LayerGeometries from './layers-geometries';
 import SideBarService from './sidebar/sidebar.service';
+import {jqxTabsModule} from 'jqwidgets-framework/jqwidgets-ng/jqxtabs';
+import {jqxCheckBoxModule} from 'jqwidgets-framework/jqwidgets-ng/jqxcheckbox';
+import {jqxWindowModule} from 'jqwidgets-framework/jqwidgets-ng/jqxwindow';
+import {jqxButtonModule} from 'jqwidgets-framework/jqwidgets-ng/jqxbuttons';
 
 @NgModule({
   declarations: [
@@ -25,7 +29,7 @@ import SideBarService from './sidebar/sidebar.service';
     SidebarComponent
   ],
   imports: [
-    BrowserModule, HttpClientModule
+    BrowserModule, HttpClientModule, jqxButtonModule, jqxWindowModule, jqxCheckBoxModule, jqxTabsModule
   ],
   providers: [
     {
