@@ -18,7 +18,7 @@ body {
 
 .application {
   display: grid;
-  grid-template: 35px 1fr / 80% 1fr;
+  grid-template: 35px 1fr 1px / 80% 1fr;
   height: 100vh;
   min-height: 100%;
 }
@@ -37,6 +37,10 @@ body {
   background-color: white;
   border-style: solid;
   border-color: white;
+}
+
+#jqxWidget {
+  grid-row: 3;
 }
 
 .map {

@@ -62,8 +62,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    const offsetLeft = this.jqxWidget.nativeElement.offsetLeft;
-    const offsetTop = this.jqxWidget.nativeElement.offsetTop;
+    const offsetLeft = 0; // this.jqxWidget.nativeElement.offsetLeft;
+    const offsetTop = 0; // this.jqxWidget.nativeElement.offsetTop;
     this.window.position({x: offsetLeft + 50, y: offsetTop + 50});
     this.window.focus();
   }
