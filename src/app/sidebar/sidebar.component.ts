@@ -28,5 +28,4 @@ export class SidebarComponent implements OnInit {
     // await this.userStore.init(this.eowData, this.measurementStore);
 
   }
-
 }

@@ -25,6 +25,7 @@ import {isDebugLevel} from './globals';
 import SideBarService from './sidebar/sidebar.service';
 import {SideBarMessage} from './types';
 import {jqxWindowComponent} from 'jqwidgets-framework/jqwidgets-ng/jqxwindow';
+import {StatsService} from './stats.service';
 
 const theClass = 'AppComponent';
 
@@ -36,9 +37,9 @@ type WaterBodyFeatures = { [name: string]: Feature[] }; // tslint:disable-line
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
 })
-export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
-  @ViewChild('windowReference', { static: false }) window: jqxWindowComponent;
-  @ViewChild('jqxWidget', { static: false }) jqxWidget: ElementRef;
+export class AppComponent implements OnInit, OnDestroy { //}, AfterViewInit {
+  // @ViewChild('windowReference', {static: false}) window: jqxWindowComponent;
+  // @ViewChild('jqxWidget', {static: false}) jqxWidget: ElementRef;
 
   title = 'Eye On Water';
   waterBodiesLayers: LayersInfo[];
@@ -58,39 +59,45 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   constructor(@Inject(DOCUMENT) private htmlDocument: Document, private http: HttpClient, private log: Brolog, private eowMap: EOWMap, private popupObject: Popup,
               private eowData: EowDataLayer, private layers: ApplicationLayers, private eowLayers: EowLayers, private eowDataGeometries: EowDataGeometries,
-              private layersGeometries: LayerGeometries, private eowDataCharts: EowDataCharts, private sideBarService: SideBarService) {
+              private layersGeometries: LayerGeometries, private eowDataCharts: EowDataCharts, private sideBarService: SideBarService,
+              private statsService: StatsService) {
   }
 
-  ngAfterViewInit(): void {
+  XngAfterViewInit(): void {
     const offsetLeft = 0; // this.jqxWidget.nativeElement.offsetLeft;
     const offsetTop = 0; // this.jqxWidget.nativeElement.offsetTop;
-    this.window.position({x: offsetLeft + 50, y: offsetTop + 50});
-    this.window.focus();
+    // this.window.position({x: offsetLeft + 50, y: offsetTop + 50});
+    // this.window.focus();
   }
 
-  onResizeCheckBox(event: any): void {
-    if (event.args.checked) {
-      this.window.resizable(true);
-    } else {
-      this.window.resizable(false);
-    }
+
+  onLogin() {
+    console.log('login');
   }
 
-  onDragCheckBox(event: any): void {
-    if (event.args.checked) {
-      this.window.draggable(true);
-    } else {
-      this.window.draggable(false);
-    }
-  }
-
-  onShowButton(): void {
-    this.window.open();
-  }
-
-  onHideButton(): void {
-    this.window.close();
-  }
+  // onResizeCheckBox(event: any): void {
+  //   if (event.args.checked) {
+  //     this.window.resizable(true);
+  //   } else {
+  //     this.window.resizable(false);
+  //   }
+  // }
+  //
+  // onDragCheckBox(event: any): void {
+  //   if (event.args.checked) {
+  //     this.window.draggable(true);
+  //   } else {
+  //     this.window.draggable(false);
+  //   }
+  // }
+  //
+  // onShowButton(): void {
+  //   this.window.open();
+  // }
+  //
+  // onHideButton(): void {
+  //   this.window.close();
+  // }
 
   async ngOnInit() {
     this.eowMap.init(this.sideBarMessagingService);
@@ -111,7 +118,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     this.subscriptions.push(this.eowData.dataLayerObs.subscribe(dataLayer => {
       this.dataLayer = dataLayer;
     }));
-
     await this.eowLayers.init();
 
     await this.eowDataGeometries.init();
@@ -119,6 +125,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     this.popupObject.init(this.sideBarMessagingService);
     this.eowDataCharts.init(this.eowMap, this.htmlDocument, this.sideBarMessagingService);
     await this.sideBarService.init(this.sideBarMessagingService);
+    this.statsService.init();
 
     this.setupObserversHandleNewData();
 

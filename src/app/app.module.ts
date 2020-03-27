@@ -22,11 +22,13 @@ import {jqxTabsModule} from 'jqwidgets-framework/jqwidgets-ng/jqxtabs';
 import {jqxCheckBoxModule} from 'jqwidgets-framework/jqwidgets-ng/jqxcheckbox';
 import {jqxWindowModule} from 'jqwidgets-framework/jqwidgets-ng/jqxwindow';
 import {jqxButtonModule} from 'jqwidgets-framework/jqwidgets-ng/jqxbuttons';
+import { HeaderComponent } from './header/header.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    SidebarComponent
+    SidebarComponent,
+    HeaderComponent
   ],
   imports: [
     BrowserModule, HttpClientModule, jqxButtonModule, jqxWindowModule, jqxCheckBoxModule, jqxTabsModule

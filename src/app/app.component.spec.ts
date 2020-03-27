@@ -15,12 +15,13 @@ import LayerGeometries from './layers-geometries';
 import EowDataCharts from './charts/eow-data-charts';
 import SideBarService from './sidebar/sidebar.service';
 import {MeasurementStore} from './sidebar/measurement-store';
+import {HeaderComponent} from './header/header.component';
 
 describe('AppComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [
-        AppComponent, SidebarComponent
+        AppComponent, SidebarComponent, HeaderComponent
       ],
       imports: [HttpClientTestingModule],
       providers: [Brolog, EOWMap, Popup, UserStore, EowDataLayer, ApplicationLayers, EowLayers, EowDataGeometries, LayerGeometries,

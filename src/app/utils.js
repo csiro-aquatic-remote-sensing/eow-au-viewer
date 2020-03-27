@@ -101,6 +101,7 @@ export function printStats (stats, userStore) {
         <span class="stats-value">${stats.eowGlobal}</span>
         <span class="stats-label">EyeOnWater: Worldwide</span>
         </li>
+        <a (click)="onLogin()" href="#">login</a>
       </ul>
       <div style="clear:both"></div>
     </div>
