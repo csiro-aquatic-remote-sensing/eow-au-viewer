@@ -6,7 +6,7 @@ import {HttpClientModule} from '@angular/common/http';
 import {Brolog} from 'brolog';
 import {brologLevel} from './globals';
 import { SidebarComponent } from './sidebar/sidebar.component';
-import {MeasurementStore} from './sidebar/measurement-store';
+// import {MeasurementStore} from './sidebar/measurement-store';
 import {UserStore} from './sidebar/user-store';
 import EowDataGeometries from './eow-data-geometries';
 import {EowDataLayer} from './eow-data-layer';
@@ -42,7 +42,7 @@ import { MeasurementsComponent } from './sidebar/measurements/measurements.compo
       // 'silent' | 'error' | 'warn' | 'info' | 'verbose' | 'silly'
       useFactory: function brologFactory() { return Brolog.instance(brologLevel); },
     },
-    MeasurementStore, UserStore, EowDataGeometries, EowDataLayer, EowDataStruct, EowDataLayer, EowDataCharts, EOWMap,
+    UserStore, EowDataGeometries, EowDataLayer, EowDataStruct, EowDataLayer, EowDataCharts, EOWMap,
     EowLayers, ApplicationLayers, LayerGeometries, SideBarService
   ],
   bootstrap: [AppComponent]

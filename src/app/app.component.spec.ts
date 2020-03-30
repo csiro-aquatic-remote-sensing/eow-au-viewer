@@ -13,7 +13,7 @@ import EowDataGeometries from './eow-data-geometries';
 import LayerGeometries from './layers-geometries';
 import EowDataCharts from './charts/eow-data-charts';
 import SideBarService from './sidebar/sidebar.service';
-import {MeasurementStore} from './sidebar/measurement-store';
+import {MeasurementStoreXXXX} from './sidebar/measurement-store';
 import {HeaderComponent} from './header/header.component';
 import {StatsComponent} from './stats/stats.component';
 
@@ -25,7 +25,7 @@ describe('AppComponent', () => {
       ],
       imports: [HttpClientTestingModule],
       providers: [Brolog, EOWMap, UserStore, EowDataLayer, ApplicationLayers, EowLayers, EowDataGeometries, LayerGeometries,
-        EowDataCharts, SideBarService, MeasurementStore]
+        EowDataCharts, SideBarService]
     }).compileComponents();
   }));
 

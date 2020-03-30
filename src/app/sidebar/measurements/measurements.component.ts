@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, Inject, OnDestroy, OnInit} from '@angular/core';
 import {EowBaseService} from '../../eow-base-service';
 import {EOWMap} from '../../eow-map';
 import {EowDataLayer} from '../../eow-data-layer';
@@ -13,6 +13,9 @@ import orderBy from 'lodash/orderBy';
 import {DateTime} from 'luxon';
 import {UserStore} from '../user-store';
 import {Coords} from '../../eow-data-struct';
+import {Coordinate} from 'ol/coordinate';
+import {AnimationOptions} from 'ol/View';
+import {DOCUMENT} from '@angular/common';
 
 let performOnce = true;
 
@@ -29,15 +32,17 @@ interface MeasurementsType {
   styleUrls: ['./measurements.component.css']
 })
 export class MeasurementsComponent extends EowBaseService implements OnInit, OnDestroy {
-  measurements: Feature[];
-  measurementsById: {};
-  measurementsByOwner: {};
-  measurementsList: MeasurementsType[];
-  allDataSource: VectorSource;
-  dataLayer: VectorLayer;
-  map: Map;
+  private measurements: Feature[];
+  private initialMeasurements: Feature[];
+  private measurementsById: {};
+  private measurementsByOwner: {};
+  private measurementsList: MeasurementsType[];
+  private allDataSource: VectorSource;
+  private dataLayer: VectorLayer;
+  private map: Map;
 
-  constructor(private eowMap: EOWMap, private eowData: EowDataLayer, private log: Brolog) { // , private userStore: UserStore
+  constructor(private eowMap: EOWMap, private eowData: EowDataLayer,
+              private log: Brolog, @Inject(DOCUMENT) private htmlDocument: Document) { // , private userStore: UserStore
     super();
   }
 
@@ -48,6 +53,9 @@ export class MeasurementsComponent extends EowBaseService implements OnInit, OnD
   ngOnInit() {
     this.subscriptions.push(this.eowData.allDataSourceObs.subscribe(allDataSource => {
       this.allDataSource = allDataSource;
+      if (! this.initialMeasurements && this.measurements) {
+        this.initialMeasurements = this.measurements.slice(0);  // duplicate
+      }
       this.initialLoadMeasurements(allDataSource);
       // this.setupEventHandling();  // this.userStore);
     }));
@@ -57,24 +65,57 @@ export class MeasurementsComponent extends EowBaseService implements OnInit, OnD
     this.subscriptions.push(this.eowData.dataLayerObs.subscribe(dataLayer => {
       this.dataLayer = dataLayer;
     }));
+
+    this.setupEventHandlers();
   }
 
-  initialLoadMeasurements(allDataSource: VectorSource) {
-    if (allDataSource) {
+  private setupEventHandlers() {
+    this.htmlDocument.querySelector('.measurement-list').addEventListener('click', (event) => {
+      const element = (event.target as HTMLElement).closest('.item');
+      if (!element) {
+        return;
+      }
+
+      const coordinate = element.getAttribute('data-coordinate').split(',').map(c => parseFloat(c)) as Coordinate;
+      console.log(`Clicked on Measurement List - coord: ${coordinate}`)
+      const view = this.map.getView();
+      view.cancelAnimations();
+      view.animate({
+        center: coordinate,
+        zoom: 14,
+        duration: 1300
+      } as AnimationOptions);
+    }, true);
+
+    this.htmlDocument.getElementById('resetButton').addEventListener('click', (event) => {
+      this.resetMeasurments();
+    });
+
+  }
+
+  private initialLoadMeasurements(source: VectorSource) {
+    if (source) {
       performOnce = false;
       // const source = event.target;
-      const features = allDataSource.getFeatures();
+      const features = source.getFeatures();
+      console.log(`initialLoadMeasurements - #: ${features.length}`)
       // Store the measurements in easy to access data structure
       this.measurements = features;
       this.measurementsById = keyBy(features, f => f.get('n_code'));
       this.measurementsByOwner = groupBy(features, f => f.get('user_n_code'));
 
       this.recentMeasurements(this.measurements);
+      this.showMeasurments(source);
       // this.allDataSource.un('change', this.initialLoadMeasurements.bind(this, userStore));
       // console.log(`loadMeasurements (by Id): ${JSON.stringify(Object.keys(this.measurementsById))}`);
       // console.log(`loadMeasurements (by Owner): ${JSON.stringify(Object.keys(this.measurementsByOwner))}`);
       // }
     }
+  }
+
+  private resetMeasurments() {
+    this.recentMeasurements(this.initialMeasurements);
+    this.showUserMeasurements();
   }
 
   getByOwner(userId) {
@@ -89,7 +130,7 @@ export class MeasurementsComponent extends EowBaseService implements OnInit, OnD
     return this.measurementsList ? this.measurementsList.length : 0;
   }
 
-  private recentMeasurements(measurements, n = 20) {
+  private recentMeasurements(measurements, n = 50) {
     this.measurementsList = orderBy(measurements, [(f) => (new Date(f.get('date_photo'))).getTime()], ['desc']).slice(0, n).map((measurement) => {
       const prettyDate = DateTime.fromISO(measurement.get('date_photo')).toLocaleString(DateTime.DATE_FULL);
 
@@ -107,19 +148,14 @@ export class MeasurementsComponent extends EowBaseService implements OnInit, OnD
     // document.querySelector('.measurement-list ul').innerHTML = userList.join('\n');
   }
 
-  showMeasurements(userId = null) {
+  showUserMeasurements(userId = null) {
     const selection = this.getByOwner(userId);
     if (!selection.length) {
       return false;
     }
     const newSource = new VectorSource();
     newSource.addFeatures(selection);
-    this.map.getView().fit(newSource.getExtent(), {
-      size: this.map.getSize(),
-      padding: [100, 100, 100, 100],
-      nearest: false,
-      duration: 1300
-    });
+    this.showMeasurments(newSource);
     if (this.dataLayer) {
       this.dataLayer.setSource(newSource);
     }
@@ -128,6 +164,14 @@ export class MeasurementsComponent extends EowBaseService implements OnInit, OnD
     return true;
   }
 
+  private showMeasurments(source: VectorSource) {
+    this.map.getView().fit(source.getExtent(), {
+      size: this.map.getSize(),
+      padding: [100, 100, 100, 100],
+      nearest: false,
+      duration: 1300
+    });
+  }
   /**
    * Succinct summary of measurements data for debugging and also a field showing if the referenced user exists
    * @param byOwner: true or byId if false
