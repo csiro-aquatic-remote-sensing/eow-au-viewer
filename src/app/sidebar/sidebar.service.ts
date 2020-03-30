@@ -146,12 +146,13 @@ export default class SideBarService extends EowBaseService {
         return;
       }
 
-      const coordinate = element.getAttribute('data-coordinate').split(',').map(c => parseInt(c, 10)) as Coordinate;
+      const coordinate = element.getAttribute('data-coordinate').split(',').map(c => parseFloat(c)) as Coordinate;
+      console.log(`Clicked on Measurement List - coord: ${coordinate}`)
       const view = this.map.getView();
       view.cancelAnimations();
       view.animate({
         center: coordinate,
-        zoom: 8,
+        zoom: 14,
         duration: 1300
       } as AnimationOptions);
     }, true);
