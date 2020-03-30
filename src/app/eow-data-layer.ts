@@ -10,10 +10,6 @@ import {
 } from 'ol/style';
 import debounce from 'lodash/debounce';
 
-import {
-  printStats,
-  calculateStats,
-} from './utils';
 import colors from './colors.json';
 import {UserStore} from './sidebar/user-store';
 import {MeasurementStore} from './sidebar/measurement-store';

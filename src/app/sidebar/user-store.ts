@@ -1,10 +1,6 @@
 import orderBy from 'lodash/orderBy';
 import keyBy from 'lodash/keyBy';
 import debounce from 'lodash/debounce';
-import {
-  printStats,
-  calculateStats,
-} from '../utils';
 import Brolog from 'brolog';
 import {BehaviorSubject, Subscription} from 'rxjs';
 import {MeasurementStore} from './measurement-store';

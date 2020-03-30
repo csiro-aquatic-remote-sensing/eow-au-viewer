@@ -42,8 +42,4 @@ export class StatsComponent implements OnChanges { // extends EowBaseService imp
   getStatsItemAmountAmount(statsItemAmount: StatsItemAmount) {
     return statsItemAmount.item ? '@' + statsItemAmount.amount : 'N/A';
   }
-
-  onLogin() {
-    console.log('header login');
-  }
 }

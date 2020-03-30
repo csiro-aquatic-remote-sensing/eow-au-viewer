@@ -52,7 +52,7 @@ export class HeaderComponent extends EowBaseService implements OnInit, OnDestroy
 //     return statsItemAmount.item ? '@' + statsItemAmount.amount : 'N/A';
 //   }
 //
-//   onLogin() {
-//     console.log('header login');
-//   }
+  onLogin() {
+    console.log('header login');
+  }
 }
