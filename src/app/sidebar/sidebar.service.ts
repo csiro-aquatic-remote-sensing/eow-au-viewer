@@ -14,7 +14,6 @@ import {EOWMap} from '../eow-map';
 import {Subject} from 'rxjs';
 import {SideBarMessage} from '../types';
 import {EowBaseService} from '../eow-base-service';
-import {Popup} from './popup';
 import {TimeSeriesChartHTML} from '../charts/time-series-chart-html';
 
 const show = true;
