@@ -2,7 +2,7 @@ import colors from '../colors.json';
 import {
   Brolog,
 } from 'brolog';
-import {select} from 'd3-selection';
+import {select, selectAll} from 'd3-selection';
 import {pie, arc} from 'd3-shape';
 import {PieItem, PieItems} from '../eow-data-struct';
 import {brologLevel} from '../globals';
@@ -19,17 +19,17 @@ export class PieChart {
    * Draw pie chart of features (FU Values) at elementId
    *
    * @param preparedChartData to make up the segments of the pie chart
-   * @param elementId of div to draw chart in to
+   * @param elementIdOrClass of div to draw chart in to
    * @param sizeScaleFactor used to create the height and width
    */
-  static drawD3(preparedChartData: PieItems, elementId: string, sizeScaleFactor: number) {
+  static drawD3(preparedChartData: PieItems, elementIdOrClass: string, sizeScaleFactor: number) {
     const width = widthFactor * sizeScaleFactor;
     const fontSize = 0.8 * sizeScaleFactor;
     const fontWeight = 15;
     const theFUColours = PieChart.getFUColours();
 
     // Delete any existing pie-chart that existed in the elementId
-    select('#' + elementId).select('svg').remove();
+    selectAll(elementIdOrClass).select('svg').remove();
 
     // 2. Create chart dimensions
 
@@ -51,7 +51,7 @@ export class PieChart {
 
     // 3. Draw canvas
 
-    const wrapper = select('#' + elementId)
+    const wrapper = selectAll(elementIdOrClass)
       // .attr('class', 'svg-container')
       .append('svg')
       .attr('width', '' + dimensions.width)

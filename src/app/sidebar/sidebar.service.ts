@@ -24,9 +24,9 @@ const hide = false;
 export default class SideBarService extends EowBaseService {
   dataLayer: VectorLayer;
   map: Map;
-  private sideBarMessagingService: Subject<SideBarMessage>;
+  sideBarMessagingService: Subject<SideBarMessage>;
 
-  constructor(private eowData: EowDataLayer, private eowMap: EOWMap, private measurementStore: MeasurementStore, private userStore: UserStore, private popup: Popup,
+  constructor(private eowData: EowDataLayer, private eowMap: EOWMap, private measurementStore: MeasurementStore, private userStore: UserStore,
               private log: Brolog, @Inject(DOCUMENT) private htmlDocument: Document) {
     super();
   }
@@ -87,7 +87,7 @@ export default class SideBarService extends EowBaseService {
     switch (menuId) {
       case 'eow-dataPoint-information':
         console.log(`sidebar - show ${menuId}`);
-        await this.popup.draw(features, coordinate, 'eow-dataPoint-information');
+        // await this.popup.draw(features, coordinate, 'eow-dataPoint-information');
         this.showHideMenu('measurements', hide);
         this.showHideMenu('users', hide);
         this.showHideMenu('eow-dataPoint-information', show);

@@ -25,7 +25,7 @@ export class UserStore extends EowBaseService {
   private dataLayer: VectorLayer;
 
   constructor(@Inject(DOCUMENT) private htmlDocument: Document, private log: Brolog,
-              private eowData: EowDataLayer) { // }, private measurementStore: MeasurementStore) {
+              private eowDataLayer: EowDataLayer) { // }, private measurementStore: MeasurementStore) {
     super();
   }
 
@@ -37,7 +37,7 @@ export class UserStore extends EowBaseService {
   async init(): Promise<UserStore> {
     const USER_SERVICE = 'https://www.eyeonwater.org/api/users';
 
-    this.subscriptions.push(this.eowData.dataLayerObs.subscribe(dataLayer => {
+    this.subscriptions.push(this.eowDataLayer.dataLayerObs.subscribe(dataLayer => {
       this.dataLayer = dataLayer;
     }));
 
@@ -68,13 +68,13 @@ export class UserStore extends EowBaseService {
 
   setupEventHandlers() { // measurementStore: MeasurementStore) {
     // this.eowData.dataLayerObs.subscribe(dataLayer => {
-    if (this.dataLayer) {
-      this.dataLayer.on('change', debounce(({target}) => {
-        // Populate datalayer
-        const element = this.htmlDocument.querySelector('.sub-header-stats') as HTMLElement;
-        element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), this);
-      }, 200));
-    }
+    // if (this.dataLayer) {
+    //   this.dataLayer.on('change', debounce(({target}) => {
+    //     Populate datalayer
+        // const element = this.htmlDocument.querySelector('.sub-header-stats') as HTMLElement;
+        // element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), this);
+      // }, 200));
+    // }
     // });
 
     // // User List

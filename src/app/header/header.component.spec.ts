@@ -4,6 +4,7 @@ import { HeaderComponent } from './header.component';
 import {EowDataLayer} from '../eow-data-layer';
 import {EOWMap} from '../eow-map';
 import Brolog from 'brolog';
+import {StatsComponent} from '../stats/stats.component';
 
 describe('HeaderComponent', () => {
   let component: HeaderComponent;
@@ -11,7 +12,7 @@ describe('HeaderComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ HeaderComponent ],
+      declarations: [ HeaderComponent, StatsComponent ],
       providers: [EowDataLayer, EOWMap, Brolog]
     })
     .compileComponents();

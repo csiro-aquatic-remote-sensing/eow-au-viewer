@@ -15,7 +15,6 @@ import EowDataCharts from './charts/eow-data-charts';
 import {EOWMap} from './eow-map';
 import {EowLayers} from './eow-layers';
 import {ApplicationLayers} from './layers';
-import {Popup} from './sidebar/popup';
 import LayerGeometries from './layers-geometries';
 import SideBarService from './sidebar/sidebar.service';
 import {jqxTabsModule} from 'jqwidgets-framework/jqwidgets-ng/jqxtabs';
@@ -23,12 +22,14 @@ import {jqxCheckBoxModule} from 'jqwidgets-framework/jqwidgets-ng/jqxcheckbox';
 import {jqxWindowModule} from 'jqwidgets-framework/jqwidgets-ng/jqxwindow';
 import {jqxButtonModule} from 'jqwidgets-framework/jqwidgets-ng/jqxbuttons';
 import { HeaderComponent } from './header/header.component';
+import { StatsComponent } from './stats/stats.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     SidebarComponent,
-    HeaderComponent
+    HeaderComponent,
+    StatsComponent
   ],
   imports: [
     BrowserModule, HttpClientModule, jqxButtonModule, jqxWindowModule, jqxCheckBoxModule, jqxTabsModule
@@ -40,7 +41,7 @@ import { HeaderComponent } from './header/header.component';
       useFactory: function brologFactory() { return Brolog.instance(brologLevel); },
     },
     MeasurementStore, UserStore, EowDataGeometries, EowDataLayer, EowDataStruct, EowDataLayer, EowDataCharts, EOWMap,
-    EowLayers, ApplicationLayers, Popup, LayerGeometries, SideBarService
+    EowLayers, ApplicationLayers, LayerGeometries, SideBarService
   ],
   bootstrap: [AppComponent]
 })

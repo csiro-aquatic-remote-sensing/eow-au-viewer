@@ -69,7 +69,7 @@ export class Popup extends EowBaseService {
       stats.innerHTML = PieChart.fixForThisPieChart(printStats(calculateStats(features), this.userStore));
       element.classList.add('active');
       const preparedFeatures = await EowDataStruct.preparePieChartData(features);
-      PieChart.drawD3(preparedFeatures, 'pieChart', 8);
+      PieChart.drawD3(preparedFeatures, '.pieChart', 8);
     }
 
     this.setupEventHandlers(elementId);

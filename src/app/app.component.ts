@@ -2,7 +2,6 @@ import {Component, OnInit, Inject, OnDestroy, ElementRef, ViewChild, AfterViewIn
 import {DOCUMENT} from '@angular/common';
 import Feature from 'ol/Feature';
 import {HttpClient} from '@angular/common/http';
-import {Popup} from './sidebar/popup';
 import {ApplicationLayers} from './layers';
 import {EowDataLayer} from './eow-data-layer';
 import EowDataGeometries from './eow-data-geometries';
@@ -25,7 +24,7 @@ import {isDebugLevel} from './globals';
 import SideBarService from './sidebar/sidebar.service';
 import {SideBarMessage} from './types';
 import {jqxWindowComponent} from 'jqwidgets-framework/jqwidgets-ng/jqxwindow';
-import {StatsService} from './stats.service';
+import {StatsService} from './stats/stats.service';
 
 const theClass = 'AppComponent';
 
@@ -37,7 +36,7 @@ type WaterBodyFeatures = { [name: string]: Feature[] }; // tslint:disable-line
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
 })
-export class AppComponent implements OnInit, OnDestroy { //}, AfterViewInit {
+export class AppComponent implements OnInit, OnDestroy { // }, AfterViewInit {
   // @ViewChild('windowReference', {static: false}) window: jqxWindowComponent;
   // @ViewChild('jqxWidget', {static: false}) jqxWidget: ElementRef;
 
@@ -57,7 +56,7 @@ export class AppComponent implements OnInit, OnDestroy { //}, AfterViewInit {
   sideBarMessagingService = new Subject<SideBarMessage>();
   private subscriptions: Subscription[] = [];
 
-  constructor(@Inject(DOCUMENT) private htmlDocument: Document, private http: HttpClient, private log: Brolog, private eowMap: EOWMap, private popupObject: Popup,
+  constructor(@Inject(DOCUMENT) private htmlDocument: Document, private http: HttpClient, private log: Brolog, private eowMap: EOWMap,
               private eowData: EowDataLayer, private layers: ApplicationLayers, private eowLayers: EowLayers, private eowDataGeometries: EowDataGeometries,
               private layersGeometries: LayerGeometries, private eowDataCharts: EowDataCharts, private sideBarService: SideBarService,
               private statsService: StatsService) {
@@ -122,7 +121,7 @@ export class AppComponent implements OnInit, OnDestroy { //}, AfterViewInit {
 
     await this.eowDataGeometries.init();
 
-    this.popupObject.init(this.sideBarMessagingService);
+    // this.popupObject.init(this.sideBarMessagingService);
     this.eowDataCharts.init(this.eowMap, this.htmlDocument, this.sideBarMessagingService);
     await this.sideBarService.init(this.sideBarMessagingService);
     this.statsService.init();
@@ -139,7 +138,7 @@ export class AppComponent implements OnInit, OnDestroy { //}, AfterViewInit {
   ngOnDestroy() {
     this.subscriptions.forEach(s => s.unsubscribe());
     this.eowMap.destroy();
-    this.popupObject.destroy();
+    // this.popupObject.destroy();
     this.eowData.destroy();
     this.layers.destroy();
     this.eowLayers.destroy();

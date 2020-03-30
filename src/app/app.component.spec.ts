@@ -5,7 +5,6 @@ import {HttpClientTestingModule} from '@angular/common/http/testing';
 import Brolog from 'brolog';
 import {SidebarComponent} from './sidebar/sidebar.component';
 import {EOWMap} from './eow-map';
-import {Popup} from './sidebar/popup';
 import {UserStore} from './sidebar/user-store';
 import {EowDataLayer} from './eow-data-layer';
 import {ApplicationLayers} from './layers';
@@ -16,15 +15,16 @@ import EowDataCharts from './charts/eow-data-charts';
 import SideBarService from './sidebar/sidebar.service';
 import {MeasurementStore} from './sidebar/measurement-store';
 import {HeaderComponent} from './header/header.component';
+import {StatsComponent} from './stats/stats.component';
 
 describe('AppComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [
-        AppComponent, SidebarComponent, HeaderComponent
+        AppComponent, SidebarComponent, HeaderComponent, StatsComponent
       ],
       imports: [HttpClientTestingModule],
-      providers: [Brolog, EOWMap, Popup, UserStore, EowDataLayer, ApplicationLayers, EowLayers, EowDataGeometries, LayerGeometries,
+      providers: [Brolog, EOWMap, UserStore, EowDataLayer, ApplicationLayers, EowLayers, EowDataGeometries, LayerGeometries,
         EowDataCharts, SideBarService, MeasurementStore]
     }).compileComponents();
   }));

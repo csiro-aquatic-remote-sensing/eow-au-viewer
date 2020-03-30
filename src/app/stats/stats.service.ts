@@ -1,8 +1,8 @@
 import {Injectable} from '@angular/core';
 import VectorLayer from 'ol/layer/Vector';
 import {BehaviorSubject, Subject} from 'rxjs';
-import {EowDataLayer} from './eow-data-layer';
-import {EowBaseService} from './eow-base-service';
+import {EowDataLayer} from '../eow-data-layer';
+import {EowBaseService} from '../eow-base-service';
 import {debounce} from 'rxjs/operators';
 
 // export class StatsItemAmount {
@@ -13,14 +13,14 @@ import {debounce} from 'rxjs/operators';
 export type StatsItemAmount = { [item: string]: number }; // tslint:disable-line
 
 export class Stats {
-  iPhones: number;
-  androids: number;
+  iPhones = 0;
+  androids = 0;
   mostUsedDevice: StatsItemAmount = {}; // new StatsItemAmount();
   mostReportedFU: StatsItemAmount = {}; // new StatsItemAmount();
   mostActiveUser: StatsItemAmount = {}; // new StatsItemAmount();
   avgFU = 0;
-  eowAu: number;
-  eowGlobal: number;
+  eowAu = 0;
+  eowGlobal = 0;
 
   // set iPhones(value) {
   //   this._iPhones = value;
@@ -78,41 +78,42 @@ export class Stats {
 @Injectable({
   providedIn: 'root'
 })
-export class StatsService extends EowBaseService {
-  private _statsObs: BehaviorSubject<Stats> = new BehaviorSubject<Stats>(new Stats());  // Observers that outside subscribers can use to know when data ready
+export class StatsService { // extends EowBaseService {
+  // private _statsObs: BehaviorSubject<Stats> = new BehaviorSubject<Stats>(new Stats());  // Observers that outside subscribers can use to know when data ready
 
-  constructor(private eowDataLayer: EowDataLayer) {
-    super();
-  }
-
-  destroy() {
-    super.destroy();
-  }
+  // constructor(private eowDataLayer: EowDataLayer) {
+  //   super();
+  // }
+  //
+  // destroy() {
+  //   super.destroy();
+  // }
 
   /**
    * Create the map overlay.
    * @param elementId to draw into
    */
   init() {
-    this.setupEventHandlers();
+  //   this.setupEventHandlers();
   }
-
-  private setupEventHandlers() {
-    this.subscriptions.push(this.eowDataLayer.allDataSourceObs.subscribe(allDataSource => {
-      if (allDataSource) {
-        // @ts-ignore
-        // this.dataLayer.on('change', debounce(({target}) => {
-        this.calculateStats(allDataSource.getFeatures());
+  //
+  // private setupEventHandlers() {
+  //   The stats are automatically - REMOVE THIS GOING IN HEADER
+    // this.subscriptions.push(this.eowDataLayer.allDataSourceObs.subscribe(allDataSource => {
+    //   if (allDataSource) {
+    //     @ts-ignore
+    //     this.dataLayer.on('change', debounce(({target}) => {
+        // this.calculateStats(allDataSource.getFeatures());
         // }));
-      }
-    }));
-  }
+      // }
+    // }));
+  // }
 
-  get statsObs() {
-    return this._statsObs.asObservable();
-  }
+  // get statsObs() {
+  //   return this._statsObs.asObservable();
+  // }
 
-  calculateStats(features) {
+  calculateStats(features): Stats {
     const stats = new Stats();
     const users: StatsItemAmount = {};  // stats.mostActiveUser;
     const fuValues: StatsItemAmount = {};  // stats.mostReportedFU;
@@ -138,7 +139,7 @@ export class StatsService extends EowBaseService {
       // devices[properties.device_model] = devices.hasOwnProperty(properties.device_model) ? Math.trunc(devices[properties.device_model] + 1) : 1;
       // rStats[properties.device_platform === 'iOS' ? 'iphones' : 'androids'] += 1;
       // rStats[properties.application === 'australia' ? 'eowAu' : 'eowGlobal'] += 1;
-      incrementIfProperty(rStats, properties.device_platform === 'iOS' ? 'iphones' : 'androids');
+      incrementIfProperty(rStats, properties.device_platform === 'iOS' ? 'iPhones' : 'androids');
       incrementIfProperty(rStats, properties.application === 'australia' ? 'eowAu' : 'eowGlobal');
       return rStats;
     }, stats);
@@ -160,7 +161,7 @@ export class StatsService extends EowBaseService {
       mostActiveUser
     });
 
-    this._statsObs.next(theStats);
+    return theStats;
   }
 
   private getLargestAmount(collection: StatsItemAmount) {
