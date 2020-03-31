@@ -3,7 +3,7 @@ import keyBy from 'lodash/keyBy';
 import debounce from 'lodash/debounce';
 import Brolog from 'brolog';
 import {BehaviorSubject, Subscription} from 'rxjs';
-import {MeasurementStore} from './measurement-store';
+// import {MeasurementStore} from './measurement-store';
 import {EowDataLayer} from '../eow-data-layer';
 import VectorLayer from 'ol/layer/Vector';
 import {Inject, Injectable} from '@angular/core';

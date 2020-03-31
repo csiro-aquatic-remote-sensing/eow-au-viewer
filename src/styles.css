@@ -376,7 +376,7 @@ td, th {
 #measurements, #users {
   /*display: block;*/
   opacity: 1;
-  max-height: 420px;
+  /*max-height: 420px;*/
   visibility: visible;
   -webkit-transition: all 500ms ease-out 1s;
   -moz-transition: all 500ms ease-out 1s;
@@ -392,8 +392,12 @@ td, th {
 }
 
 h5 {
-  margin-block-start: 5px;
+  /*margin-block-start: 5px;*/
   margin-block-end: 0;
+  /*padding-top: 5px;*/
+  border-top-color: black;
+  border-top-width: 1px;
+  border-top-style: solid;
 }
 
 #header-login {

@@ -11,6 +11,8 @@ import Feature from 'ol/Feature';
 import {DOCUMENT} from '@angular/common';
 import colors from '../colors.json';
 import moment = require('moment-timezone/moment-timezone');
+import {MeasurementsService} from './measurements/measurements.service';
+import {UserService} from './users/user.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -23,20 +25,37 @@ export class SidebarComponent extends EowBaseService implements OnInit {
   pieChartPreparedData: PieItem[];
   parentSelector = 'div#eow-dataPoint-information';
 
-  constructor(private sideBarService: SideBarService, private statsService: StatsService, @Inject(DOCUMENT) private htmlDocument: Document, private log: Brolog) {
+  constructor(private sideBarService: SideBarService, private measurementsService: MeasurementsService, private userService: UserService,
+              private statsService: StatsService, @Inject(DOCUMENT) private htmlDocument: Document, private log: Brolog) {
     super();
     this.stats = new Stats();
-  }
-
-  destroy() {
-    super.destroy();
   }
 
   async ngOnInit() {
     this.subscriptions.push(this.sideBarMessagingService.asObservable().subscribe(msg => {
       this.handleMessage(msg);
     }));
+    this.measurementsService.init();
+    await this.userService.init();
+  }
 
+  destroy() {
+    super.destroy();
+    this.sideBarService.destroy();
+    this.measurementsService.destroy();
+    this.userService.destroy();
+  }
+
+  // get measurements() {
+  //   return this.measurementsService.measurements;
+  // }
+
+  get measurementsList() {
+    return this.measurementsService.measurementsList;
+  }
+
+  get usersList() {
+    return this.userService.userList;
   }
 
   private handleMessage(msg: SideBarMessage) {
