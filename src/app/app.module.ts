@@ -26,6 +26,8 @@ import { StatsComponent } from './stats/stats.component';
 import { MeasurementsComponent } from './sidebar/measurements/measurements.component';
 import { UsersComponent } from './sidebar/users/users.component';
 import { LoginComponent } from './header/login/login.component';
+import {SidebarStatsService} from './stats/stats.sidebar.service';
+import {HeaderStatsService} from './stats/stats.header.service';
 
 @NgModule({
   declarations: [
@@ -47,7 +49,7 @@ import { LoginComponent } from './header/login/login.component';
       useFactory: function brologFactory() { return Brolog.instance(brologLevel); },
     },
     UserStore, EowDataGeometries, EowDataLayer, EowDataStruct, EowDataLayer, EowDataCharts, EOWMap,
-    EowLayers, ApplicationLayers, LayerGeometries, SideBarService
+    EowLayers, ApplicationLayers, LayerGeometries, SideBarService, SidebarStatsService, HeaderStatsService
   ],
   bootstrap: [AppComponent]
 })

@@ -24,7 +24,9 @@ import {isDebugLevel} from './globals';
 import SideBarService from './sidebar/sidebar.service';
 import {SideBarMessage} from './types';
 import {jqxWindowComponent} from 'jqwidgets-framework/jqwidgets-ng/jqxwindow';
-import {StatsService} from './stats/stats.service';
+import {SidebarStatsService} from './stats/stats.sidebar.service';
+import {HeaderStatsService} from './stats/stats.header.service';
+// import {HeaderStatsService} from './stats/stats.header.service';
 
 const theClass = 'AppComponent';
 
@@ -59,7 +61,7 @@ export class AppComponent implements OnInit, OnDestroy { // }, AfterViewInit {
   constructor(@Inject(DOCUMENT) private htmlDocument: Document, private http: HttpClient, private log: Brolog, private eowMap: EOWMap,
               private eowData: EowDataLayer, private layers: ApplicationLayers, private eowLayers: EowLayers, private eowDataGeometries: EowDataGeometries,
               private layersGeometries: LayerGeometries, private eowDataCharts: EowDataCharts, private sideBarService: SideBarService,
-              private statsService: StatsService) {
+              private sidebarStatsService: SidebarStatsService, private headerStatsService: HeaderStatsService) {
   }
 
   XngAfterViewInit(): void {
@@ -124,7 +126,8 @@ export class AppComponent implements OnInit, OnDestroy { // }, AfterViewInit {
     // this.popupObject.init(this.sideBarMessagingService);
     this.eowDataCharts.init(this.eowMap, this.htmlDocument, this.sideBarMessagingService);
     await this.sideBarService.init(this.sideBarMessagingService);
-    this.statsService.init();
+    this.sidebarStatsService.init();
+    this.headerStatsService.init();
 
     this.setupObserversHandleNewData();
 
@@ -146,6 +149,8 @@ export class AppComponent implements OnInit, OnDestroy { // }, AfterViewInit {
     this.layersGeometries.destroy();
     this.eowDataCharts.destroy();
     this.sideBarService.destroy();
+    this.sidebarStatsService.destroy();
+    this.headerStatsService.destroy();
   }
 
   private setupObserversHandleNewData() {

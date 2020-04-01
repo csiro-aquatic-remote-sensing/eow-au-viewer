@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import {feature, Feature as TurfFeature} from '@turf/helpers';
-import { StatsService } from './stats.service';
+import { StatsService } from './stats.base.service';
 import GeoJSON from 'ol/format/GeoJSON';
 import {EowDataLayer} from '../eow-data-layer';
 import {EOWMap} from '../eow-map';

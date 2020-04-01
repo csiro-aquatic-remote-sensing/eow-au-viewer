@@ -1,6 +1,5 @@
-import {AfterViewInit, Component, Inject, Input, OnChanges, OnInit} from '@angular/core';
-import {EowBaseService} from '../eow-base-service';
-import {Stats, StatsItemAmount, StatsService} from './stats.service';
+import {Component, Inject, Input, OnChanges} from '@angular/core';
+import {Stats, StatsItemAmount} from './stats.base.service';
 import {PieChart} from '../charts/pie-chart';
 import {DOCUMENT} from '@angular/common';
 import {PieItem} from '../eow-data-struct';
@@ -19,21 +18,17 @@ export class StatsComponent implements OnChanges { // extends EowBaseService imp
   @Input() pieChartParentSelector: string;
 
   constructor(@Inject(DOCUMENT) private htmlDocument: Document) { // private statsService: StatsService) {
-  //   super();
   }
 
   ngOnChanges() {
-  //   this.setupEventHandlers();  // this.measurementStore);
+    this.setupEventHandlers();
     if (this.pieChartPreparedData) {
       PieChart.drawD3(this.pieChartPreparedData, this.pieChartParentSelector + ' span.pieChart', 8);
     }
   }
 
-  // setupEventHandlers() { // measurementStore: MeasurementStore) {
-  //   this.subscriptions.push(this.statsService.statsObs.subscribe(stats => {
-  //     this.stats = stats;
-  //   }));
-  // }
+  setupEventHandlers() { // measurementStore: MeasurementStore) {
+  }
 
   getStatsItemAmountItem(statsItemAmount: StatsItemAmount) {
     return statsItemAmount.item ? statsItemAmount.item : '';

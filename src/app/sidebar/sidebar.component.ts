@@ -1,5 +1,4 @@
 import {Component, Inject, Input, OnInit} from '@angular/core';
-import {Stats, StatsService} from '../stats/stats.service';
 import SideBarService from './sidebar.service';
 import {EowBaseService} from '../eow-base-service';
 import {SideBarMessage} from '../types';
@@ -13,6 +12,7 @@ import colors from '../colors.json';
 import moment = require('moment-timezone/moment-timezone');
 import {MeasurementsService} from './measurements/measurements.service';
 import {UserService} from './users/user.service';
+import {SidebarStatsService} from '../stats/stats.sidebar.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -21,14 +21,14 @@ import {UserService} from './users/user.service';
 })
 export class SidebarComponent extends EowBaseService implements OnInit {
   @Input() sideBarMessagingService: Subject<SideBarMessage>;
-  stats: Stats;
-  pieChartPreparedData: PieItem[];
+  // private _stats: Stats;
+  _pieChartPreparedData: PieItem[];
   parentSelector = 'div#eow-dataPoint-information';
 
   constructor(private sideBarService: SideBarService, private measurementsService: MeasurementsService, private userService: UserService,
-              private statsService: StatsService, @Inject(DOCUMENT) private htmlDocument: Document, private log: Brolog) {
+              private sidebarStatsService: SidebarStatsService, @Inject(DOCUMENT) private htmlDocument: Document, private log: Brolog) {
     super();
-    this.stats = new Stats();
+    // this._stats = new Stats();
   }
 
   async ngOnInit() {
@@ -51,11 +51,20 @@ export class SidebarComponent extends EowBaseService implements OnInit {
   // }
 
   get measurementsList() {
+    this.sidebarStatsService.calculateStats(this.measurementsService.measurements);
     return this.measurementsService.measurementsList;
   }
 
   get usersList() {
     return this.userService.userList;
+  }
+
+  get stats() {
+    return this.sidebarStatsService.stats;
+  }
+
+  get pieChartPreparedData() {
+    return this._pieChartPreparedData;
   }
 
   private handleMessage(msg: SideBarMessage) {
@@ -99,8 +108,8 @@ export class SidebarComponent extends EowBaseService implements OnInit {
       content.innerHTML = features.map(f => this.printDetails(f)).join('');
       // stats.innerHTML = PieChart.fixForThisPieChart(printStats(calculateStats(features), this.userStore));
       element.classList.add('active');
-      this.stats = this.statsService.calculateStats(features);
-      this.pieChartPreparedData = await EowDataStruct.preparePieChartData(features);
+      // this._stats = this.statsService.calculateStats(features);  // stats comes direct from StatsSidebarService
+      this._pieChartPreparedData = await EowDataStruct.preparePieChartData(features);
       // const preparedFeatures = await EowDataStruct.preparePieChartData(features);
       // PieChart.drawD3(preparedFeatures, '.pieChart', 8);
     }
