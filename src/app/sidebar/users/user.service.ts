@@ -22,7 +22,6 @@ export interface UserType {
 export class UserService extends EowBaseService {
   private users: [];
   private userById: {};
-  selectedUserId = '';
   private dataLayer: VectorLayer;
   private _usersList: UserType[] = [];
 
@@ -48,7 +47,7 @@ export class UserService extends EowBaseService {
     }
 
 // Load users
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       loadUsers().then((users) => {
         this.users = users;
         this.userById = keyBy(this.users, 'id');
@@ -56,6 +55,8 @@ export class UserService extends EowBaseService {
         this.log.silly(this.constructor.name, `Users Loaded - ids: ${JSON.stringify(Object.keys(this.userById))}`);
         // this.setupEventHandlers();  // this.measurementStore);
         resolve();
+      }).catch((error) => {
+        reject(error);
       });
     });
   }
