@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import VectorSource from 'ol/source/Vector';
 import {Feature} from 'ol';
 import VectorLayer from 'ol/layer/Vector';
-import Map from 'ol/Map';
 import keyBy from 'lodash/keyBy';
 import groupBy from 'lodash/groupBy';
 import orderBy from 'lodash/orderBy';
@@ -74,8 +73,7 @@ export class MeasurementsService extends EowBaseService {
   private initialLoadMeasurements(features: Feature[]) {
     if (features && features.length) {
       performOnce = false;
-      // const source = event.target;
-      // const features = source.getFeatures();
+
       console.log(`initialLoadMeasurements - #: ${features.length}`);
       // Store the measurements in easy to access data structure
       this._measurements = features;
@@ -83,11 +81,6 @@ export class MeasurementsService extends EowBaseService {
       this.measurementsByOwner = groupBy(features, f => f.get('user_n_code'));
 
       this.recentMeasurements(this._measurements);
-      // this.showMeasurments(source);
-      // this.allDataSource.un('change', this.initialLoadMeasurements.bind(this, userStore));
-      // console.log(`loadMeasurements (by Id): ${JSON.stringify(Object.keys(this.measurementsById))}`);
-      // console.log(`loadMeasurements (by Owner): ${JSON.stringify(Object.keys(this.measurementsByOwner))}`);
-      // }
     }
   }
 
@@ -116,14 +109,7 @@ export class MeasurementsService extends EowBaseService {
         code: measurement.get('n_code'),
         img: 'https://eyeonwater.org/grfx/icons/small/' + measurement.get('fu_value') + '.png',
         date: prettyDate};
-
-      // const itemTemplate = ` <li class="item measurement-item" data-coordinate="${measurement.getGeometry().getCoordinates()}"` +
-      //   `data-key="${measurement.get('n_code')}"><img src="https://eyeonwater.org/grfx/icons/small/` +
-      //   `${measurement.get('fu_value')}.png"> ${prettyDate}</li>`;
-      // return itemTemplate;
     });
-
-    // document.querySelector('.measurement-list ul').innerHTML = userList.join('\n');
   }
 
   showUserMeasurements(userId = null) {
@@ -134,17 +120,6 @@ export class MeasurementsService extends EowBaseService {
       return true;
     }
     return false;
-    // if (!selection.length) {
-    //   return false;
-    // }
-    // const newSource = new VectorSource();
-    // newSource.addFeatures(selection);
-    // this.showMeasurments(newSource);
-    // if (this.dataLayer) {
-    //   this.dataLayer.setSource(newSource);
-    // }
-    // this.recentMeasurements(selection);
-    // return true;
   }
 
   /**

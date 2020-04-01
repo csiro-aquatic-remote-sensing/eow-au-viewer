@@ -1,5 +1,4 @@
 html {
-  /*overflow-x: hidden;*/
   box-sizing: padding-box;
 }
 
@@ -33,21 +32,6 @@ body {
   overflow: hidden;
 }
 
-/*.sidebar {*/
-/*  grid-column: 2;*/
-/*  grid-row: 1/2;*/
-/*  background-color: white;*/
-/*  border-style: solid;*/
-/*  border-color: white;*/
-/*  overflow-y: scroll;*/
-/*}*/
-
-#sidebar-content {
-  /*grid-column: 2;*/
-  /*grid-row: 1 / 2;*/
-  /*overflow-y: scroll;*/
-}
-
 #jqxWidget {
   /*grid-row: 3;*/
 }
@@ -59,17 +43,12 @@ body {
 }
 
 .header {
-  /*grid-column: 1;*/
-  /*grid-row: 1;*/
   padding: 0 0;
-  /*position: fixed;*/
-  /*z-index: 10;*/
-  /*height: 20px;*/
   background: white;
   width: 100%;
-  /*height: 10px;*/
   color: slategray;
   opacity: 0.8;
+
   /* Now make a nested grid within the header */
   display: grid;
   grid-template-columns: 80% 1fr;
@@ -96,26 +75,14 @@ body {
   display: block;
 }
 
-/*#popup */
 .title {
   border-bottom: 1px solid #bebebe;
 }
 
-/*#popup */
-/*.content {*/
-/*  overflow: auto;*/
-/*  max-height: 350px;*/
-/*}*/
-
-/*#popup */
 .close {
   float: right;
-  /*position: absolute;*/
-  /*top: 4px;*/
-  /*right: 8px;*/
 }
 
-/*#popup */
 .close::before {
   content: '\00d7'
 }
@@ -160,7 +127,6 @@ body {
 
 .more-info-btn::after {
   content: 'More';
-  /*details';*/
   font-weight: bold;
 }
 
@@ -334,10 +300,6 @@ li.item {
   cursor: pointer;
 }
 
-/*.hidden {*/
-/*  display:none;*/
-/*}*/
-
 #clearFilterButton {
   float:right;
 }
@@ -368,7 +330,6 @@ li.item {
 }
 
 td, th {
-  /*border: 1px solid #999;*/
   padding: 0.1rem;
 }
 
@@ -378,9 +339,7 @@ td, th {
 }
 
 #measurements, #users {
-  /*display: block;*/
   opacity: 1;
-  /*max-height: 420px;*/
   visibility: visible;
   -webkit-transition: all 500ms ease-out 1s;
   -moz-transition: all 500ms ease-out 1s;
@@ -396,9 +355,7 @@ td, th {
 }
 
 h5 {
-  /*margin-block-start: 5px;*/
   margin-block-end: 0;
-  /*padding-top: 5px;*/
   border-top-color: black;
   border-top-width: 1px;
   border-top-style: solid;

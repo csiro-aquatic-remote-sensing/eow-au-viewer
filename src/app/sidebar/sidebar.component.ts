@@ -4,7 +4,6 @@ import {EowBaseService} from '../eow-base-service';
 import {SideBarMessage} from '../types';
 import Brolog from 'brolog';
 import {Subject} from 'rxjs';
-import {PieChart} from '../charts/pie-chart';
 import {EowDataStruct, PieItem} from '../eow-data-struct';
 import Feature from 'ol/Feature';
 import {DOCUMENT} from '@angular/common';
@@ -28,7 +27,6 @@ export class SidebarComponent extends EowBaseService implements OnInit {
   constructor(private sideBarService: SideBarService, private measurementsService: MeasurementsService, private userService: UserService,
               private sidebarStatsService: SidebarStatsService, @Inject(DOCUMENT) private htmlDocument: Document, private log: Brolog) {
     super();
-    // this._stats = new Stats();
   }
 
   async ngOnInit() {
@@ -45,10 +43,6 @@ export class SidebarComponent extends EowBaseService implements OnInit {
     this.measurementsService.destroy();
     this.userService.destroy();
   }
-
-  // get measurements() {
-  //   return this.measurementsService.measurements;
-  // }
 
   get measurementsList() {
     this.sidebarStatsService.calculateStats(this.measurementsService.measurements);
