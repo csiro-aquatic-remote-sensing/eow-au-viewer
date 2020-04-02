@@ -45,7 +45,6 @@ export class SidebarComponent extends EowBaseService implements OnInit {
   }
 
   get measurementsList() {
-    this.sidebarStatsService.calculateStats(this.measurementsService.measurements);
     return this.measurementsService.measurementsList;
   }
 
@@ -79,6 +78,7 @@ export class SidebarComponent extends EowBaseService implements OnInit {
     switch (menuId) {
       case 'eow-dataPoint-information':
         console.log(`sidebar - show ${menuId}`);
+        this.sidebarStatsService.calculateStats(features);
         await this.showStats(features);
         // PieChart.drawD3(preparedFeatures, 'pieChart', 8);
         // await this.popup.draw(features, coordinate, 'eow-dataPoint-information');

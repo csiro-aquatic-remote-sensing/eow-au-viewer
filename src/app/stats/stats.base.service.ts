@@ -149,9 +149,9 @@ export abstract class StatsServiceBase extends EowBaseService {
         null: -2
       }));
 
-      const avgFU = Object.entries(fuValues).reduce((prev, [fu, amount]) => {
+      const avgFU = (Object.entries(fuValues).reduce((prev, [fu, amount]) => {
         return prev + (parseInt(fu, 10) * amount);
-      }, 0) / features.length;
+      }, 0) / features.length).toFixed(2);
 
       this._stats = Object.assign({}, allStats, {
         mostReportedFU,

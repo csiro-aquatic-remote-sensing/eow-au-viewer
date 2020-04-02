@@ -12,6 +12,8 @@ import {PieItem} from '../eow-data-struct';
 export class StatsComponent implements OnChanges { // extends EowBaseService implements OnInit {
   @Input() stats: Stats;
   @Input() pieChartPreparedData: PieItem[];
+  @Input() location: String;
+
   /**
    * The parent descendant element selector of the <span class="pieChart"> that the pie chart is drawn in to
    */
