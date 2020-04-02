@@ -6,6 +6,10 @@ import {EowDataLayer} from '../eow-data-layer';
 import {HeaderStatsService} from '../stats/stats.header.service';
 import {MeasurementsComponent} from '../sidebar/measurements/measurements.component';
 import {MeasurementsService} from '../sidebar/measurements/measurements.service';
+import VectorSource from 'ol/source/Vector';
+import {EOWMap} from '../eow-map';
+import Map from 'ol/Map';
+import Feature from 'ol/Feature';
 
 @Component({
   selector: 'app-header',
@@ -13,8 +17,11 @@ import {MeasurementsService} from '../sidebar/measurements/measurements.service'
   styleUrls: ['./header.component.css']
 })
 export class HeaderComponent extends EowBaseService implements OnInit, OnDestroy {
+  eowDataSource: VectorSource;
+  map: Map;
 
-  constructor(private headerStatsService: HeaderStatsService, private measurementsService: MeasurementsService) {
+  constructor(private headerStatsService: HeaderStatsService, private measurementsService: MeasurementsService,
+              private eowDataLayer: EowDataLayer, private eowMap: EOWMap) {
     super();
   }
 
@@ -27,11 +34,25 @@ export class HeaderComponent extends EowBaseService implements OnInit, OnDestroy
   }
 
   setupEventHandlers() { // measurementStore: MeasurementStore) {
+    this.subscriptions.push(this.eowDataLayer.allDataSourceObs.subscribe(eowDataSource => {
+      this.eowDataSource = eowDataSource;
+    }));
+    this.subscriptions.push(this.eowMap.getMap().subscribe(map => {
+      this.map = map;
+    }));
   }
 
   get stats() {
-    this.headerStatsService.calculateStats(this.measurementsService.measurements);
+    const measurementsInView = this.getMeasurementsInView();
+    this.headerStatsService.calculateStats(measurementsInView);
     return this.headerStatsService.stats;
+  }
+
+  private getMeasurementsInView(): Feature[] {
+    if (this.map && this.eowDataSource) {
+      const eowDataPointsInView = this.eowDataSource.getFeaturesInExtent(this.map.getView().calculateExtent(this.map.getSize()));
+      return eowDataPointsInView;
+    }
   }
 
   onLogin() {
