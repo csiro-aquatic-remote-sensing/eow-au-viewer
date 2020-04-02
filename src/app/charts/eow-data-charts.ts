@@ -1,5 +1,5 @@
 import {
-  Feature,
+  Feature as TurfFeature,
   Point,
   lineString as turfLineString,
   FeatureCollection
@@ -19,6 +19,9 @@ import {Subject} from 'rxjs';
 import {EowBaseService} from '../eow-base-service';
 import {SideBarMessage} from '../types';
 import {forEachOf} from 'async-es';
+import {SidebarStatsService} from '../stats/stats.sidebar.service';
+import Feature from 'ol/Feature';
+import SideBarService from '../sidebar/sidebar.service';
 
 const theClass = `EOWDataCharts`;
 
@@ -35,7 +38,7 @@ export default class EowDataCharts extends EowBaseService {
   ids: { [id: string]: boolean } = {};
   private sideBarMessagingService: Subject<SideBarMessage>;
 
-  constructor(private layers: ApplicationLayers, private log: Brolog) {
+  constructor(private sidebarStatsService: SidebarStatsService, private sideBarService: SideBarService, private layers: ApplicationLayers, private log: Brolog) {
     super();
   }
 
@@ -83,7 +86,7 @@ export default class EowDataCharts extends EowBaseService {
         const points: Coords[] = [];
         if (eowDataInWaterbody.eowData) {
           this.log.silly(theClass + '.plot', `EowWaterBodyIntersection.waterBody: ${JSON.stringify(eowDataInWaterbody.eowData, null, 2)}`);
-          featureEach(eowDataInWaterbody.eowData, (feature: Feature<Point>) => {
+          featureEach(eowDataInWaterbody.eowData, (feature: TurfFeature<Point>) => {
             if (feature.hasOwnProperty('geometry')) {
               points.push(feature.geometry.coordinates as Coords);
             }
@@ -91,8 +94,8 @@ export default class EowDataCharts extends EowBaseService {
           let centroid;
           if (points.length > 1) {
             this.log.silly(theClass + '.plot', `EOWDatum points: ${JSON.stringify(points)}`);
-            const centrodData = await GeometryOps.calculateCentroidFromPoints(points);
-            centroid = centrodData.geometry.coordinates;
+            const centroidData = await GeometryOps.calculateCentroidFromPoints(points);
+            centroid = centroidData.geometry.coordinates;
           } else if (points.length === 1) {
             centroid = points[0];
           }
@@ -119,21 +122,28 @@ export default class EowDataCharts extends EowBaseService {
    */
   async drawCharts(eowDataInWaterbody: FeatureCollection<Point>, point: Coords, map: Map, waterBodyIndex: number, layerName: string) {
     // TODO - type this data (all the way through)
-    const validData: any[] = [];
+    const validData: Feature[] = [];
     featureEach(eowDataInWaterbody, eowDataPoint => {
       if (eowDataPoint) {
-        validData.push(eowDataPoint.properties);
+        validData.push(eowDataPoint.properties as Feature);
       }
     });
+    // Create uniqueId for PieCharts based on input data, so don't attempt to redraw
     // Using pointToPrecision to make unique Id from 6 decimal places as sometimes the maths can be ~ .0000001 off
-    const uniqueChartIdForPosition = EowDataStruct.createPointSting(EowDataStruct.pointToPrecision(point));
+    const uniqueChartIdForPosition = EowDataStruct.createPointString(EowDataStruct.pointToPrecision(point));
     if (!this.chartMap.hasOwnProperty(uniqueChartIdForPosition)) {
       if (validData.length > 0 && point[0] && point[1] && !isNaN(point[0]) && !isNaN(point[1])) {
         const idPie = this.createId('pieChart-');
         this.log.verbose(theClass, `Draw pieChart ${idPie} at ${JSON.stringify(point)}`);
         const pie = new PieChartContainer(layerName, this.layers, this.log);
         pie.init(this.htmlDocument, this.sideBarMessagingService, point, map, idPie, validData);
-        pie.draw();
+        pie.draw(() => {
+          // Clicking on the pie chart causes stats and chart to be displayed in sidebar
+          this.sidebarStatsService.calculateStats(validData);
+          this.sideBarService.buildPieChartPreparedData(validData);
+          this.sideBarService.timeSeriesRawData = validData;
+          this.sideBarService.setupToDisplayCharts();
+        });
         this.chartMap[uniqueChartIdForPosition] = true;
       } else {
         this.log.verbose(theClass, `NOT Drawing pieChart at ${JSON.stringify(point)})} - data not valid or complete`);

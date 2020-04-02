@@ -4,6 +4,7 @@ import {Position} from 'geojson';
 import moment from 'moment-timezone';
 import {brologLevel} from './globals';
 import DurationConstructor = moment.unitOfTime.DurationConstructor;
+import Feature from 'ol/Feature';
 
 const theClass = 'EowDataStruct';
 const log = Brolog.instance(brologLevel);
@@ -87,7 +88,7 @@ export class EowDataStruct {
    * ]
    * @param features - the EOWdata that is all located in the same waterbody
    */
-  static preparePieChartData(features): PieItems {
+  static preparePieChartData(features: Feature[]): PieItems {
     const aggregateFUValues = () => {
       const eowDataReducer = (acc, currentValue) => {
         if (currentValue.values_ && currentValue.values_.fu_value) {
@@ -244,10 +245,10 @@ export class EowDataStruct {
    */
   static createPointMapString(point: TurfFeature<Point>): string {
     const c = point.geometry.coordinates;
-    return EowDataStruct.createPointSting(c);
+    return EowDataStruct.createPointString(c);
   }
 
-  static createPointSting(c: Position) {
+  static createPointString(c: Position) {
     return '' + c[0] + '+' + c[1];
   }
 

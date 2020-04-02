@@ -18,12 +18,16 @@ import {TimeSeriesChartHTML} from '../charts/time-series-chart-html';
 import {UserStore} from './user-store';
 import {MeasurementsService} from './measurements/measurements.service';
 import {UserService} from './users/user.service';
+import {EowDataStruct, PieItem} from '../eow-data-struct';
+import Feature from 'ol/Feature';
 
 const show = true;
 const hide = false;
 
 @Injectable()
 export default class SideBarService extends EowBaseService {
+  private _pieChartPreparedData: PieItem[];
+  private _timeSeriesRawData: Feature[];
   dataLayer: VectorLayer;
   map: Map;
   sideBarMessagingService: Subject<SideBarMessage>;
@@ -71,6 +75,32 @@ export default class SideBarService extends EowBaseService {
     return this;
   }
 
+  // TODO - Move passing features and let the client prepare it, and then just pass the features in once here
+  get pieChartPreparedData() {
+    return this._pieChartPreparedData;
+  }
+
+  set timeSeriesRawData(features: Feature[]) {
+    this._timeSeriesRawData = features;
+  }
+
+  get timeSeriesRawData() {
+    return this._timeSeriesRawData;
+  }
+
+  async buildPieChartPreparedData(features: Feature[]) {
+    this._pieChartPreparedData = await EowDataStruct.preparePieChartData(features);
+  }
+
+  /**
+   * 'Message' to say a PieChart was clicked on, and we need to hide some menus and show others.  Want to see the charts.
+   */
+  setupToDisplayCharts() {
+    this.showHideMenu('measurements', hide);
+    this.showHideMenu('users', hide);
+    this.showHideMenu('eow-dataPoint-information', show);
+  }
+
   private handleMessage(msg: SideBarMessage) {
     switch (msg.action) {
       case 'show':
@@ -92,9 +122,9 @@ export default class SideBarService extends EowBaseService {
       case 'eow-dataPoint-information':
         console.log(`sidebar - show ${menuId}`);
         // await this.popup.draw(features, coordinate, 'eow-dataPoint-information');
-        this.showHideMenu('measurements', hide);
-        this.showHideMenu('users', hide);
-        this.showHideMenu('eow-dataPoint-information', show);
+        // this.showHideMenu('measurements', hide);
+        // this.showHideMenu('users', hide);
+        // this.showHideMenu('eow-dataPoint-information', show);
         break;
       default:
         this.log.warn(this.constructor.name, `Unknown menId to show: ${menuId}`);
@@ -136,7 +166,7 @@ export default class SideBarService extends EowBaseService {
         this.showHideMenu('eow-dataPoint-information', show);
         this.showHideMenu('eow-timeline', show);
 
-        new TimeSeriesChartHTML(this.htmlDocument, data.rawData, this.log).draw('eow-timeline');
+        // new TimeSeriesChartHTML(this.htmlDocument, data.rawData, this.log).draw('eow-timeline');
         break;
       default:
         this.log.warn(this.constructor.name, `Unknown Item to draw: ${message}`);

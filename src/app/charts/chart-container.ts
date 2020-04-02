@@ -9,6 +9,7 @@ import {ApplicationLayers} from '../layers';
 import {EowBaseService} from '../eow-base-service';
 import {Subject} from 'rxjs';
 import {SideBarMessage} from '../types';
+import Feature from 'ol/Feature';
 
 const htmlElementId = 'waterbody';
 export const LOG2 = Math.log(2);
@@ -43,7 +44,7 @@ export abstract class ChartContainer extends EowBaseService {
     this.layers = layers;
   }
 
-  init(htmlDocument: Document, sideBarMessagingService: Subject<SideBarMessage>, point: Coords, map: Map, id: string, data: any[]) {
+  init(htmlDocument: Document, sideBarMessagingService: Subject<SideBarMessage>, point: Coords, map: Map, id: string, data: Feature[]) {
     this.htmlDocument = htmlDocument;
     this.sideBarMessagingService = sideBarMessagingService;
     this.point = point;
@@ -60,7 +61,7 @@ export abstract class ChartContainer extends EowBaseService {
    * Method to perform the drawing of chart calling out to abstract buildPrepareData() to prepare the data in format required for chart
    * and abstract drawChartOfType to perform the actual drawing
    */
-  draw() {
+  draw(clickCallback: () => void) {
     const el = this.htmlDocument.createElement('div');
     el.setAttribute('id', this.id);
     this.htmlDocument.getElementById(htmlElementId).appendChild(el);
@@ -79,6 +80,18 @@ export abstract class ChartContainer extends EowBaseService {
       // PieChart.drawD3(this.data, this.id, this.map.getView().getZoom() * LOG2);
       this.drawChartOfType();
     });
+    this.setupEvents(clickCallback);
+  }
+
+  private setupEvents(clickCallback: () => void) {
+    this.htmlDocument.querySelector('#' + this.id).addEventListener('click', (event) => {
+      console.log(`Clicked pieChart with id: ${this.id} and run clickCallback()`);
+      clickCallback();
+      // new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.offSet(point, 1), map, idTime, validData).draw();
+      // this.sideBarMessagingService.next({action: 'draw', message: 'timeSeriesChart', data: {rawData: this.data, scale: this.map.getView().getZoom() * LOG2}});
+      // this.sideBarMessagingService.next({action: 'show', message: 'eow-dataPoint-information', data: {features: this.data, coordinate: null}});
+    });
+
   }
 
   /**
@@ -86,7 +99,7 @@ export abstract class ChartContainer extends EowBaseService {
    *
    * @param data passed in to the constructor
    */
-  abstract getBuildPrepareData(data: any): any;
+  abstract getBuildPrepareData(data: Feature[]): any;
 
   /**
    * The specific chart defines this to perform the actual drawing of chart

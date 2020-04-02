@@ -22,6 +22,7 @@ export class SidebarComponent extends EowBaseService implements OnInit {
   @Input() sideBarMessagingService: Subject<SideBarMessage>;
   // private _stats: Stats;
   _pieChartPreparedData: PieItem[];
+  _timeSeriesRawData: Feature[];
   parentSelector = 'div#eow-dataPoint-information';
 
   constructor(private sideBarService: SideBarService, private measurementsService: MeasurementsService, private userService: UserService,
@@ -57,7 +58,11 @@ export class SidebarComponent extends EowBaseService implements OnInit {
   }
 
   get pieChartPreparedData() {
-    return this._pieChartPreparedData;
+    return this.sideBarService.pieChartPreparedData;
+  }
+
+  get timeSeriesRawData() {
+    return this.sideBarService.timeSeriesRawData;
   }
 
   private handleMessage(msg: SideBarMessage) {
@@ -78,7 +83,7 @@ export class SidebarComponent extends EowBaseService implements OnInit {
     switch (menuId) {
       case 'eow-dataPoint-information':
         console.log(`sidebar - show ${menuId}`);
-        this.sidebarStatsService.calculateStats(features);
+        // this.sidebarStatsService.calculateStats(features);
         await this.showStats(features);
         // PieChart.drawD3(preparedFeatures, 'pieChart', 8);
         // await this.popup.draw(features, coordinate, 'eow-dataPoint-information');
