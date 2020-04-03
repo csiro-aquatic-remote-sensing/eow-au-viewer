@@ -12,6 +12,7 @@
                  [pieChartParentSelector]="parentSelector"
                   [timeSeriesRawData]="timeSeriesRawData"></app-stats>
     </div>
-    <div class="content"></div>
+<!--    <div class="content"></div>-->
+    <app-eow-data [features]="timeSeriesRawData"></app-eow-data>
   </div>
 </div>
