@@ -28,6 +28,7 @@ import { UsersComponent } from './sidebar/users/users.component';
 import { LoginComponent } from './header/login/login.component';
 import {SidebarStatsService} from './stats/stats.sidebar.service';
 import {HeaderStatsService} from './stats/stats.header.service';
+import { EowDataComponent } from './sidebar/eow-data/eow-data.component';
 
 @NgModule({
   declarations: [
@@ -37,7 +38,8 @@ import {HeaderStatsService} from './stats/stats.header.service';
     StatsComponent,
     MeasurementsComponent,
     UsersComponent,
-    LoginComponent
+    LoginComponent,
+    EowDataComponent
   ],
   imports: [
     BrowserModule, HttpClientModule, jqxButtonModule, jqxWindowModule, jqxCheckBoxModule, jqxTabsModule
