@@ -125,15 +125,15 @@ body {
   cursor: pointer;
 }
 
-/*.more-info-btn::after {*/
-/*  content: 'More';*/
-/*  font-weight: bold;*/
-/*}*/
+.more-info-btn::after {
+  content: 'More';
+  font-weight: bold;
+}
 
-/*.popup-item.active .more-info-btn::after {*/
-/*  content: 'Less';*/
-/*  !*details'*!*/
-/*}*/
+.popup-item.active .more-info-btn::after {
+  content: 'Less';
+  /*details'*/
+}
 
 .sub-header-stats {
   background: #ffffff;
@@ -198,7 +198,7 @@ body {
 }
 
 .popup-item .image, .popup-item .metadata {
-  display: inline-block;
+  display: inline;
 }
 
 .image {
@@ -211,7 +211,7 @@ body {
 }
 .popup-item .metadata  {
   /*margin-left: 1em;*/
-  flex-grow: 3
+  /*flex-grow: 3*/
 }
 
 .metadata {

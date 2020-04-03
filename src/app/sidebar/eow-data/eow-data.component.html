@@ -1,11 +1,11 @@
 <div class="popup-item" *ngFor="let pf of preparedFeatures">
   <div class="metadata-row">
-    <div class="image">
-      <img src="{{pf.image}}"/>
-    </div>
-    <div class="metadata">
+    <div class="metadata" style="float: left">
+      <div class="image" style="float: left">
+        <img src="{{pf.image}}"/>
+      </div>
       <div class="fu-preview" [ngStyle]="{'background-color':pf.fu_preview}"></div>
-      <div class="more-info-btn"><button (click)="moreInfoButtonClick($event.target)">more</button></div>
+      <div><button class="more-info-btn" (click)="moreInfoButtonClick($event.target)"></button></div>
       <div class="thead"> FU value: {{pf.fu_value}}</div>
       <div class="thead"> Date: {{pf.date}}</div>
       <div class="thead"> Device: {{pf.device_model}}</div>
