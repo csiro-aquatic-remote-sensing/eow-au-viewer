@@ -35,7 +35,7 @@ const hide = false;
   templateUrl: './eow-data.component.html',
   styleUrls: ['./eow-data.component.css']
 })
-export class EowDataComponent implements OnInit, OnChanges, AfterViewInit {
+export class EowDataComponent implements OnInit, OnChanges {
   @Input() features: Feature[];
   private _preparedFeatures: EowDataComponentFormat[];
 
@@ -46,7 +46,8 @@ export class EowDataComponent implements OnInit, OnChanges, AfterViewInit {
     return this._preparedFeatures;
   }
 
-  ngAfterViewInit() {
+  ngOnInit() {
+    this.setupEventHandlers();
   }
 
   ngOnChanges() {
@@ -60,19 +61,19 @@ export class EowDataComponent implements OnInit, OnChanges, AfterViewInit {
     popupElement.classList.toggle('active');
   }
 
-  // private setupEventHandlers() {
-  //   const elementSelector = 'div#eow-dataPoint-information';
-  //
-  //   this.htmlDocument.querySelector(elementSelector).addEventListener('click', (event: Event) => {
-  //     const element = (event.target as HTMLElement);
-  //     if (element.matches('.close')) {
-  //       console.log(`close`);
-  //       this.showHideMenu('measurements', show);
-  //       this.showHideMenu('users', show);
-  //       this.showHideMenu('eow-dataPoint-information', hide);
-  //       this.showHideMenu('eow-timeline', hide);
-  //     }
-  //   });
+  private setupEventHandlers() {
+    const elementSelector = 'div#eow-dataPoint-information';
+
+    this.htmlDocument.querySelector(elementSelector).addEventListener('click', (event: Event) => {
+      const element = (event.target as HTMLElement);
+      if (element.matches('.close')) {
+        console.log(`close`);
+        this.showHideMenu('measurements', show);
+        this.showHideMenu('users', show);
+        this.showHideMenu('eow-dataPoint-information', hide);
+        this.showHideMenu('eow-timeline', hide);
+      }
+    });
   //
   //   const moreInfoButton = this.htmlDocument.querySelectorAll('.more-info-btn');
   //   moreInfoButton.forEach(mib => {
@@ -81,7 +82,7 @@ export class EowDataComponent implements OnInit, OnChanges, AfterViewInit {
   //       popupElement.classList.toggle('active');
   //     });
   //   });
-  // }
+  }
 
   private showHideMenu(menuId: string, showIt: boolean) {
     const menuItem = this.htmlDocument.getElementById(menuId);
