@@ -115,11 +115,8 @@ export class MeasurementsService extends EowBaseService {
   showUserMeasurements(userId = null) {
     const userMeasurements: Feature[] = this.getByOwner(userId);
     console.log(`measurment store - selection of this # features: ${userMeasurements.length}`);
-    if (userMeasurements.length) {
-      this.recentMeasurements(userMeasurements);
-      return true;
-    }
-    return false;
+    this.recentMeasurements(userMeasurements);
+    return userMeasurements.length > 0;
   }
 
   /**

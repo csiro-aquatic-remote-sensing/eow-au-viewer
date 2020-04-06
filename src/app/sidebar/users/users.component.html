@@ -1,6 +1,6 @@
 <div class="panel-body" id="users">
   <h5>Most Active Users ({{getUsersLength()}})</h5>
-  <button id="clearFilterButton" class="hidden"> Clear</button>
+  <button id="clearFilterButton" class="hidden" (click)="clearSelectedUser()"> Clear</button>
   <div class="user-list">
     <ul class="item-container">
       <li *ngFor="let user of usersList"
