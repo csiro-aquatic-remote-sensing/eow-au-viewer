@@ -7,6 +7,7 @@ import {line} from 'd3-shape';
 import {axisLeft, axisBottom} from 'd3-axis';
 import colors from '../colors.json';
 import Brolog from 'brolog';
+import Feature from 'ol/Feature';
 
 const opaqueness = 0.7;
 
@@ -19,7 +20,7 @@ export class TimeSeriesChartHTML {
    */
   readonly timeSeriesData: TimeSeriesItems;
 
-  constructor(private htmlDocument: Document, private data: any, private log: Brolog) {
+  constructor(private htmlDocument: Document, private data: Feature[], private log: Brolog) {
     this.timeSeriesData = EowDataStruct.prepareTimeSeriesChartData(data);
   }
 

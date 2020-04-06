@@ -1,5 +1,4 @@
 html {
-  overflow-x: hidden;
   box-sizing: padding-box;
 }
 
@@ -21,6 +20,7 @@ body {
   grid-template: 35px 1fr / 80% 1fr;
   height: 100vh;
   min-height: 100%;
+  overflow: hidden;
 }
 
 .main-container{
@@ -29,14 +29,11 @@ body {
   border-style: none;
   border-color: whitesmoke;
   background-color: white;
+  overflow: hidden;
 }
 
-.sidebar {
-  grid-column: 2;
-  grid-row: 1/2;
-  background-color: white;
-  border-style: solid;
-  border-color: white;
+#jqxWidget {
+  grid-row: 3;
 }
 
 .map {
@@ -46,17 +43,16 @@ body {
 }
 
 .header {
-  grid-column: 1;
-  grid-row: 1;
   padding: 0 0;
-  /*position: fixed;*/
-  /*z-index: 10;*/
-  /*height: 20px;*/
   background: white;
   width: 100%;
-  /*height: 10px;*/
-  color: #ffffff;
+  color: slategray;
   opacity: 0.8;
+
+  /* Now make a nested grid within the header */
+  display: grid;
+  grid-template-columns: 70% 1fr 1px;
+  justify-items: end;
 }
 
 .header h1 {
@@ -79,26 +75,14 @@ body {
   display: block;
 }
 
-/*#popup */
 .title {
   border-bottom: 1px solid #bebebe;
 }
 
-/*#popup */
-.content {
-  overflow: auto;
-  max-height: 350px;
-}
-
-/*#popup */
 .close {
   float: right;
-  /*position: absolute;*/
-  /*top: 4px;*/
-  /*right: 8px;*/
 }
 
-/*#popup */
 .close::before {
   content: '\00d7'
 }
@@ -143,7 +127,6 @@ body {
 
 .more-info-btn::after {
   content: 'More';
-  /*details';*/
   font-weight: bold;
 }
 
@@ -215,7 +198,7 @@ body {
 }
 
 .popup-item .image, .popup-item .metadata {
-  display: inline-block;
+  display: inline;
 }
 
 .image {
@@ -224,11 +207,11 @@ body {
 
 .metadata-row {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
 }
 .popup-item .metadata  {
   /*margin-left: 1em;*/
-  flex-grow: 3
+  /*flex-grow: 3*/
 }
 
 .metadata {
@@ -317,21 +300,12 @@ li.item {
   cursor: pointer;
 }
 
-/*.hidden {*/
-/*  display:none;*/
-/*}*/
-
 #clearFilterButton {
   float:right;
 }
 
 .item-nickname {
   font-weight: bolder;
-}
-
-.measurement-item {
-  margin-top: 0px;
-  margin-bottom: 5px;
 }
 
 .measurement-item {
@@ -356,7 +330,6 @@ li.item {
 }
 
 td, th {
-  /*border: 1px solid #999;*/
   padding: 0.1rem;
 }
 
@@ -366,9 +339,7 @@ td, th {
 }
 
 #measurements, #users {
-  /*display: block;*/
   opacity: 1;
-  max-height: 420px;
   visibility: visible;
   -webkit-transition: all 500ms ease-out 1s;
   -moz-transition: all 500ms ease-out 1s;
@@ -384,6 +355,35 @@ td, th {
 }
 
 h5 {
-  margin-block-start: 5px;
   margin-block-end: 0;
+  border-top-color: black;
+  border-top-width: 1px;
+  border-top-style: solid;
+}
+
+app-stats {
+  grid-column: 1;
+}
+
+app-login {
+  grid-column: -1;
+  grid-row: 1;
+  margin-right: 1rem;
+  margin-top: 5px;
+  justify-items: end;
+  display: inline;
+}
+
+#header-login {
+  display: inline;
+}
+
+app-sidebar {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  overflow: auto;
+}
+
+.loggedInUser {
+  background-color: lightgray;
 }

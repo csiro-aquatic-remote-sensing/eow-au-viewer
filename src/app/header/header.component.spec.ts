@@ -1,25 +1,25 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SidebarComponent } from './sidebar.component';
-import Brolog from 'brolog';
-import {StatsComponent} from '../stats/stats.component';
+import { HeaderComponent } from './header.component';
 import {EowDataLayer} from '../eow-data-layer';
 import {EOWMap} from '../eow-map';
+import Brolog from 'brolog';
+import {StatsComponent} from '../stats/stats.component';
 
-describe('SidebarComponent', () => {
-  let component: SidebarComponent;
-  let fixture: ComponentFixture<SidebarComponent>;
+describe('HeaderComponent', () => {
+  let component: HeaderComponent;
+  let fixture: ComponentFixture<HeaderComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ SidebarComponent, StatsComponent ],
-      providers: [Brolog, EowDataLayer, EOWMap]
+      declarations: [ HeaderComponent, StatsComponent ],
+      providers: [EowDataLayer, EOWMap, Brolog]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(SidebarComponent);
+    fixture = TestBed.createComponent(HeaderComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

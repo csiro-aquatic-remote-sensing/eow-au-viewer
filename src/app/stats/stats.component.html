@@ -1,0 +1,42 @@
+<div class="stats">
+  <ul>
+    <li> {{location}}</li>
+    <li>
+      <span class="stats-value" class="pieChart"></span>
+    </li>
+    <li>
+      <span class="stats-value">{{stats.iPhones}}</span>
+      <span class="stats-label">iPhones</span>
+    </li>
+    <li>
+      <span class="stats-value">{{stats.androids}}</span>
+      <span class="stats-label">Androids</span>
+    </li>
+    <li>
+      <span class="stats-value">{{getStatsItemAmountItem(stats.mostUsedDevice)}}<span class="stat-extra">{{getStatsItemAmountAmount(stats.mostUsedDevice)}}</span></span>
+      <span class="stats-label">Most Used Device</span>
+    </li>
+    <li>
+      <span class="stats-value">{{getStatsItemAmountItem(stats.mostReportedFU)}}<span class="stat-extra">{{getStatsItemAmountAmount(stats.mostReportedFU)}}</span></span>
+      <span class="stats-label">Most Reported FU</span>
+    </li>
+    <li>
+      <span class="stats-value">{{stats.avgFU}}</span>
+      <span class="stats-label">Average FU</span>
+    </li>
+    <li>
+      <!--        `{{userStore.getUserById(stats.mostActiveUser.item).nickname}}-->
+      <span class="stats-value">{{getStatsItemAmountItem(stats.mostActiveUser)}}<span class="stat-extra">{{getStatsItemAmountAmount(stats.mostActiveUser)}}</span></span>
+      <span class="stats-label">Most Active User</span>
+    </li>
+    <li>
+      <span class="stats-value">{{stats.eowAu}}</span>
+      <span class="stats-label">EyeOnWater Australia</span>
+    </li>
+    <li>
+      <span class="stats-value">{{stats.eowGlobal}}</span>
+      <span class="stats-label">EyeOnWater: Worldwide</span>
+    </li>
+  </ul>
+  <div style="clear:both"></div>
+</div>

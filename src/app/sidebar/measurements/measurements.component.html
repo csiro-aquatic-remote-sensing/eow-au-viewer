@@ -1,0 +1,13 @@
+<div class="panel-body" id="measurements">
+  <button id="resetButton" class="hidden"> Reset</button>
+  <h5>Recent measurements ({{getMeasurementsListlength()}})</h5>
+  <div class="measurement-list">
+    <ul class="item-container">
+      <li *ngFor="let measure of measurementsList"
+          class="item measurement-item"
+          [attr.data-coordinate]="measure.coordinate"
+          [attr.data-key]="measure.code">
+          <img src={{measure.img}}/>{{measure.date}}</li>
+    </ul>
+  </div>
+</div>

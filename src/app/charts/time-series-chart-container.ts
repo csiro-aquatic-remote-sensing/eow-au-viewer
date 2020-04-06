@@ -9,6 +9,7 @@ import {ApplicationLayers} from '../layers';
 import {TimeSeriesChartMap} from './time-series-chart-map';
 import {Subject} from 'rxjs';
 import {SideBarMessage} from '../types';
+import Feature from 'ol/Feature';
 
 const theClass = 'PieChartContainer';
 
@@ -24,7 +25,7 @@ export class TimeSeriesChartContainer extends ChartContainer {
   }
 
   // TODO type this data
-  getBuildPrepareData(data: any): TimeSeriesItems {
+  getBuildPrepareData(data: Feature[]): TimeSeriesItems {
     return EowDataStruct.prepareTimeSeriesChartData(data);
   }
 

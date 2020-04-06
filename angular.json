@@ -27,7 +27,8 @@
               "node_modules/ol/ol.css",
               "node_modules/ol-layerswitcher/src/ol-layerswitcher.css",
               "src/layerSwitcher.css",
-              "src/styles.css"
+              "src/styles.css",
+              "node_modules/jqwidgets-framework/jqwidgets-ng/jqwidgets/styles/jqx.base.css"
             ],
             "scripts": []
           },

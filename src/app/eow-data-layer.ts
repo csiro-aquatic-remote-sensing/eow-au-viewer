@@ -10,13 +10,9 @@ import {
 } from 'ol/style';
 import debounce from 'lodash/debounce';
 
-import {
-  printStats,
-  calculateStats,
-} from './utils';
 import colors from './colors.json';
 import {UserStore} from './sidebar/user-store';
-import {MeasurementStore} from './sidebar/measurement-store';
+// import {MeasurementStore} from './sidebar/measurement-store';
 import {BehaviorSubject, Subscription} from 'rxjs';
 import {EOWMap} from './eow-map';
 import Feature from 'ol/Feature';

@@ -1,8 +1,7 @@
-import {Component, OnInit, Inject, OnDestroy} from '@angular/core';
+import {Component, OnInit, Inject, OnDestroy, ElementRef, ViewChild, AfterViewInit} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
 import Feature from 'ol/Feature';
 import {HttpClient} from '@angular/common/http';
-import {Popup} from './sidebar/popup';
 import {ApplicationLayers} from './layers';
 import {EowDataLayer} from './eow-data-layer';
 import EowDataGeometries from './eow-data-geometries';
@@ -24,6 +23,10 @@ import {GisOps} from './gis-ops';
 import {isDebugLevel} from './globals';
 import SideBarService from './sidebar/sidebar.service';
 import {SideBarMessage} from './types';
+import {jqxWindowComponent} from 'jqwidgets-framework/jqwidgets-ng/jqxwindow';
+import {SidebarStatsService} from './stats/stats.sidebar.service';
+import {HeaderStatsService} from './stats/stats.header.service';
+// import {HeaderStatsService} from './stats/stats.header.service';
 
 const theClass = 'AppComponent';
 
@@ -52,9 +55,10 @@ export class AppComponent implements OnInit, OnDestroy {
   sideBarMessagingService = new Subject<SideBarMessage>();
   private subscriptions: Subscription[] = [];
 
-  constructor(@Inject(DOCUMENT) private htmlDocument: Document, private http: HttpClient, private log: Brolog, private eowMap: EOWMap, private popupObject: Popup,
+  constructor(@Inject(DOCUMENT) private htmlDocument: Document, private http: HttpClient, private log: Brolog, private eowMap: EOWMap,
               private eowData: EowDataLayer, private layers: ApplicationLayers, private eowLayers: EowLayers, private eowDataGeometries: EowDataGeometries,
-              private layersGeometries: LayerGeometries, private eowDataCharts: EowDataCharts, private sideBarService: SideBarService) {
+              private layersGeometries: LayerGeometries, private eowDataCharts: EowDataCharts, private sideBarService: SideBarService,
+              private sidebarStatsService: SidebarStatsService, private headerStatsService: HeaderStatsService) {
   }
 
   async ngOnInit() {
@@ -76,14 +80,15 @@ export class AppComponent implements OnInit, OnDestroy {
     this.subscriptions.push(this.eowData.dataLayerObs.subscribe(dataLayer => {
       this.dataLayer = dataLayer;
     }));
-
     await this.eowLayers.init();
 
     await this.eowDataGeometries.init();
 
-    this.popupObject.init(this.sideBarMessagingService);
+    // this.popupObject.init(this.sideBarMessagingService);
     this.eowDataCharts.init(this.eowMap, this.htmlDocument, this.sideBarMessagingService);
     await this.sideBarService.init(this.sideBarMessagingService);
+    this.sidebarStatsService.init();
+    this.headerStatsService.init();
 
     this.setupObserversHandleNewData();
 
@@ -97,7 +102,7 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.subscriptions.forEach(s => s.unsubscribe());
     this.eowMap.destroy();
-    this.popupObject.destroy();
+    // this.popupObject.destroy();
     this.eowData.destroy();
     this.layers.destroy();
     this.eowLayers.destroy();
@@ -105,6 +110,8 @@ export class AppComponent implements OnInit, OnDestroy {
     this.layersGeometries.destroy();
     this.eowDataCharts.destroy();
     this.sideBarService.destroy();
+    this.sidebarStatsService.destroy();
+    this.headerStatsService.destroy();
   }
 
   private setupObserversHandleNewData() {

@@ -1,0 +1,58 @@
+<div class="popup-item" *ngFor="let pf of preparedFeatures">
+  <div class="metadata-row">
+    <div class="metadata" style="float: left">
+      <div class="image" style="float: left">
+        <img src="{{pf.image}}"/>
+      </div>
+      <div class="fu-preview" [ngStyle]="{'background-color':pf.fu_preview}"></div>
+      <div><button class="more-info-btn" (click)="moreInfoButtonClick($event.target)"></button></div>
+      <div class="thead"> FU value: {{pf.fu_value}}</div>
+      <div class="thead"> Date: {{pf.date}}</div>
+      <div class="thead"> Device: {{pf.device_model}}</div>
+    </div>
+    <div class="raw-details">
+      <table>
+        <tr>
+          <td class="thead">Lon, Lat</td>
+          <td colspan="5">{{pf.lng}}, {{pf.lat}}</td>
+        </tr>
+        <tr>
+          <td class="thead">Device</td>
+          <td>{{pf.device_platform}}</td>
+          <td class="thead">Model</td>
+          <td>{{pf.device_model}}</td>
+        </tr>
+        <tr>
+          <td class="thead">Viewing angle</td>
+          <td>{{pf.viewing_angle}}</td>
+          <td class="thead">Cloud cover</td>
+          <td colspan="1">{{pf.p_cloud_cover}}</td>
+        </tr>
+        <tr>
+          <td class="thead">FU Value</td>
+          <td colspan="1">{{pf.fu_value}}</td>
+          <td class="thead">Raining?</td>
+          <td>{{pf.rain}}</td>
+        </tr>
+        <tr>
+          <td class="thead">FU Observed</td>
+          <td colspan="1">{{pf.fu_observed}}</td>
+          <td class="thead">See bottom?</td>
+          <td>{{pf.bottom}}</td>
+        </tr>
+        <tr>
+          <td class="thead">FU Processed</td>
+          <td colspan="1">{{pf.fu_processed}}</td>
+          <td class="thead">Sechi depth</td>
+          <td colspan="1">{{pf.sd_depth}}</td>
+        </tr>
+        <tr>
+          <td class="thead">PH</td>
+          <td colspan="1">{{pf.p_ph}}</td>
+          <td class="thead">Conductivity</td>
+          <td colspan="1">{{pf.p_conductivity}}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
