@@ -247,6 +247,7 @@ export class ApplicationLayers extends EowBaseService {
               // will be created in the VectorLayer code below.
               const existingWaterBodiesLayer = waterBodiesLayers.getLayerInfo(name);
               if (existingWaterBodiesLayer) {
+                this.log.verbose(this.constructor.name, `observable on waterbodies vector source - features#: ${vectorSource.getFeatures().length}`)
                 existingWaterBodiesLayer.observable.next(vectorSource);
               }
             } else {

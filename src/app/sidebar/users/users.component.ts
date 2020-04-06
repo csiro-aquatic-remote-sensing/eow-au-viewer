@@ -55,6 +55,14 @@ export class UsersComponent extends EowBaseService implements OnInit, OnDestroy 
     });
   }
 
+  buildClasses(user: UserType) {
+    let classes = 'item';
+    if (user.sourcedFromLoginRequest) {
+      classes += ' loggedInUser';
+    }
+    return classes;
+  }
+
   private toggleFilterButton(state = false) {
     const element = this.htmlDocument.getElementById('clearFilterButton');
     element.classList.toggle('hidden', !state);

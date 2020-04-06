@@ -44,7 +44,6 @@ export class HeaderComponent extends EowBaseService implements OnInit, OnDestroy
       if (this.map) {
         if (eowDataSource) {
           this.eowDataSource = eowDataSource;
-          console.log(`header - event - allDataSource - #Features In view: ${this.eowDataSource.getFeaturesInExtent(this.map.getView().calculateExtent(this.map.getSize())).length}`);
           this.updateHeader();
         }
       } else {
@@ -55,6 +54,7 @@ export class HeaderComponent extends EowBaseService implements OnInit, OnDestroy
 
   private updateHeader() {
     const measurementsInView = this.getMeasurementsInView();
+    console.log(`header - event - allDataSource - #Features In view: ${measurementsInView.length}`);
     this.headerStatsService.calculateStats(measurementsInView);
   }
 
@@ -67,6 +67,7 @@ export class HeaderComponent extends EowBaseService implements OnInit, OnDestroy
       const eowDataPointsInView = this.eowDataSource.getFeaturesInExtent(this.map.getView().calculateExtent(this.map.getSize()));
       return eowDataPointsInView;
     }
+    return [];
   }
 
   onLogin() {

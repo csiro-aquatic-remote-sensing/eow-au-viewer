@@ -33,7 +33,7 @@ body {
 }
 
 #jqxWidget {
-  /*grid-row: 3;*/
+  grid-row: 3;
 }
 
 .map {
@@ -51,7 +51,7 @@ body {
 
   /* Now make a nested grid within the header */
   display: grid;
-  grid-template-columns: 80% 1fr;
+  grid-template-columns: 70% 1fr 1px;
   justify-items: end;
 }
 
@@ -382,4 +382,8 @@ app-sidebar {
   grid-column: 2;
   grid-row: 1 / -1;
   overflow: auto;
+}
+
+.loggedInUser {
+  background-color: lightgray;
 }

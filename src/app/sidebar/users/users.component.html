@@ -4,7 +4,7 @@
   <div class="user-list">
     <ul class="item-container">
       <li *ngFor="let user of usersList"
-          class="item"
+          [className]="buildClasses(user)"
           [attr.data-user]="user.id">
         <div>
           <img class="icon-thumb" src="https:eyeonwater.org/grfx/{{user.icon}}">
