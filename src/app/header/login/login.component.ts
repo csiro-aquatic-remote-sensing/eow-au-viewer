@@ -38,14 +38,8 @@ export class LoginComponent implements OnInit {
 
   onLogin(event) {
     console.log(`login - event: ${event}`);
-    let email = this.inputUser.nativeElement ? this.inputUser.nativeElement.value : null;
-    let password = this.inputPassword.nativeElement ? this.inputPassword.nativeElement.value : null;
-
-    // DEBUG
-    if (email === 'b') {
-      email = 'brooke.b.smith@csiro.au';
-      password = '123wobbleT';
-    }
+    const email = this.inputUser.nativeElement ? this.inputUser.nativeElement.value : null;
+    const password = this.inputPassword.nativeElement ? this.inputPassword.nativeElement.value : null;
 
     if (email && password) {
       const headers = new HttpHeaders({'Content-Type': 'application/json'});
