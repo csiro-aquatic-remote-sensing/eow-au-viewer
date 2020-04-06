@@ -67,7 +67,7 @@ export class UserService extends EowBaseService {
     });
   }
 
-  buildUsersList(users, {n = 10, loginResponse = null}: {n?: number, loginResponse?: LoginResponse} = {}) {
+  buildUsersList(users, {n = 10, loginResponse = null}: { n?: number, loginResponse?: LoginResponse } = {}) {
     // Atleast temporarily filter so only users with photos show
     if (users) {
       this._usersList = orderBy(users, ['photo_count', 'points'], ['desc', 'desc']).slice(0, n)
@@ -75,9 +75,19 @@ export class UserService extends EowBaseService {
 
       if (loginResponse) {
         const loggedInUser = users.filter(u => u.nickname === loginResponse.profile.nickname);
+        let userInExistingListIndex = null;
         if (loggedInUser.length) {
-          loggedInUser[0].sourcedFromLoginRequest = true;
-          this._usersList.unshift(loggedInUser[0]);
+          this._usersList.filter((u, i) => {
+            if (u.nickname === loginResponse.profile.nickname) {
+              userInExistingListIndex = i;
+            }
+          });
+          if (userInExistingListIndex) {
+            this._usersList[userInExistingListIndex].sourcedFromLoginRequest = true;
+          } else {
+            loggedInUser[0].sourcedFromLoginRequest = true;
+            this._usersList.unshift(loggedInUser[0]);
+          }
         } else {
           this.log.error(`Logged in as ${loginResponse.profile.nickname}, but no such users in userList`);
         }
