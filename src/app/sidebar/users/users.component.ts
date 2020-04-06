@@ -37,10 +37,13 @@ export class UsersComponent extends EowBaseService implements OnInit, OnDestroy 
       const selectedUserId = element.getAttribute('data-user');
       // console.log(`clicked on user-id: ${this.userStore.selectedUserId}`);
       if (this.measurementsService.showUserMeasurements(selectedUserId)) {
-        this.selectedUserId = selectedUserId;
-        element.classList.add('selectedUser', 'box-shadow');
-        this.toggleFilterButton(true);
+        console.log(`Clicked on user has measurements`);
+      } else {
+        console.log(`Clicked on user HASN'T measurements`);
       }
+      this.selectedUserId = selectedUserId;
+      element.classList.add('selectedUser', 'box-shadow');
+      this.toggleFilterButton(true);
     }, true);
   }
 
@@ -53,6 +56,7 @@ export class UsersComponent extends EowBaseService implements OnInit, OnDestroy 
     this.htmlDocument.querySelectorAll('.user-list .item').forEach(item => {
       item.classList.remove('selectedUser', 'box-shadow');
     });
+    this.measurementsService.resetMeasurements();
   }
 
   buildClasses(user: UserType) {
