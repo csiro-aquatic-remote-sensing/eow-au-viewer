@@ -1,11 +1,11 @@
 <div id="sidebar-content">
   <app-measurements [measurementsList]="measurementsList"></app-measurements>
   <app-users [usersList]="usersList"></app-users>
-  <div class="panel-body" id="eow-timeline">
+  <div class="panel-body hidden" id="eow-timeline">
     <h5>Timeline:<span class="close"></span></h5>
     <div id="content"></div>
   </div>
-  <div class="panel-body" id="eow-dataPoint-information"> <!-- popup id -->
+  <div class="panel-body hidden" id="eow-dataPoint-information"> <!-- popup id -->
     <h5>Measurement details:<span class="close"></span></h5>
     <div class="stats">
       <app-stats [stats]="stats" [pieChartPreparedData]="pieChartPreparedData"
