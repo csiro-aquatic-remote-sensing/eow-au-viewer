@@ -15,6 +15,7 @@ import {Brolog} from 'brolog';
 import {EowDataStruct, EowWaterBodyIntersection, PointsMap} from './eow-data-struct';
 import {brologLevel} from './globals';
 import {GisOps} from './gis-ops';
+import {Debug} from './debug';
 
 const theClass = 'GeometryOps';
 const log = Brolog.instance(brologLevel);  // InjectorInstance.get<Brolog>(Brolog);
@@ -41,6 +42,8 @@ export default class GeometryOps {
    *                              margins: FeatureCollection<Point> - circle of points around that point;
    *                            }
    *      This can be null to mean that no error margin is being  used
+   * @param allPointsMap - a map from all points ( EOWData points + their error margin points) to the corresponding sourcePoint (since Error
+   * Margin Points should be 'seen' as the source point)
    * @param layerGeometries - all layers - object
    *        {
    *          layerFeatures: [{
@@ -86,7 +89,9 @@ export default class GeometryOps {
         const intersection: FeatureCollection<Point> = pointsWithinPolygon(pointsToUse, layerPolygon) as FeatureCollection<Point>;
         // TODO - now build a FeatureCollection<Point> from allPointsMapObs
         const intersectionSourcePoints = GisOps.filterSourcePoints(intersection, allPointsMap);
+        Debug.debugFeatureCollection(intersectionSourcePoints, '-> calculateLayerIntersections');
         eowWaterBodyIntersections.push(EowDataStruct.createEoWFormat(intersectionSourcePoints, layerPolygon));
+        Debug.debugEowWaterBodyIntersections(eowWaterBodyIntersections, '-> calculateLayerIntersections');
       }
       log.silly(theClass, `intersections: ${JSON.stringify(eowWaterBodyIntersections, null, 2)}`);
       resolve(eowWaterBodyIntersections);

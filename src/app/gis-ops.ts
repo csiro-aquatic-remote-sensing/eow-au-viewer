@@ -121,7 +121,10 @@ export class GisOps {
    * line is drawn from a pie chart to its EOW data point, the lines should go to the source point, not the error margin points around it.
    *
    * @param allPointsIntersection are the EOWData points found within one waterlayer polygon (the one being searched outside this method)
+   * It may include source point and error margin points (if they intersected).
    * @param allPointsMap is the source EOWData points + their error margin points (ie. A point with a concentric circle of points around)
+   * @param allPointsMap - a map from all points ( EOWData points + their error margin points) to the corresponding sourcePoint (since Error
+   * Margin Points should be 'seen' as the source point)
    * @return the source points in allPointsMap (essentially map used source points + error margin points to their source point)
    */
   static filterSourcePoints(allPointsIntersection: FeatureCollection<Point>, allPointsMap: PointsMap): FeatureCollection<Point> {
@@ -129,13 +132,16 @@ export class GisOps {
       features: [],  // Array<Feature<Point, Properties>>,
       type: 'FeatureCollection'
     };
-    const pointsAlreadyFiltered: PointsMap = {};
+    const pointsAlreadyFiltered: { [name: string]: number } = {};
     allPointsIntersection.features.forEach(api => {
       const coords = api.geometry.coordinates;
       const pointString = EowDataStruct.createPointMapString(turfPoint(coords));
-      if (allPointsMap.hasOwnProperty(pointString) && !pointsAlreadyFiltered.hasOwnProperty(pointString)) {
-        pointsAlreadyFiltered[pointString] = null;
-        filteredPoints.features.push(allPointsMap[pointString]);
+      if (allPointsMap.hasOwnProperty(pointString)) {
+        const sourcePointString = EowDataStruct.createPointMapString(allPointsMap[pointString]);
+        if (!pointsAlreadyFiltered.hasOwnProperty(sourcePointString)) {
+          pointsAlreadyFiltered[sourcePointString] = 1;
+          filteredPoints.features.push(allPointsMap[pointString]);
+        }
       }
     });
     return filteredPoints;
