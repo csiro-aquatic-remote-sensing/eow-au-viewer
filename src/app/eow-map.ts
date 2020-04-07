@@ -20,6 +20,7 @@ import {Injectable} from '@angular/core';
 import SideBarService from './sidebar/sidebar.service';
 import {SideBarMessage} from './types';
 import {EowBaseService} from './eow-base-service';
+import {SidebarStatsService} from './stats/stats.sidebar.service';
 
 const theClass = 'EOWMap';
 const defaultCoord = [133.945313, -26.431228];
@@ -32,7 +33,7 @@ export class EOWMap extends EowBaseService {
   private map: Map;
   private sideBarMessagingService: Subject<SideBarMessage>;
 
-  constructor(private log: Brolog) {  // private popupObject: Popup,
+  constructor(private sidebarStatsService: SidebarStatsService, private sideBarService: SideBarService, private log: Brolog) {  // private popupObject: Popup,
     super();
     this._mapObs = new BehaviorSubject<Map>(null);
   }
@@ -84,7 +85,7 @@ export class EOWMap extends EowBaseService {
   }
 
   private setupEventHandling() { // popupObject: Popup) {
-    this.map.on('click', (evt) => {
+    this.map.on('click', async (evt) => {
       const {
         pixel,
         coordinate
@@ -98,7 +99,11 @@ export class EOWMap extends EowBaseService {
 
       if (features.length) {
         this.log.verbose(theClass, `Clicked on map at: ${JSON.stringify(coordinate)}  - fix the call to display Popup (do through sidebar)`);
-        this.sideBarMessagingService.next({action: 'show', message: 'eow-dataPoint-information', data: {features, coordinate}});
+        this.sidebarStatsService.calculateStats(features);
+        this.sideBarService.timeSeriesRawData = features;
+        await this.sideBarService.buildPieChartPreparedData(features);
+        this.sideBarService.setupToDisplayCharts();
+// this.sideBarMessagingService.next({action: 'show', message: 'eow-dataPoint-information', data: {features, coordinate}});
         // popupObject.draw(features, coordinate);
       }
     });
