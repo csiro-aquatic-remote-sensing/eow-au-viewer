@@ -98,6 +98,7 @@ export default class SideBarService extends EowBaseService {
     this.showHideMenu('measurements', hide);
     this.showHideMenu('users', hide);
     this.showHideMenu('eow-dataPoint-information', show);
+    this.showHideMenu('eow-timeline', show);
   }
 
   private handleMessage(msg: SideBarMessage) {

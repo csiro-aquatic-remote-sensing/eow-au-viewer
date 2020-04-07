@@ -269,6 +269,10 @@ pre {
   margin: 0.1em;
 }
 
+.hidden {
+  display: none;
+}
+
 .icon-thumb {
   width: 40px;
   margin-right: 5px;
