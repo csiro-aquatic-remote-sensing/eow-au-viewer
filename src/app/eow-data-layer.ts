@@ -21,6 +21,7 @@ import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import {writeAllEOWDataImageUrls} from './globals';
 import {Injectable} from '@angular/core';
 import {EowBaseService} from './eow-base-service';
+import {Debug} from './debug';
 
 const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia'; // ?service=WFS';
 // + '&version=1.0.0&request=GetFeature&typeName=eow_australia&maxFeatures=5000&outputFormat=application%2Fjson&srsName=epsg:3587';
@@ -72,7 +73,8 @@ export class EowDataLayer extends EowBaseService {
             // debug (for Corp Affairs)
             if (writeAllEOWDataImageUrls) {
               console.log(`EOWData images (before): #${features.length}`);
-              features.forEach(f => console.log(f.getProperties().image));
+              Debug.debugFeaturesByImages(features);
+              features.sort((fa, fb) => (fa.getProperties().image - fb.getProperties().image)).forEach(f => console.log(f.getProperties().image));
               console.log(`EOWData images (after): #${features.length}`);
             }
             allDataSource.clear(true);

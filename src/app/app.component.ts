@@ -11,7 +11,7 @@ import {Brolog} from 'brolog';
 import {EOWMap} from './eow-map';
 import {EowLayers, LayersInfo} from './eow-layers';
 import {EowWaterBodyIntersection, PointsMap, SourcePointMarginsType} from './eow-data-struct';
-import {FeatureCollection, Point, Polygon} from '@turf/helpers';
+import {FeatureCollection, Feature as turfFeature, Point, Polygon} from '@turf/helpers';
 import EowDataCharts from './charts/eow-data-charts';
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import Map from 'ol/Map';
@@ -22,15 +22,14 @@ import moment from 'moment';
 import {GisOps} from './gis-ops';
 import {isDebugLevel} from './globals';
 import SideBarService from './sidebar/sidebar.service';
-import {SideBarMessage} from './types';
+import {SideBarMessage, WaterBodyFeatures} from './types';
 import {jqxWindowComponent} from 'jqwidgets-framework/jqwidgets-ng/jqxwindow';
 import {SidebarStatsService} from './stats/stats.sidebar.service';
 import {HeaderStatsService} from './stats/stats.header.service';
+import {Debug} from './debug';
 // import {HeaderStatsService} from './stats/stats.header.service';
 
 const theClass = 'AppComponent';
-
-type WaterBodyFeatures = { [name: string]: Feature[] }; // tslint:disable-line
 
 // TODO - split this up!
 @Component({
@@ -74,7 +73,7 @@ export class AppComponent implements OnInit, OnDestroy {
         // DEBUG
         // this.allDataSource.on('change', this.debug_compareUsersNMeasurements.bind(this));
         // this.allDataSource.on('change', this.debug_printFirstEOWData.bind(this));
-        this.debug_printFirstEOWData();
+        Debug.debug_printFirstEOWData(this.allDataSource);
       }
     }));
     this.subscriptions.push(this.eowData.dataLayerObs.subscribe(dataLayer => {
@@ -240,7 +239,9 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private async intersectAndDraw(layerName: string, waterBodyPolygons: FeatureCollection<Polygon>, points: FeatureCollection<Point>,
                                  allPointsMap: PointsMap, sourceNErrorMarginPoints: FeatureCollection<Point>) {
+    Debug.debugFeatureCollection(points, '-> intersectAndDraw');
     const eowWaterBodyIntersections = await GeometryOps.calculateLayerIntersections(points, sourceNErrorMarginPoints, allPointsMap, waterBodyPolygons, layerName);
+    Debug.debugEowWaterBodyIntersections(eowWaterBodyIntersections, '-> intersectAndDraw (int eowWaterBodyIntersections)');
     this.eowDataCharts.plotCharts(eowWaterBodyIntersections, layerName);
     await this.eowDataCharts.drawErrorMarginPoints(this.pointsErrorMargins);
   }
@@ -251,16 +252,9 @@ export class AppComponent implements OnInit, OnDestroy {
   private async calculateWaterBodiesCentroidsPlot() {
     const layerName = 'DigitalEarthAustraliaWaterbodies';
     if (this.waterBodyFeatures.hasOwnProperty(layerName)) {
+      Debug.debugWaterBodyFeatures(this.waterBodyFeatures, layerName);
       const eowWaterbodyPoints: EowWaterBodyIntersection[] = await GeometryOps.convertLayerToDataFormat(this.waterBodyFeatures[layerName]);
       await this.eowDataCharts.plotCharts(eowWaterbodyPoints, layerName);
-    }
-  }
-
-  private debug_printFirstEOWData() {
-    if (isDebugLevel() && this.allDataSource) {
-      const features = this.allDataSource.getFeatures();
-      const point = features.length > 0 ? (features[0].getGeometry() as SimpleGeometry).getFirstCoordinate() : 'no data yet';
-      this.log.verbose(theClass, `First EOWData point: ${point}`);
     }
   }
 

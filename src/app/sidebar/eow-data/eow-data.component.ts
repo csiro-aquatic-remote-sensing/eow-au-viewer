@@ -74,14 +74,14 @@ export class EowDataComponent implements OnInit, OnChanges {
         this.showHideMenu('eow-timeline', hide);
       }
     });
-  //
-  //   const moreInfoButton = this.htmlDocument.querySelectorAll('.more-info-btn');
-  //   moreInfoButton.forEach(mib => {
-  //     mib.addEventListener('click', (event: Event) => {
-  //       const popupElement = mib.closest('.popup-item');
-  //       popupElement.classList.toggle('active');
-  //     });
-  //   });
+    //
+    //   const moreInfoButton = this.htmlDocument.querySelectorAll('.more-info-btn');
+    //   moreInfoButton.forEach(mib => {
+    //     mib.addEventListener('click', (event: Event) => {
+    //       const popupElement = mib.closest('.popup-item');
+    //       popupElement.classList.toggle('active');
+    //     });
+    //   });
   }
 
   private showHideMenu(menuId: string, showIt: boolean) {
@@ -90,6 +90,7 @@ export class EowDataComponent implements OnInit, OnChanges {
     menuItem.classList.remove(showIt ? 'hidden' : 'show');
     menuItem.classList.add(showIt ? 'show' : 'hidden');
   }
+
 // this.sanitizer.bypassSecurityTrustStyle(
   private buildPreparedFeatures() {
     if (this.features) {
@@ -128,5 +129,7 @@ export class EowDataComponent implements OnInit, OnChanges {
     return d ? d : '';
   }
 
-
+  getImage(feature: EowDataComponentFormat): string {
+    return feature.image.replace(/.*?eyeonwater_upload\//, '');
+  }
 }
