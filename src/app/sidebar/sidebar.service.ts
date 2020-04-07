@@ -1,7 +1,7 @@
 import {Inject, Injectable} from '@angular/core';
 import Map from 'ol/Map';
 
-import {EowDataLayer} from '../eow-data-layer';
+// import {EowDataLayer} from '../eow-data-layer';
 // import {MeasurementStore} from './measurement-store';
 // import {UserStore} from './user-store';
 import {isDebugLevel} from '../globals';
@@ -16,7 +16,7 @@ import {SideBarMessage} from '../types';
 import {EowBaseService} from '../eow-base-service';
 import {TimeSeriesChartHTML} from '../charts/time-series-chart-html';
 import {UserStore} from './user-store';
-import {MeasurementsService} from './measurements/measurements.service';
+// import {MeasurementsService} from './measurements/measurements.service';
 import {UserService} from './users/user.service';
 import {EowDataStruct, PieItem} from '../eow-data-struct';
 import Feature from 'ol/Feature';
@@ -28,13 +28,11 @@ const hide = false;
 export default class SideBarService extends EowBaseService {
   private _pieChartPreparedData: PieItem[];
   private _timeSeriesRawData: Feature[];
-  dataLayer: VectorLayer;
-  map: Map;
+  // dataLayer: VectorLayer;
+  // map: Map;
   sideBarMessagingService: Subject<SideBarMessage>;
 
-  constructor(private eowData: EowDataLayer, private eowMap: EOWMap,
-              private log: Brolog, @Inject(DOCUMENT) private htmlDocument: Document,
-              private measurementsService: MeasurementsService, private userService: UserService) {
+  constructor(private log: Brolog, @Inject(DOCUMENT) private htmlDocument: Document) {
     // , private measurementStore: MeasurementStore, private userStore: UserStore
     super();
   }
@@ -52,25 +50,26 @@ export default class SideBarService extends EowBaseService {
       this.handleMessage(msg);
     }));
 
-    this.subscriptions.push(this.eowData.dataLayerObs.subscribe(dataLayer => {
-      this.dataLayer = dataLayer;
-    }));
+    // this.subscriptions.push(this.eowData.dataLayerObs.subscribe(dataLayer => {
+    //   this.dataLayer = dataLayer;
+    // }));
+    //
+    // this.subscriptions.push(this.eowMap.getMap().subscribe(async map => {
+    //   this.map = map;
+    // }));
 
-    this.subscriptions.push(this.eowMap.getMap().subscribe(async map => {
-      this.map = map;
-    }));
-
-    this.subscriptions.push(this.eowData.allDataSourceObs.subscribe(allDataSource => {
-      if (allDataSource) {
-        // this.measurementStore.initialLoadMeasurements(this.userStore, allDataSource);
-        // allDataSource.un('change', this.measurementStore.initialLoadMeasurements.bind(this, this.userStore, allDataSource));
-
-        // Debug
-        allDataSource.on('change', this.debug_compareUsersNMeasurements.bind(this, allDataSource));
-
-        this.setupEventHandlers(allDataSource);
-      }
-    }));
+    // this.subscriptions.push(this.eowData.allDataSourceObs.subscribe(allDataSource => {
+    //   if (allDataSource) {
+    //     // this.measurementStore.initialLoadMeasurements(this.userStore, allDataSource);
+    //     // allDataSource.un('change', this.measurementStore.initialLoadMeasurements.bind(this, this.userStore, allDataSource));
+    //
+    //     // Debug
+    //     allDataSource.on('change', this.debug_compareUsersNMeasurements.bind(this, allDataSource));
+    //
+    //     this.setupEventHandlers(allDataSource);
+    //   }
+    // }));
+    this.setupEventHandlers();
 
     return this;
   }
@@ -173,7 +172,7 @@ export default class SideBarService extends EowBaseService {
     }
   }
 
-  private setupEventHandlers(allDataSource) {
+  private setupEventHandlers() {
     // Measurement List
     // this.htmlDocument.querySelector('.measurement-list').addEventListener('click', (event) => {
     //   const element = (event.target as HTMLElement).closest('.item');
@@ -205,9 +204,9 @@ export default class SideBarService extends EowBaseService {
     //   }
     // }, true);
 
-    this.htmlDocument.getElementById('clearFilterButton').addEventListener('click', (event) => {
-      this.clearFilter(allDataSource);
-    });
+    // this.htmlDocument.getElementById('clearFilterButton').addEventListener('click', (event) => {
+    //   this.clearFilter(allDataSource);
+    // });
 
     this.htmlDocument.getElementById('eow-timeline').addEventListener('click', (event: Event) => {
       const element = (event.target as HTMLElement);
@@ -217,42 +216,43 @@ export default class SideBarService extends EowBaseService {
     });
   }
 
-  private clearFilter(allDataSource) {
-    // this.userStore.clearSelectedUser();
-    // this.measurementStore.clearFilter();
-    if (this.dataLayer) {
-      this.map.getView().fit(this.dataLayer.getSource().getExtent(), {duration: 1300});
-      if (allDataSource) {
-        this.dataLayer.setSource(allDataSource);
-      }
-    }
-    this.toggleFilterButton(false);
-  }
+  // private clearFilter(allDataSource) {
+  //   // this.userStore.clearSelectedUser();
+  //   // this.measurementStore.clearFilter();
+  //   if (this.dataLayer) {
+  //     this.map.getView().fit(this.dataLayer.getSource().getExtent(), {duration: 1300});
+  //     if (allDataSource) {
+  //       this.dataLayer.setSource(allDataSource);
+  //     }
+  //   }
+  //   this.toggleFilterButton(false);
+  // }
+  //
+  // private toggleFilterButton(state = false) {
+  //   const element = this.htmlDocument.getElementById('clearFilterButton');
+  //   element.classList.toggle('hidden', !state);
+  // }
 
-  private toggleFilterButton(state = false) {
-    const element = this.htmlDocument.getElementById('clearFilterButton');
-    element.classList.toggle('hidden', !state);
-  }
-
-  private debug_compareUsersNMeasurements(allDataSource) {
-    if (false && isDebugLevel() && allDataSource) {
-      this.log.verbose(this.constructor.name, 'debug_compareUsersNMeasurements:');
-      this.userService.getUserByIdKeys().forEach(uid => {
-        const user = this.userService.getUserById(uid);
-        this.log.verbose(this.constructor.name, `  user - Id: ${user.id}, nickName: ${user.nickname}, photo_count: ${user.photo_count}`);
-        const m = null; // this.measurementStore.getByOwner(user.id);
-        if (m && m.length > 0) {
-          const images = m.map(m2 => m2.get('image'));
-          this.log.verbose(this.constructor.name, `    number of images: ${images.length} -> \n${JSON.stringify(images, null, 2)}`);
-        }
-      });
-      // Now print Measurements info
-      // this.log.verbose(this.constructor.name, `measurementsByOwner: ${
-      //   JSON.stringify(this.measurementStore.measurementSummary(true, this.userStore), null, 2)}`);
-      // this.log.verbose(this.constructor.name, `measurementsById: ${
-      //   JSON.stringify(this.measurementStore.measurementSummary(false, this.userStore), null, 2)}`);
-      // this.log.verbose(this.constructor.name, `Number of measurements per user: ${
-      //   JSON.stringify(this.measurementStore.numberMeasurmentsPerUser(this.userStore), null, 2)}`);
-    }
-  }
+  // If I need this again it will need to be moved to somewhere else to avoid circular dependency
+  // private debug_compareUsersNMeasurements(allDataSource) {
+  //   if (false && isDebugLevel() && allDataSource) {
+  //     this.log.verbose(this.constructor.name, 'debug_compareUsersNMeasurements:');
+  //     this.userService.getUserByIdKeys().forEach(uid => {
+  //       const user = this.userService.getUserById(uid);
+  //       this.log.verbose(this.constructor.name, `  user - Id: ${user.id}, nickName: ${user.nickname}, photo_count: ${user.photo_count}`);
+  //       const m = null; // this.measurementStore.getByOwner(user.id);
+  //       if (m && m.length > 0) {
+  //         const images = m.map(m2 => m2.get('image'));
+  //         this.log.verbose(this.constructor.name, `    number of images: ${images.length} -> \n${JSON.stringify(images, null, 2)}`);
+  //       }
+  //     });
+  //     // Now print Measurements info
+  //     // this.log.verbose(this.constructor.name, `measurementsByOwner: ${
+  //     //   JSON.stringify(this.measurementStore.measurementSummary(true, this.userStore), null, 2)}`);
+  //     // this.log.verbose(this.constructor.name, `measurementsById: ${
+  //     //   JSON.stringify(this.measurementStore.measurementSummary(false, this.userStore), null, 2)}`);
+  //     // this.log.verbose(this.constructor.name, `Number of measurements per user: ${
+  //     //   JSON.stringify(this.measurementStore.numberMeasurmentsPerUser(this.userStore), null, 2)}`);
+  //   }
+  // }
 }
