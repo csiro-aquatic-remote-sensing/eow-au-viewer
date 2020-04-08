@@ -26,7 +26,6 @@ export abstract class ChartContainer extends EowBaseService {
   protected layerName: string;
   protected layers: ApplicationLayers;
   protected data: any;
-  protected sideBarMessagingService: Subject<SideBarMessage>;
 
   /**
    * Abstract class for the business related functions surrounding drawing charts on map.
@@ -44,9 +43,8 @@ export abstract class ChartContainer extends EowBaseService {
     this.layers = layers;
   }
 
-  init(htmlDocument: Document, sideBarMessagingService: Subject<SideBarMessage>, point: Coords, map: Map, id: string, data: Feature[]) {
+  init(htmlDocument: Document, point: Coords, map: Map, id: string, data: Feature[]) {
     this.htmlDocument = htmlDocument;
-    this.sideBarMessagingService = sideBarMessagingService;
     this.point = point;
     this.map = map;
     this.id = id;
@@ -85,11 +83,9 @@ export abstract class ChartContainer extends EowBaseService {
 
   private setupEvents(clickCallback: () => void) {
     this.htmlDocument.querySelector('#' + this.id).addEventListener('click', (event) => {
-      console.log(`Clicked pieChart with id: ${this.id} and run clickCallback()`);
+      console.log(`Clicked Chart with id: ${this.id} and run clickCallback()`);
       clickCallback();
       // new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.offSet(point, 1), map, idTime, validData).draw();
-      // this.sideBarMessagingService.next({action: 'draw', message: 'timeSeriesChart', data: {rawData: this.data, scale: this.map.getView().getZoom() * LOG2}});
-      // this.sideBarMessagingService.next({action: 'show', message: 'eow-dataPoint-information', data: {features: this.data, coordinate: null}});
     });
 
   }

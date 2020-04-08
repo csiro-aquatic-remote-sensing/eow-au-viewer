@@ -19,8 +19,8 @@ export class PieChartContainer extends ChartContainer {
     super(layerName, layers, log);
   }
 
-  init(htmlDocument: Document, sideBarMessagingService: Subject<SideBarMessage>, point: Coords, map: Map, id: string, data: any[]) {
-    return super.init(htmlDocument, sideBarMessagingService, point, map, id, data);
+  init(htmlDocument: Document, point: Coords, map: Map, id: string, data: any[]) {
+    return super.init(htmlDocument, point, map, id, data);
   }
 
   // TODO type this data
@@ -34,15 +34,6 @@ export class PieChartContainer extends ChartContainer {
     // this.setupEvents(this.id);
     await this.drawDebugLines(this.point, this.preparedData, this.layerName);
   }
-
-  // private setupEvents(elementId: string) {
-  //   this.htmlDocument.querySelector('#' + elementId).addEventListener('click', (event) => {
-  //     console.log(`Clicked pieChart with id: ${elementId}`);
-  //     // new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.offSet(point, 1), map, idTime, validData).draw();
-  //     this.sideBarMessagingService.next({action: 'draw', message: 'timeSeriesChart', data: {rawData: this.data, scale: this.map.getView().getZoom() * LOG2}});
-  //     this.sideBarMessagingService.next({action: 'show', message: 'eow-dataPoint-information', data: {features: this.data, coordinate: null}});
-  //   });
-  // }
 
   /**
    * Debug method that draws lines from the point where the Pie Chart is drawn to each EOWData point.

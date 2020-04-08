@@ -6,19 +6,13 @@ import Brolog from 'brolog';
 import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
 import View from 'ol/View';
-import {fromLonLat, toLonLat} from 'ol/proj';
-import {AppComponent} from './app.component';
-import {FeatureCollection, featureCollection as turfFeatureCollection, Geometry, Polygon, polygon as turfPolygon} from '@turf/helpers';
-import {feature as turfFeature} from '@turf/helpers';
 import {LayersInfo} from './eow-layers';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
-import {ATTRIBUTION} from 'ol/source/OSM';
 import LayerSwitcher from 'ol-layerswitcher';
 import {defaults} from 'ol/control';
 import {Injectable} from '@angular/core';
 import SideBarService from './sidebar/sidebar.service';
-import {SideBarMessage} from './types';
 import {EowBaseService} from './eow-base-service';
 import {SidebarStatsService} from './stats/stats.sidebar.service';
 
@@ -31,9 +25,8 @@ const theZoom = 12;
 export class EOWMap extends EowBaseService {
   private _mapObs: BehaviorSubject<Map>;
   private map: Map;
-  private sideBarMessagingService: Subject<SideBarMessage>;
 
-  constructor(private sidebarStatsService: SidebarStatsService, private sideBarService: SideBarService, private log: Brolog) {  // private popupObject: Popup,
+  constructor(private sidebarStatsService: SidebarStatsService, private sideBarService: SideBarService, private log: Brolog) {
     super();
     this._mapObs = new BehaviorSubject<Map>(null);
   }
@@ -43,8 +36,7 @@ export class EOWMap extends EowBaseService {
   }
 
   // popupObject: Popup) {
-  init(sideBarMessagingService: Subject<SideBarMessage>) {
-    this.sideBarMessagingService = sideBarMessagingService;
+  init() {
     const mainMap = new TileLayer({
       source: new OSM(),
     });
@@ -103,7 +95,6 @@ export class EOWMap extends EowBaseService {
         this.sideBarService.timeSeriesRawData = features;
         await this.sideBarService.buildPieChartPreparedData(features);
         this.sideBarService.setupToDisplayCharts();
-// this.sideBarMessagingService.next({action: 'show', message: 'eow-dataPoint-information', data: {features, coordinate}});
         // popupObject.draw(features, coordinate);
       }
     });

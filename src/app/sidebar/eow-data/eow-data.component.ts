@@ -62,36 +62,8 @@ export class EowDataComponent implements OnInit, OnChanges {
   }
 
   private setupEventHandlers() {
-    const elementSelector = 'div#eow-dataPoint-information';
-
-    this.htmlDocument.querySelector(elementSelector).addEventListener('click', (event: Event) => {
-      const element = (event.target as HTMLElement);
-      if (element.matches('.close')) {
-        console.log(`close`);
-        this.showHideMenu('measurements', show);
-        this.showHideMenu('users', show);
-        this.showHideMenu('eow-dataPoint-information', hide);
-        this.showHideMenu('eow-timeline', hide);
-      }
-    });
-    //
-    //   const moreInfoButton = this.htmlDocument.querySelectorAll('.more-info-btn');
-    //   moreInfoButton.forEach(mib => {
-    //     mib.addEventListener('click', (event: Event) => {
-    //       const popupElement = mib.closest('.popup-item');
-    //       popupElement.classList.toggle('active');
-    //     });
-    //   });
   }
 
-  private showHideMenu(menuId: string, showIt: boolean) {
-    const menuItem = this.htmlDocument.getElementById(menuId);
-    // menuItem.style.display = showIt ? 'block' : 'none';
-    menuItem.classList.remove(showIt ? 'hidden' : 'show');
-    menuItem.classList.add(showIt ? 'show' : 'hidden');
-  }
-
-// this.sanitizer.bypassSecurityTrustStyle(
   private buildPreparedFeatures() {
     if (this.features) {
       this._preparedFeatures = this.features.map(feature => {

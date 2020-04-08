@@ -1,8 +1,6 @@
 import {Inject, Injectable} from '@angular/core';
 import Brolog from 'brolog';
 import {DOCUMENT} from '@angular/common';
-import {Subject} from 'rxjs';
-import {SideBarMessage} from '../types';
 import {EowBaseService} from '../eow-base-service';
 import {EowDataStruct, PieItem} from '../eow-data-struct';
 import Feature from 'ol/Feature';
@@ -14,7 +12,6 @@ const hide = false;
 export default class SideBarService extends EowBaseService {
   private _pieChartPreparedData: PieItem[];
   private _timeSeriesRawData: Feature[];
-  sideBarMessagingService: Subject<SideBarMessage>;
 
   constructor(private log: Brolog, @Inject(DOCUMENT) private htmlDocument: Document) {
     super();
@@ -24,13 +21,7 @@ export default class SideBarService extends EowBaseService {
     super.destroy();
   }
 
-  async init(sideBarMessagingService: Subject<SideBarMessage>): Promise<SideBarService> {
-    this.sideBarMessagingService = sideBarMessagingService;
-
-    this.subscriptions.push(this.sideBarMessagingService.asObservable().subscribe(msg => {
-      this.handleMessage(msg);
-    }));
-
+  async init(): Promise<SideBarService> {
     this.setupEventHandlers();
 
     return this;
@@ -54,43 +45,13 @@ export default class SideBarService extends EowBaseService {
   }
 
   /**
-   * 'Message' to say a PieChart was clicked on, and we need to hide some menus and show others.  Want to see the charts.
+   * Hide and show some menus.
    */
   setupToDisplayCharts() {
     this.showHideMenu('measurements', hide);
     this.showHideMenu('users', hide);
     this.showHideMenu('eow-dataPoint-information', show);
     this.showHideMenu('eow-timeline', show);
-  }
-
-  private handleMessage(msg: SideBarMessage) {
-    switch (msg.action) {
-      case 'show':
-        this.show(msg.message, msg.data);
-        break;
-      case 'close':
-        this.close(msg.message);
-        break;
-      case 'draw':
-        this.draw(msg.message, msg.data);
-        break;
-      default:
-        this.log.warn(this.constructor.name, `Unknown sidebarMessage action: ${msg.action}`);
-    }
-  }
-
-  private async show(menuId: string, {features, coordinate}: { [name: string]: any }) {
-    switch (menuId) {
-      case 'eow-dataPoint-information':
-        console.log(`sidebar - show ${menuId}`);
-        // await this.popup.draw(features, coordinate, 'eow-dataPoint-information');
-        // this.showHideMenu('measurements', hide);
-        // this.showHideMenu('users', hide);
-        // this.showHideMenu('eow-dataPoint-information', show);
-        break;
-      default:
-        this.log.warn(this.constructor.name, `Unknown menId to show: ${menuId}`);
-    }
   }
 
   private showHideMenu(menuId: string, showIt: boolean) {
@@ -100,48 +61,28 @@ export default class SideBarService extends EowBaseService {
     menuItem.classList.add(showIt ? 'show' : 'hidden');
   }
 
-  private close(menuId: string) {
-    switch (menuId) {
-      case 'eow-dataPoint-information':
-      case 'eow-timeline':
-        this.showHideMenu('measurements', show);
-        this.showHideMenu('users', show);
-        this.showHideMenu('eow-dataPoint-information', hide);
-        this.showHideMenu('eow-timeline', hide);
-        break;
-      default:
-        this.log.warn(this.constructor.name, `Unknown menId to close: ${menuId}`);
-    }
-  }
-
-  /**
-   * Draw charts in to the sidebar
-   *
-   * @param message about what to draw
-   * @param data for what to draw
-   */
-  private draw(message: string, data: { [p: string]: any }) {
-    switch (message) {
-      case 'timeSeriesChart':
-        this.showHideMenu('measurements', hide);
-        this.showHideMenu('users', hide);
-        this.showHideMenu('eow-dataPoint-information', show);
-        this.showHideMenu('eow-timeline', show);
-
-        // new TimeSeriesChartHTML(this.htmlDocument, data.rawData, this.log).draw('eow-timeline');
-        break;
-      default:
-        this.log.warn(this.constructor.name, `Unknown Item to draw: ${message}`);
-    }
-  }
-
   private setupEventHandlers() {
     this.htmlDocument.getElementById('eow-timeline').addEventListener('click', (event: Event) => {
       const element = (event.target as HTMLElement);
       if (element.matches('.close')) {
-        this.sideBarMessagingService.next({action: 'close', message: 'eow-timeline'});
+        this.showHideMenu('measurements', show);
+        this.showHideMenu('users', show);
+        this.showHideMenu('eow-dataPoint-information', hide);
+        this.showHideMenu('eow-timeline', hide);
       }
     });
+
+    this.htmlDocument.querySelector('div#eow-dataPoint-information').addEventListener('click', (event: Event) => {
+      const element = (event.target as HTMLElement);
+      if (element.matches('.close')) {
+        console.log(`close`);
+        this.showHideMenu('measurements', show);
+        this.showHideMenu('users', show);
+        this.showHideMenu('eow-dataPoint-information', hide);
+        this.showHideMenu('eow-timeline', hide);
+      }
+    });
+
   }
 
   // If I need this again it will need to be moved to somewhere else to avoid circular dependency
