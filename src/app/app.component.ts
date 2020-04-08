@@ -50,8 +50,7 @@ export class AppComponent implements OnInit, OnDestroy {
   newPoints = false;
   waterBodyFeatures: WaterBodyFeatures = {};
   mapIsMovingState = false;
-  // Use this to asyncronously 'call' SideBar methods - mitigates Circular Refs
-  sideBarMessagingService = new Subject<SideBarMessage>();
+
   private subscriptions: Subscription[] = [];
 
   constructor(@Inject(DOCUMENT) private htmlDocument: Document, private http: HttpClient, private log: Brolog, private eowMap: EOWMap,
@@ -61,7 +60,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit() {
-    this.eowMap.init(this.sideBarMessagingService);
+    this.eowMap.init();
     this.subscriptions.push(this.eowMap.getMap().subscribe(async map => {
       this.map = map;
     }));
@@ -83,9 +82,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
     await this.eowDataGeometries.init();
 
-    // this.popupObject.init(this.sideBarMessagingService);
-    this.eowDataCharts.init(this.eowMap, this.htmlDocument, this.sideBarMessagingService);
-    await this.sideBarService.init(this.sideBarMessagingService);
+    this.eowDataCharts.init(this.eowMap, this.htmlDocument);
+    await this.sideBarService.init();
     this.sidebarStatsService.init();
     this.headerStatsService.init();
 

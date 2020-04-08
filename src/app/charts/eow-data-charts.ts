@@ -36,7 +36,6 @@ export default class EowDataCharts extends EowBaseService {
   map: Map;
   htmlDocument: Document;
   ids: { [id: string]: boolean } = {};
-  private sideBarMessagingService: Subject<SideBarMessage>;
 
   constructor(private sidebarStatsService: SidebarStatsService, private sideBarService: SideBarService, private layers: ApplicationLayers, private log: Brolog) {
     super();
@@ -46,9 +45,8 @@ export default class EowDataCharts extends EowBaseService {
     super.destroy();
   }
 
-  init(eowMap: EOWMap, htmlDocument, sideBarMessagingService) {
+  init(eowMap: EOWMap, htmlDocument) {
     this.htmlDocument = htmlDocument;
-    this.sideBarMessagingService = sideBarMessagingService;
     this.subscriptions.push(eowMap.getMap().subscribe(map => {
       this.map = map;
     }));
@@ -136,7 +134,7 @@ export default class EowDataCharts extends EowBaseService {
         const idPie = this.createId('pieChart-');
         this.log.verbose(theClass, `Draw pieChart ${idPie} at ${JSON.stringify(point)}`);
         const pie = new PieChartContainer(layerName, this.layers, this.log);
-        pie.init(this.htmlDocument, this.sideBarMessagingService, point, map, idPie, validData);
+        pie.init(this.htmlDocument, point, map, idPie, validData);
         pie.draw(() => {
           // Clicking on the pie chart causes stats and chart to be displayed in sidebar
           this.sidebarStatsService.calculateStats(validData);
