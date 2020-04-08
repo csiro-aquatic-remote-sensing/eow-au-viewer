@@ -1,14 +1,8 @@
 import {Component, Inject, Input, OnInit} from '@angular/core';
 import SideBarService from './sidebar.service';
 import {EowBaseService} from '../eow-base-service';
-import {SideBarMessage} from '../types';
 import Brolog from 'brolog';
-import {Subject} from 'rxjs';
-import {EowDataStruct, PieItem} from '../eow-data-struct';
-import Feature from 'ol/Feature';
 import {DOCUMENT} from '@angular/common';
-import colors from '../colors.json';
-import moment = require('moment-timezone/moment-timezone');
 import {MeasurementsService} from './measurements/measurements.service';
 import {UserService} from './users/user.service';
 import {SidebarStatsService} from '../stats/stats.sidebar.service';
@@ -19,6 +13,8 @@ import {SidebarStatsService} from '../stats/stats.sidebar.service';
   styleUrls: ['./sidebar.component.css']
 })
 export class SidebarComponent extends EowBaseService implements OnInit {
+  parentSelector = 'div#eow-dataPoint-information';
+
   constructor(private sideBarService: SideBarService, private measurementsService: MeasurementsService, private userService: UserService,
               private sidebarStatsService: SidebarStatsService, @Inject(DOCUMENT) private htmlDocument: Document, private log: Brolog) {
     super();

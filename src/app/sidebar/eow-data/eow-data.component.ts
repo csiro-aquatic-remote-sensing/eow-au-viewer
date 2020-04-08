@@ -102,6 +102,10 @@ export class EowDataComponent implements OnInit, OnChanges {
   }
 
   getImage(feature: EowDataComponentFormat): string {
-    return feature.image.replace(/.*?eyeonwater_upload\//, '');
+    if (feature && feature.image) {
+      return feature.image.replace(/.*?eyeonwater_upload\//, '');
+    } else {
+      return 'no image available';
+    }
   }
 }
