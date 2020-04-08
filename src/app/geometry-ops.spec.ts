@@ -572,7 +572,7 @@ describe('geometry-ops', () => {
           getArray: () => ([])
         };
       });
-      const mockEOWMap = new EOWMap(log);
+      const mockEOWMap = new EOWMap(null, null, log);
       const mockEOWMapStub = sinon.stub(mockEOWMap, 'getMap').callsFake(() => {
         return of(mockMap);
       });

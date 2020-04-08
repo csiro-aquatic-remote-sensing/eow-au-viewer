@@ -4,7 +4,6 @@ import Map from 'ol/Map';
 import Brolog from 'brolog';
 import {ApplicationLayers} from '../layers';
 import {TimeSeriesChartMap} from './time-series-chart-map';
-import {Subject} from 'rxjs';
 import Feature from 'ol/Feature';
 
 export class TimeSeriesChartContainer extends ChartContainer {

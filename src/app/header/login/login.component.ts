@@ -18,7 +18,6 @@ export class LoginComponent implements OnInit {
   @ViewChild('inputUser', {static: false}) inputUser: ElementRef;
   @ViewChild('inputPassword', {static: false}) inputPassword: ElementRef;
   message = '';
-  // loginReponse: LoginResponse;
   linkText = 'Login';
 
   constructor(private loginService: LoginService, private http: HttpClient) {

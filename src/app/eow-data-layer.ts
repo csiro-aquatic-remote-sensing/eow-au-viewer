@@ -1,4 +1,3 @@
-import Map from 'ol/Map';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
@@ -8,22 +7,18 @@ import {
   Stroke,
   Fill
 } from 'ol/style';
-import debounce from 'lodash/debounce';
 
 import colors from './colors.json';
-// import {MeasurementStore} from './sidebar/measurement-store';
-import {BehaviorSubject, Subscription} from 'rxjs';
+import {BehaviorSubject} from 'rxjs';
 import {EOWMap} from './eow-map';
 import Feature from 'ol/Feature';
 import {bbox as bboxStrategy} from 'ol/loadingstrategy';
-import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import {writeAllEOWDataImageUrls} from './globals';
 import {Injectable} from '@angular/core';
 import {EowBaseService} from './eow-base-service';
 import {Debug} from './debug';
 
-const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia'; // ?service=WFS';
-// + '&version=1.0.0&request=GetFeature&typeName=eow_australia&maxFeatures=5000&outputFormat=application%2Fjson&srsName=epsg:3587';
+const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia';
 const title = 'eow_australia';
 const LOG2 = Math.log2(2);
 
@@ -38,7 +33,7 @@ export class EowDataLayer extends EowBaseService {
   private _dataLayerNumber = 0;
   private styleCache = {};
 
-  constructor(private eowMap: EOWMap) { // , htmlDocument: Document) {
+  constructor(private eowMap: EOWMap) {
     super();
   }
 
@@ -46,11 +41,7 @@ export class EowDataLayer extends EowBaseService {
     super.destroy();
   }
 
-  init() { // eowMap: EOWMap) { // , htmlDocument: Document) {
-    // const allDataSource = new VectorSource({
-    //   format: new GeoJSON({dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3857'}),
-    //   url: WFS_URL
-    // });
+  init() {
     const allDataSource = new VectorSource({
       format: new GeoJSON(),
       loader: (extent, resolution, projection) => {
@@ -88,12 +79,10 @@ export class EowDataLayer extends EowBaseService {
     });
 
     allDataSource.on('addfeature', (evt) => {
-      // setTimeout(() => {  // TODO get rid of the timeout
         if (this._allDataSourceNumber !== allDataSource.getFeatures().length) {
           this._allDataSourceNumber = allDataSource.getFeatures().length;
           this._allDataSourceObs.next(allDataSource);
         }
-      // }, 2000); // yes, a hack
     });
 
     this.subscriptions.push(this.eowMap.getMap().subscribe(map => {

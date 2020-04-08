@@ -2,8 +2,6 @@
   <div id="header-login">
     {{getHeaderText()}} <a (click)="onLoginLogoutOpen()" href="#">{{linkText}}</a>
   </div>
-  <!--  <div id="jqxWidget" #jqxWidget>-->
-  <!--    <div id="mainDemoContainer" style="width: 100%; height: 100px; margin-top: 50px;">-->
   <jqxWindow #windowReference [width]="250" [height]="140"
              [showCollapseButton]="false" [showCloseButton]="true" [isModal]="true" [autoOpen]="false"
              [position]="{ x: 90, y: 140 }" title="Login">
@@ -34,5 +32,3 @@
     </div>
   </jqxWindow>
 </div>
-<!--  </div>-->
-<!--</div>-->

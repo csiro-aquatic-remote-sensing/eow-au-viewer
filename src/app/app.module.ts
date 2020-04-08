@@ -6,7 +6,6 @@ import {HttpClientModule} from '@angular/common/http';
 import {Brolog} from 'brolog';
 import {brologLevel} from './globals';
 import { SidebarComponent } from './sidebar/sidebar.component';
-// import {MeasurementStore} from './sidebar/measurement-store';
 import EowDataGeometries from './eow-data-geometries';
 import {EowDataLayer} from './eow-data-layer';
 import {EowDataStruct} from './eow-data-struct';

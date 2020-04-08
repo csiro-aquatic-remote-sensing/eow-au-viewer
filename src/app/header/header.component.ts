@@ -1,10 +1,7 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {EowBaseService} from '../eow-base-service';
-import {Stats, StatsItemAmount} from '../stats/stats.base.service';
-import {BehaviorSubject} from 'rxjs';
 import {EowDataLayer} from '../eow-data-layer';
 import {HeaderStatsService} from '../stats/stats.header.service';
-import {MeasurementsComponent} from '../sidebar/measurements/measurements.component';
 import {MeasurementsService} from '../sidebar/measurements/measurements.service';
 import VectorSource from 'ol/source/Vector';
 import {EOWMap} from '../eow-map';
