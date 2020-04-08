@@ -1,4 +1,3 @@
-import {fromLonLat} from 'ol/proj';
 import Overlay from 'ol/Overlay';
 import OverlayPositioning from 'ol/OverlayPositioning';
 import Map from 'ol/Map';
@@ -7,8 +6,6 @@ import {Coords} from '../eow-data-struct';
 import Brolog from 'brolog';
 import {ApplicationLayers} from '../layers';
 import {EowBaseService} from '../eow-base-service';
-import {Subject} from 'rxjs';
-import {SideBarMessage} from '../types';
 import Feature from 'ol/Feature';
 
 const htmlElementId = 'waterbody';
@@ -85,7 +82,6 @@ export abstract class ChartContainer extends EowBaseService {
     this.htmlDocument.querySelector('#' + this.id).addEventListener('click', (event) => {
       console.log(`Clicked Chart with id: ${this.id} and run clickCallback()`);
       clickCallback();
-      // new TimeSeriesChartContainer(layerName, this.layers, this.log).init(this.htmlDocument, this.offSet(point, 1), map, idTime, validData).draw();
     });
 
   }

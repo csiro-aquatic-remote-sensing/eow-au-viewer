@@ -153,13 +153,7 @@ export class ApplicationLayers extends EowBaseService {
    * @param waterBodiesLayers class instance to update for the client
    */
   async createLayerFromGeoJSON(url, options: LayersSourceSetup, waterBodiesLayers: LayersInfoManager): Promise<BaseLayer> {
-    // return new Promise(async (resolve, reject) => {
     const createNewLayer = (layer?: Layer): Layer => {
-      // const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
-      // const response = await fetch(url);
-      // if (!response.ok) {
-      //   throw new Error(`createLayerFromWFSURL - Fetch Network response not ok for Name: "${name}", URL: ${url} - status: ${response.status}`);
-      // }
       const newLayer = new VectorLayer(Object.assign(options, {
         source: new VectorSource({
           url,
@@ -167,12 +161,7 @@ export class ApplicationLayers extends EowBaseService {
           // projection: 'EPSG:4326'
         })
       }));
-      // newLayer.set('name', name);
-      // const index = this.addLayer(newLayer, name);
-      // This waterBodiesLayers.addInfo() needs to be done here in the promise
       waterBodiesLayers.addInfo(name, 999, url, options);
-      // resolve(newLayer
-      // );
       return newLayer;
     };
     return this.createLayer(options, createNewLayer);
@@ -187,7 +176,6 @@ export class ApplicationLayers extends EowBaseService {
    * @param waterBodiesLayers class instance to update for the client
    */
   async createLayerFromWFS(urlForWFS, options: LayersSourceSetup, waterBodiesLayers: LayersInfoManager): Promise<BaseLayer> {
-    // return new Promise((resolve, reject) => {
     if (!options.layerOrFeatureName) {
       throw new Error('options.featureName expected');
     }
@@ -268,9 +256,6 @@ export class ApplicationLayers extends EowBaseService {
           })
         })
       }));
-      // newLayer.set('name', name);
-      // const index = this.addLayer(newLayer, name);
-      // This waterBodiesLayers.addInfo() needs to be done here in the promise
       const behaviourSubject = new BehaviorSubject<VectorSource>(vectorSource);
       waterBodiesLayers.addInfo(name, 99, urlForWFS, options, behaviourSubject);  // TODO I shouldn't need this now have rewritten layers.ts
       return newLayer;
@@ -286,7 +271,6 @@ export class ApplicationLayers extends EowBaseService {
    * @param waterBodiesLayers class instance to update for the client
    */
   async createLayerFromWMS(url, options: LayersSourceSetup, waterBodiesLayers: LayersInfoManager): Promise<BaseLayer> {
-    // return new Promise((resolve) => {
     const createNewLayer = (layer?: Layer): Layer => {
       options.opacity = options.opacity || 0.6;
       const newLayer = new TileLayer(Object.assign(options, {
@@ -297,10 +281,6 @@ export class ApplicationLayers extends EowBaseService {
           })
         })
       }));
-      // const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
-      // newLayer.set('name', name);
-      // this.addLayer(newLayer, name);
-      // resolve(newLayer);
       return newLayer;
     };
     return this.createLayer(options, createNewLayer);
@@ -314,12 +294,10 @@ export class ApplicationLayers extends EowBaseService {
    * @param waterBodiesLayers class instance to update for the client
    */
   async createLayerFromWFSFeatures(features: Feature[], options: LayersSourceSetup, waterBodiesLayers: LayersInfoManager): Promise<Layer> {
-    // return new Promise((resolve) => {
     const createNewLayer = (layer?: Layer): Layer => {
 
       const name = options.layerDisplayName ? options.layerDisplayName : options.layerOrFeatureName;
       let newLayer;
-      // if (existingLayerIndex > -1) {
       if (layer) {  // Because we allow this we set options.allowMergeThruSameLayerName to true
         const source: VectorSource = (layer as VectorLayer).getSource() as VectorSource;
         if (options.clear) {
@@ -336,11 +314,7 @@ export class ApplicationLayers extends EowBaseService {
           title: name,
           group: 'Features'
         }));
-        // newLayer.set('name', name);
-        // this.addLayer(newLayer, name);
-        // newLayer.get('name');
       }
-      // resolve(newLayer);
       return newLayer;
     };
     return this.createLayer(Object.assign(options, {allowMergeThruSameLayerName: true}), createNewLayer);

@@ -27,7 +27,6 @@ export class PieChartContainer extends ChartContainer {
   async drawChartOfType() {
     PieChart.drawD3(this.preparedData, '#' + this.id, this.map.getView().getZoom() * LOG2);
 
-    // this.setupEvents(this.id);
     await this.drawDebugLines(this.point, this.preparedData, this.layerName);
   }
 

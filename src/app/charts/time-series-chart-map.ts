@@ -91,7 +91,6 @@ export class TimeSeriesChartMap {
     const cArray = Object.keys(colors);
     return cArray.map(c => {
       const index = (parseInt(c, 10)) % cArray.length;
-      // console.log(`colors length: ${cArray.length}, c: ${c}, color index: ${index}`);
       return colors[index].replace(')', ` , ${opaqueness})`);
     });
   }

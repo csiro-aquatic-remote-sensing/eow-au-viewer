@@ -93,7 +93,6 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.subscriptions.forEach(s => s.unsubscribe());
     this.eowMap.destroy();
-    // this.popupObject.destroy();
     this.eowData.destroy();
     this.layers.destroy();
     this.eowLayers.destroy();

@@ -34,7 +34,6 @@ export class EOWMap extends EowBaseService {
     super.destroy();
   }
 
-  // popupObject: Popup) {
   init() {
     const mainMap = new TileLayer({
       source: new OSM(),
@@ -66,7 +65,6 @@ export class EOWMap extends EowBaseService {
 
     const layerSwitcher = new LayerSwitcher();
     this.map.addControl(layerSwitcher);
-    // layerSwitcher.showPanel();
 
     return this;
   }
@@ -94,7 +92,6 @@ export class EOWMap extends EowBaseService {
         this.sideBarService.timeSeriesRawData = features;
         await this.sideBarService.buildPieChartPreparedData(features);
         this.sideBarService.setupToDisplayCharts();
-        // popupObject.draw(features, coordinate);
       }
     });
   }
@@ -110,7 +107,6 @@ export class EOWMap extends EowBaseService {
   async getWaterBodiesInView(waterBodyLayer: LayersInfo): Promise<Feature[]> {
     return new Promise(resolve => {
       const format = new GeoJSON();
-      // this.mapObs.asObservable().subscribe(map => {
       if (this.map.getLayers().getLength() > waterBodyLayer.index) {
         if (waterBodyLayer.options.useAsWaterBodySource) {
           if (this.map.getLayers().getArray()[waterBodyLayer.index] instanceof VectorLayer) {

@@ -1,5 +1,3 @@
-/***** DEBUG *****/
-
 import {brologLevel, isDebugLevel} from './globals';
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import {Feature as turfFeature, FeatureCollection, Point} from '@turf/helpers';
@@ -8,7 +6,7 @@ import {WaterBodyFeatures} from './types';
 import Feature from 'ol/Feature';
 import {Brolog} from 'brolog';
 
-const log = Brolog.instance(brologLevel);  // InjectorInstance.get<Brolog>(Brolog);
+const log = Brolog.instance(brologLevel);
 
 export class Debug {
   static debug_printFirstEOWData(allDataSource) {

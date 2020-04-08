@@ -93,23 +93,6 @@ export class PieChart {
       .enter().append('g')
       .attr('transform', d => `translate(${arcInPie.centroid(d)})`);
 
-    // iconGroups.append('path')
-    //   .attr('class', 'icon')
-    //   .attr('d', d => iconPaths[d.data.key])
-    //   .attr('transform', d => `translate(-25, -32) scale(0.5)`);
-
-    // 6. Draw peripherals
-
-    // bounds.append('text')
-    //   .attr('class', 'title')
-    //   .text('2018 Weather')
-    //   .attr('transform', `translate(${dimensions.boundedWidth / 2}, ${dimensions.boundedHeight / 2})`);
-    //
-    // bounds.append('text')
-    //   .attr('class', 'title-small')
-    //   .text('New York City, CA')
-    //   .attr('transform', `translate(${dimensions.boundedWidth / 2}, ${dimensions.boundedHeight / 2 + 30})`);
-
     iconGroups.append('text')
       .text(d => d.data.name)
       .attr('class', 'label')
@@ -127,18 +110,7 @@ export class PieChart {
     const cArray = Object.keys(colors);
     return cArray.map(c => {
       const index = (parseInt(c, 10)) % cArray.length;
-      // console.log(`colors length: ${cArray.length}, c: ${c}, color index: ${index}`);
       return colors[index].replace(')', ` , ${opaqueness})`);
     });
-  }
-
-  /**
-   *  Draw the pie chart of FU values selected, but the printStats() where the Pie Chart exists is used in other places
-   *  The chart is placed into an element with an id.  And as we know you can only have one id (since we only want one graph).
-   *  Change the class to id in this one place.
-   * @param html that contains 'class="pieChart"'
-   */
-  static fixForThisPieChart(html: string) {
-    return html.replace('class="pieChart"', 'id="pieChart"');
   }
 }

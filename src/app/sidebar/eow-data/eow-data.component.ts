@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, Inject, Input, OnChanges, OnInit} from '@angular/core';
+import {Component, Inject, Input, OnChanges, OnInit} from '@angular/core';
 import Feature from 'ol/Feature';
 import moment = require('moment-timezone/moment-timezone');
 import colors from '../../colors.json';
@@ -26,9 +26,6 @@ interface EowDataComponentFormat {
   p_ph: number;
   p_conductivity: number;
 }
-
-const show = true;
-const hide = false;
 
 @Component({
   selector: 'app-eow-data',
@@ -94,7 +91,7 @@ export class EowDataComponent implements OnInit, OnChanges {
   }
 
   formatDate(d) {
-    return moment(d).format('MM/DD/YYYY hh:mm Z');
+    return moment(d).format('DD/MM/YYYY hh:mm Z');
   }
 
   formatNull(d) {

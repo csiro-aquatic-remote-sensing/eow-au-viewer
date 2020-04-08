@@ -32,7 +32,6 @@ export class StatsComponent implements OnChanges {
       PieChart.drawD3(this.pieChartPreparedData, this.pieChartParentSelector + ' span.pieChart', 8);
     }
     if (this.timeSeriesRawData) {
-      // I DON"T LIKE THIS HERE AS UNRELATED OR MOVE 'eow-timeline' to the .html
       new TimeSeriesChartHTML(this.htmlDocument, this.timeSeriesRawData).draw('eow-timeline');
     }
   }
