@@ -67,12 +67,22 @@ export class UserService extends EowBaseService {
     });
   }
 
+  /**
+   * This is called to initially load the users from the web service, and then to alter the list displayed after a user logs in, so as to
+   * put the logged in user at the top of the list.
+   * @param users
+   * @param n
+   * @param loginResponse
+   */
   buildUsersList(users, {n = 10, loginResponse = null}: { n?: number, loginResponse?: LoginResponse } = {}) {
     // Atleast temporarily filter so only users with photos show
     if (users) {
-      this._usersList = orderBy(users, ['photo_count', 'points'], ['desc', 'desc']).slice(0, n)
-        .filter(user => this.getUserById(user.id).photos.length > 0); // user => user.photo_count && user.photo_count > 0)
+      this._usersList = orderBy(users, ['photo_count', 'points'], ['desc', 'desc']).slice(0, n);
+        // .filter(user => this.getUserById(user.id).photos.length > 0); // user => user.photo_count && user.photo_count > 0)
 
+      /**
+       * If this is in response to a login, put the logged in user at the top of the list.
+       */
       if (loginResponse) {
         const loggedInUser = users.filter(u => u.nickname === loginResponse.profile.nickname);
         let userInExistingListIndex = null;

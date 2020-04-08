@@ -46,6 +46,7 @@
     "luxon": "^1.19.3",
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.28",
+    "ng2-tooltip-directive": "^2.9.20",
     "npm": "^6.14.1",
     "ol": "^6.0.1",
     "ol-layerswitcher": "^3.5.0",
