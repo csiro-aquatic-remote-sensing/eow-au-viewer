@@ -6,7 +6,6 @@ import {brologLevel} from './globals';
 import DurationConstructor = moment.unitOfTime.DurationConstructor;
 import Feature from 'ol/Feature';
 
-const theClass = 'EowDataStruct';
 const log = Brolog.instance(brologLevel);
 
 export type Coords = [number, number];
@@ -126,7 +125,7 @@ export class EowDataStruct {
     const eowData = Object.keys(arrayFUValuesObj).map(k => {
       return {name: k, y: eowDataFUValues[k]};
     });
-    log.silly(theClass, `EOWData: ${JSON.stringify(eowData)}`);
+    log.silly(EowDataStruct.name, `EOWData: ${JSON.stringify(eowData)}`);
     return eowData;
   }
 
@@ -207,7 +206,7 @@ export class EowDataStruct {
     const doubleUpSingleEntry = doubleUpSingleEntryFn(deDupe);
     const withOrdinal = addOrdinal(doubleUpSingleEntry);
 
-    log.verbose(theClass, `EOWData: ${JSON.stringify(withOrdinal)}`);
+    log.verbose(EowDataStruct.name, `EOWData: ${JSON.stringify(withOrdinal)}`);
     return withOrdinal;
   }
 

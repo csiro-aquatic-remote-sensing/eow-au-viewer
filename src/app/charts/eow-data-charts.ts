@@ -15,15 +15,11 @@ import {ApplicationLayers, redLines} from '../layers';
 import {EowDataStruct, EowWaterBodyIntersection, SourcePointMarginsType} from '../eow-data-struct';
 import {PieChartContainer} from './pie-chart-container';
 import {Injectable} from '@angular/core';
-import {Subject} from 'rxjs';
 import {EowBaseService} from '../eow-base-service';
-import {SideBarMessage} from '../types';
 import {forEachOf} from 'async-es';
 import {SidebarStatsService} from '../stats/stats.sidebar.service';
 import Feature from 'ol/Feature';
 import SideBarService from '../sidebar/sidebar.service';
-
-const theClass = `EOWDataCharts`;
 
 type Coords = [number, number];
 
@@ -83,7 +79,7 @@ export default class EowDataCharts extends EowBaseService {
         // If there is no EOWData points within the waterbody, the eowData field will be null
         const points: Coords[] = [];
         if (eowDataInWaterbody.eowData) {
-          this.log.silly(theClass + '.plot', `EowWaterBodyIntersection.waterBody: ${JSON.stringify(eowDataInWaterbody.eowData, null, 2)}`);
+          this.log.silly(this.constructor.name + '.plot', `EowWaterBodyIntersection.waterBody: ${JSON.stringify(eowDataInWaterbody.eowData, null, 2)}`);
           featureEach(eowDataInWaterbody.eowData, (feature: TurfFeature<Point>) => {
             if (feature.hasOwnProperty('geometry')) {
               points.push(feature.geometry.coordinates as Coords);
@@ -91,21 +87,21 @@ export default class EowDataCharts extends EowBaseService {
           });
           let centroid;
           if (points.length > 1) {
-            this.log.silly(theClass + '.plot', `EOWDatum points: ${JSON.stringify(points)}`);
+            this.log.silly(this.constructor.name + '.plot', `EOWDatum points: ${JSON.stringify(points)}`);
             const centroidData = await GeometryOps.calculateCentroidFromPoints(points);
             centroid = centroidData.geometry.coordinates;
           } else if (points.length === 1) {
             centroid = points[0];
           }
           if (centroid) {
-            this.log.verbose(theClass + '.plot', `Centroid: ${JSON.stringify(centroid)}`);
+            this.log.verbose(this.constructor.name + '.plot', `Centroid: ${JSON.stringify(centroid)}`);
             await this.drawCharts(eowDataInWaterbody.eowData, centroid, this.map, waterBodyIndex++, layerName);
           } else {
-            this.log.verbose(theClass + '.plot', 'No Centroid to draw at');
+            this.log.verbose(this.constructor.name + '.plot', 'No Centroid to draw at');
           }
         }
       });
-      this.log.verbose(theClass, `finished going through waterbodies`);
+      this.log.verbose(this.constructor.name, `finished going through waterbodies`);
       resolve();
     });
   }
@@ -132,7 +128,7 @@ export default class EowDataCharts extends EowBaseService {
     if (!this.chartMap.hasOwnProperty(uniqueChartIdForPosition)) {
       if (validData.length > 0 && point[0] && point[1] && !isNaN(point[0]) && !isNaN(point[1])) {
         const idPie = this.createId('pieChart-');
-        this.log.verbose(theClass, `Draw pieChart ${idPie} at ${JSON.stringify(point)}`);
+        this.log.verbose(this.constructor.name, `Draw pieChart ${idPie} at ${JSON.stringify(point)}`);
         const pie = new PieChartContainer(layerName, this.layers, this.log);
         pie.init(this.htmlDocument, point, map, idPie, validData);
         pie.draw(() => {
@@ -144,10 +140,10 @@ export default class EowDataCharts extends EowBaseService {
         });
         this.chartMap[uniqueChartIdForPosition] = true;
       } else {
-        this.log.verbose(theClass, `NOT Drawing pieChart at ${JSON.stringify(point)})} - data not valid or complete`);
+        this.log.verbose(this.constructor.name, `NOT Drawing pieChart at ${JSON.stringify(point)})} - data not valid or complete`);
       }
     } else {
-      this.log.verbose(theClass, `NOT Drawing pieChart at ${JSON.stringify(point)})} - chart already exists`);
+      this.log.verbose(this.constructor.name, `NOT Drawing pieChart at ${JSON.stringify(point)})} - chart already exists`);
     }
   }
 

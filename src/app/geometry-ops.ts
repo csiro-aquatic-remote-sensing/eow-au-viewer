@@ -1,4 +1,3 @@
-import LayerGeometries from './layers-geometries';
 import {
   Feature as TurfFeature,
   FeatureCollection,
@@ -6,7 +5,7 @@ import {
   Polygon,
   point as turfPoint,
   featureCollection,
-  featureCollection as turfFeatureCollection, Geometry
+  featureCollection as turfFeatureCollection
 } from '@turf/helpers';
 import centroid from '@turf/centroid';
 import pointsWithinPolygon from '@turf/points-within-polygon';
@@ -17,8 +16,7 @@ import {brologLevel} from './globals';
 import {GisOps} from './gis-ops';
 import {Debug} from './debug';
 
-const theClass = 'GeometryOps';
-const log = Brolog.instance(brologLevel);  // InjectorInstance.get<Brolog>(Brolog);
+const log = Brolog.instance(brologLevel);
 
 export default class GeometryOps {
   /**
@@ -81,9 +79,9 @@ export default class GeometryOps {
       const eowWaterBodyIntersections: EowWaterBodyIntersection[] = [];
       const pointsToUse = errorMarginPoints ? errorMarginPoints : eowDataGeometry;
 
-      log.info(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
+      log.info(GeometryOps.name, `GeometryOps / calculateIntersection for "${layerName}"`);
       const details = waterBodyPolygonsFeatures.length > 0 ? waterBodyPolygonsFeatures[0].geometry.coordinates[0][0] : 'no polygons';
-      log.verbose(theClass, `layerPolygons - there are: ${waterBodyPolygonsFeatures.length} - coords of first is: ${details}`);
+      log.verbose(GeometryOps.name, `layerPolygons - there are: ${waterBodyPolygonsFeatures.length} - coords of first is: ${details}`);
       for (const layerPolygon of waterBodyPolygonsFeatures) {
         // Find the EOWPoints that intersect the polygons in the waterbody layer
         const intersection: FeatureCollection<Point> = pointsWithinPolygon(pointsToUse, layerPolygon) as FeatureCollection<Point>;
@@ -93,7 +91,7 @@ export default class GeometryOps {
         eowWaterBodyIntersections.push(EowDataStruct.createEoWFormat(intersectionSourcePoints, layerPolygon));
         Debug.debugEowWaterBodyIntersections(eowWaterBodyIntersections, '-> calculateLayerIntersections');
       }
-      log.silly(theClass, `intersections: ${JSON.stringify(eowWaterBodyIntersections, null, 2)}`);
+      log.silly(GeometryOps.name, `intersections: ${JSON.stringify(eowWaterBodyIntersections, null, 2)}`);
       resolve(eowWaterBodyIntersections);
     });
   }
@@ -104,13 +102,12 @@ export default class GeometryOps {
     return new Promise<EowWaterBodyIntersection[]>(resolve => {
       const eowWaterBodyPoints: EowWaterBodyIntersection[] = [];
 
-      // log.verbose(theClass, `GeometryOps / calculateIntersection for "${layerName}"`);
       for (const layerPolygon of GisOps.createTurfFeatures(waterBodiesPolygons)) {
         const thePoints: TurfFeature<Point>[] = layerPolygon.geometry.coordinates[0].map(c => turfPoint(c));
         const theFeatureCollection = featureCollection(thePoints);
         eowWaterBodyPoints.push(EowDataStruct.createEoWFormat(theFeatureCollection, layerPolygon));
       }
-      log.silly(theClass, `convertLayerToDataForamt: ${JSON.stringify(eowWaterBodyPoints, null, 2)}`);
+      log.silly(GeometryOps.name, `convertLayerToDataForamt: ${JSON.stringify(eowWaterBodyPoints, null, 2)}`);
       resolve(eowWaterBodyPoints);
     });
   }

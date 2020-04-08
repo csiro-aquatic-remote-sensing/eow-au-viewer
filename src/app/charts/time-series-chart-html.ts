@@ -8,8 +8,11 @@ import {axisLeft, axisBottom} from 'd3-axis';
 import colors from '../colors.json';
 import Brolog from 'brolog';
 import Feature from 'ol/Feature';
+import {brologLevel} from '../globals';
 
 const opaqueness = 0.7;
+
+const log = Brolog.instance(brologLevel);
 
 export class TimeSeriesChartHTML {
   /**
@@ -20,7 +23,7 @@ export class TimeSeriesChartHTML {
    */
   readonly timeSeriesData: TimeSeriesItems;
 
-  constructor(private htmlDocument: Document, private data: Feature[], private log: Brolog) {
+  constructor(private htmlDocument: Document, private data: Feature[]) {
     this.timeSeriesData = EowDataStruct.prepareTimeSeriesChartData(data);
   }
 
@@ -34,7 +37,7 @@ export class TimeSeriesChartHTML {
   }
 
   draw(elementId: string) {
-    this.log.verbose(this.constructor.name, `time series chart - draw at ${elementId} - data length: ${this.timeSeriesData.length}`);
+    log.verbose(this.constructor.name, `time series chart - draw at ${elementId} - data length: ${this.timeSeriesData.length}`);
 
     const dateTimeFormat = '%Y-%m-%dT%H:%M:%SZ';
     const dateFormat = '%Y-%m-%d';
@@ -133,7 +136,7 @@ export class TimeSeriesChartHTML {
       .style('font-family', 'sans-serif')
       .text('FU over time');
 
-    this.timeSeriesData.forEach(d => this.log.verbose(this.constructor.name, `  date: ${dateTimeFormatter(xAccessor(d))}, fu: ${yAccessor(d)}`));
+    this.timeSeriesData.forEach(d => log.silly(this.constructor.name, `  date: ${dateTimeFormatter(xAccessor(d))}, fu: ${yAccessor(d)}`));
   }
 
   /**
