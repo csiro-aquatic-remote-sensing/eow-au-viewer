@@ -11,7 +11,6 @@ import {
 import debounce from 'lodash/debounce';
 
 import colors from './colors.json';
-import {UserStore} from './sidebar/user-store';
 // import {MeasurementStore} from './sidebar/measurement-store';
 import {BehaviorSubject, Subscription} from 'rxjs';
 import {EOWMap} from './eow-map';
@@ -144,13 +143,5 @@ export class EowDataLayer extends EowBaseService {
   }
 
   setupEventHandlers() {
-    // this.dataLayer.on('change', debounce(({target}) => {
-    //   // Populate datalayer
-    //   const element = this.htmlDocument.querySelector('.sub-header-stats') as HTMLElement;
-    //   element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), this.userStore);
-    // }, 200));
-
-
-    // this.allDataSource.on('change', this.measurementStore.initialLoadMeasurements.bind(this.measurementStore));
   }
 }

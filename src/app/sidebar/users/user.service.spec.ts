@@ -9,4 +9,8 @@ describe('UserService', () => {
     const service: UserService = TestBed.get(UserService);
     expect(service).toBeTruthy();
   });
+
+  it('should create an instance', () => {
+    expect(new UserService(null, null, null)).not.toBeUndefined();
+  });
 });
