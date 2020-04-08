@@ -57,7 +57,6 @@ export class UsersComponent extends EowBaseService implements OnInit, OnDestroy 
       this.clearSelectedUser();
       const element = (event.target as HTMLElement).closest('.item');
       const selectedUserId = element.getAttribute('data-user');
-      // console.log(`clicked on user-id: ${this.userStore.selectedUserId}`);
       if (this.measurementsService.showUserMeasurements(selectedUserId)) {
         console.log(`Clicked on user has measurements`);
       } else {
@@ -100,8 +99,6 @@ export class UsersComponent extends EowBaseService implements OnInit, OnDestroy 
   }
 
   private clearFilter() {
-    // this.userStore.clearSelectedUser();
-    // this.measurementStore.clearFilter();
     if (this.dataLayer && this.allDataSource) {
       this.map.getView().fit(this.dataLayer.getSource().getExtent(), {duration: 1300});
       if (this.allDataSource) {
@@ -110,9 +107,4 @@ export class UsersComponent extends EowBaseService implements OnInit, OnDestroy 
     }
     this.toggleFilterButton(false);
   }
-
-  // private toggleFilterButton(state = false) {
-  //   const element = this.htmlDocument.getElementById('clearFilterButton');
-  //   element.classList.toggle('hidden', !state);
-  // }
 }

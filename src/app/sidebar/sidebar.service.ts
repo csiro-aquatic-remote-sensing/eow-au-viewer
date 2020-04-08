@@ -1,23 +1,9 @@
 import {Inject, Injectable} from '@angular/core';
-import Map from 'ol/Map';
-
-// import {EowDataLayer} from '../eow-data-layer';
-// import {MeasurementStore} from './measurement-store';
-// import {UserStore} from './user-store';
-import {isDebugLevel} from '../globals';
 import Brolog from 'brolog';
-import {Coordinate} from 'ol/coordinate';
-import {AnimationOptions} from 'ol/View';
 import {DOCUMENT} from '@angular/common';
-import VectorLayer from 'ol/layer/Vector';
-import {EOWMap} from '../eow-map';
 import {Subject} from 'rxjs';
 import {SideBarMessage} from '../types';
 import {EowBaseService} from '../eow-base-service';
-import {TimeSeriesChartHTML} from '../charts/time-series-chart-html';
-import {UserStore} from './user-store';
-// import {MeasurementsService} from './measurements/measurements.service';
-import {UserService} from './users/user.service';
 import {EowDataStruct, PieItem} from '../eow-data-struct';
 import Feature from 'ol/Feature';
 
@@ -28,12 +14,9 @@ const hide = false;
 export default class SideBarService extends EowBaseService {
   private _pieChartPreparedData: PieItem[];
   private _timeSeriesRawData: Feature[];
-  // dataLayer: VectorLayer;
-  // map: Map;
   sideBarMessagingService: Subject<SideBarMessage>;
 
   constructor(private log: Brolog, @Inject(DOCUMENT) private htmlDocument: Document) {
-    // , private measurementStore: MeasurementStore, private userStore: UserStore
     super();
   }
 
@@ -43,32 +26,11 @@ export default class SideBarService extends EowBaseService {
 
   async init(sideBarMessagingService: Subject<SideBarMessage>): Promise<SideBarService> {
     this.sideBarMessagingService = sideBarMessagingService;
-    // this.measurementStore.init();
-    // await this.userStore.init();
 
     this.subscriptions.push(this.sideBarMessagingService.asObservable().subscribe(msg => {
       this.handleMessage(msg);
     }));
 
-    // this.subscriptions.push(this.eowData.dataLayerObs.subscribe(dataLayer => {
-    //   this.dataLayer = dataLayer;
-    // }));
-    //
-    // this.subscriptions.push(this.eowMap.getMap().subscribe(async map => {
-    //   this.map = map;
-    // }));
-
-    // this.subscriptions.push(this.eowData.allDataSourceObs.subscribe(allDataSource => {
-    //   if (allDataSource) {
-    //     // this.measurementStore.initialLoadMeasurements(this.userStore, allDataSource);
-    //     // allDataSource.un('change', this.measurementStore.initialLoadMeasurements.bind(this, this.userStore, allDataSource));
-    //
-    //     // Debug
-    //     allDataSource.on('change', this.debug_compareUsersNMeasurements.bind(this, allDataSource));
-    //
-    //     this.setupEventHandlers(allDataSource);
-    //   }
-    // }));
     this.setupEventHandlers();
 
     return this;
@@ -174,41 +136,6 @@ export default class SideBarService extends EowBaseService {
   }
 
   private setupEventHandlers() {
-    // Measurement List
-    // this.htmlDocument.querySelector('.measurement-list').addEventListener('click', (event) => {
-    //   const element = (event.target as HTMLElement).closest('.item');
-    //   if (!element) {
-    //     return;
-    //   }
-    //
-    //   const coordinate = element.getAttribute('data-coordinate').split(',').map(c => parseFloat(c)) as Coordinate;
-    //   console.log(`Clicked on Measurement List - coord: ${coordinate}`)
-    //   const view = this.map.getView();
-    //   view.cancelAnimations();
-    //   view.animate({
-    //     center: coordinate,
-    //     zoom: 14,
-    //     duration: 1300
-    //   } as AnimationOptions);
-    // }, true);
-
-    // User List
-    // this.htmlDocument.querySelector('.user-list').addEventListener('click', (event) => {
-    //   const element = (event.target as HTMLElement).closest('.item');
-    //   const selectedUserId = element.getAttribute('data-user');
-    //   // console.log(`clicked on user-id: ${this.userStore.selectedUserId}`);
-    //   if (false) { // this.measurementStore.showMeasurements(selectedUserId)) {
-    //     // this.userStore.clearSelectedUser();
-    //     // this.userStore.selectedUserId = selectedUserId;
-    //     element.classList.add('selectedUser', 'box-shadow');
-    //     this.toggleFilterButton(true);
-    //   }
-    // }, true);
-
-    // this.htmlDocument.getElementById('clearFilterButton').addEventListener('click', (event) => {
-    //   this.clearFilter(allDataSource);
-    // });
-
     this.htmlDocument.getElementById('eow-timeline').addEventListener('click', (event: Event) => {
       const element = (event.target as HTMLElement);
       if (element.matches('.close')) {
@@ -216,23 +143,6 @@ export default class SideBarService extends EowBaseService {
       }
     });
   }
-
-  // private clearFilter(allDataSource) {
-  //   // this.userStore.clearSelectedUser();
-  //   // this.measurementStore.clearFilter();
-  //   if (this.dataLayer) {
-  //     this.map.getView().fit(this.dataLayer.getSource().getExtent(), {duration: 1300});
-  //     if (allDataSource) {
-  //       this.dataLayer.setSource(allDataSource);
-  //     }
-  //   }
-  //   this.toggleFilterButton(false);
-  // }
-  //
-  // private toggleFilterButton(state = false) {
-  //   const element = this.htmlDocument.getElementById('clearFilterButton');
-  //   element.classList.toggle('hidden', !state);
-  // }
 
   // If I need this again it will need to be moved to somewhere else to avoid circular dependency
   // private debug_compareUsersNMeasurements(allDataSource) {

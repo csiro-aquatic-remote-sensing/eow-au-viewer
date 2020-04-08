@@ -1,11 +1,9 @@
 import { TestBed, async } from '@angular/core/testing';
 import { AppComponent } from './app.component';
-import {HttpClientModule} from '@angular/common/http';
 import {HttpClientTestingModule} from '@angular/common/http/testing';
 import Brolog from 'brolog';
 import {SidebarComponent} from './sidebar/sidebar.component';
 import {EOWMap} from './eow-map';
-import {UserStore} from './sidebar/user-store';
 import {EowDataLayer} from './eow-data-layer';
 import {ApplicationLayers} from './layers';
 import {EowLayers} from './eow-layers';
@@ -13,9 +11,9 @@ import EowDataGeometries from './eow-data-geometries';
 import LayerGeometries from './layers-geometries';
 import EowDataCharts from './charts/eow-data-charts';
 import SideBarService from './sidebar/sidebar.service';
-// import {MeasurementStoreXXXX} from './sidebar/measurement-store';
 import {HeaderComponent} from './header/header.component';
 import {StatsComponent} from './stats/stats.component';
+import {UserService} from './sidebar/users/user.service';
 
 describe('AppComponent', () => {
   beforeEach(async(() => {
@@ -24,7 +22,7 @@ describe('AppComponent', () => {
         AppComponent, SidebarComponent, HeaderComponent, StatsComponent
       ],
       imports: [HttpClientTestingModule],
-      providers: [Brolog, EOWMap, UserStore, EowDataLayer, ApplicationLayers, EowLayers, EowDataGeometries, LayerGeometries,
+      providers: [Brolog, EOWMap, UserService, EowDataLayer, ApplicationLayers, EowLayers, EowDataGeometries, LayerGeometries,
         EowDataCharts, SideBarService]
     }).compileComponents();
   }));

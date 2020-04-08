@@ -6,11 +6,11 @@ import keyBy from 'lodash/keyBy';
 import groupBy from 'lodash/groupBy';
 import orderBy from 'lodash/orderBy';
 import {DateTime} from 'luxon';
-import {UserStore} from '../user-store';
 import {Coords} from '../../eow-data-struct';
 import {EowBaseService} from '../../eow-base-service';
 import {EowDataLayer} from '../../eow-data-layer';
 import Brolog from 'brolog';
+import {UserService} from '../users/user.service';
 
 let performOnce = true;
 
@@ -61,7 +61,6 @@ export class MeasurementsService extends EowBaseService {
           this.initialMeasurements = this._measurements.slice(0);  // duplicate
         }
         this.initialLoadMeasurements(allDataSource.getFeatures());
-        // this.setupEventHandling();  // this.userStore);
       }
     }));
     this.subscriptions.push(this.eowData.dataLayerObs.subscribe(dataLayer => {
@@ -123,7 +122,7 @@ export class MeasurementsService extends EowBaseService {
    * Succinct summary of measurements data for debugging and also a field showing if the referenced user exists
    * @param byOwner: true or byId if false
    */
-  measurementSummary(byOwner: boolean, userStore: UserStore) {
+  measurementSummary(byOwner: boolean, userService: UserService) {
     const measurementsByOwnerOrId = byOwner ? this.measurementsByOwner : this.measurementsById;
     const ids = Object.keys(measurementsByOwnerOrId);
     const results = {};
@@ -133,7 +132,7 @@ export class MeasurementsService extends EowBaseService {
           return {
             // n_code: m.get('n_code'),
             user_n_code: m.get('user_n_code'),
-            user_exists: userStore.userExists(m.get('user_n_code')),
+            user_exists: userService.userExists(m.get('user_n_code')),
             image: m.get('image')
           };
         });
@@ -141,7 +140,7 @@ export class MeasurementsService extends EowBaseService {
         results[k] = {
           // n_code: measurementsByOwnerOrId[k].get('n_code'),
           user_n_code: measurementsByOwnerOrId[k].get('user_n_code'),
-          user_exists: userStore.userExists(measurementsByOwnerOrId[k].get('user_n_code')),
+          user_exists: userService.userExists(measurementsByOwnerOrId[k].get('user_n_code')),
           image: measurementsByOwnerOrId[k].get('image')
         };
       }
@@ -152,15 +151,15 @@ export class MeasurementsService extends EowBaseService {
   /**
    * Debug information showing the users with measurements, if they exist in the Users Store and how many measurments they have.
    *
-   * @param userStore to do the lookup
+   * @param userService to do the lookup
    */
-  numberMeasurmentsPerUser(userStore: UserStore) {
+  numberMeasurmentsPerUser(userService: UserService) {
     const ids = Object.keys(this.measurementsByOwner);
     const results = {};
     ids.forEach(k => {
       results[k] = {
         // user_n_code: [k],
-        user_exists: userStore.userExists(k),
+        user_exists: userService.userExists(k),
         number_measurements: this.measurementsByOwner[k].length
       };
     });

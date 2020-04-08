@@ -7,7 +7,6 @@ import {Brolog} from 'brolog';
 import {brologLevel} from './globals';
 import { SidebarComponent } from './sidebar/sidebar.component';
 // import {MeasurementStore} from './sidebar/measurement-store';
-import {UserStore} from './sidebar/user-store';
 import EowDataGeometries from './eow-data-geometries';
 import {EowDataLayer} from './eow-data-layer';
 import {EowDataStruct} from './eow-data-struct';
@@ -30,6 +29,7 @@ import {SidebarStatsService} from './stats/stats.sidebar.service';
 import {HeaderStatsService} from './stats/stats.header.service';
 import { EowDataComponent } from './sidebar/eow-data/eow-data.component';
 import {LoginService} from './header/login/login.service';
+import { TooltipModule } from 'ng2-tooltip-directive';
 
 @NgModule({
   declarations: [
@@ -43,7 +43,7 @@ import {LoginService} from './header/login/login.service';
     EowDataComponent
   ],
   imports: [
-    BrowserModule, HttpClientModule, jqxButtonModule, jqxWindowModule, jqxCheckBoxModule, jqxTabsModule
+    BrowserModule, HttpClientModule, jqxButtonModule, jqxWindowModule, jqxCheckBoxModule, jqxTabsModule, TooltipModule
   ],
   providers: [
     {
@@ -51,7 +51,7 @@ import {LoginService} from './header/login/login.service';
       // 'silent' | 'error' | 'warn' | 'info' | 'verbose' | 'silly'
       useFactory: function brologFactory() { return Brolog.instance(brologLevel); },
     },
-    UserStore, EowDataGeometries, EowDataLayer, EowDataStruct, EowDataLayer, EowDataCharts, EOWMap,
+    EowDataGeometries, EowDataLayer, EowDataStruct, EowDataLayer, EowDataCharts, EOWMap,
     EowLayers, ApplicationLayers, LayerGeometries, SideBarService, SidebarStatsService, HeaderStatsService, LoginService
   ],
   bootstrap: [AppComponent]
