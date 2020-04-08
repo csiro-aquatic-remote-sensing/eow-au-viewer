@@ -1,14 +1,11 @@
 import colors from '../colors.json';
-import {
-  Brolog,
-} from 'brolog';
-import {select, selectAll} from 'd3-selection';
+import {Brolog} from 'brolog';
+import {selectAll} from 'd3-selection';
 import {pie, arc} from 'd3-shape';
 import {PieItem, PieItems} from '../eow-data-struct';
 import {brologLevel} from '../globals';
 
 const log = Brolog.instance(brologLevel);  // InjectorInstance.get<Brolog>(Brolog);
-const theClass = 'PieChart';
 
 const widthFactor = 9;
 const pieWidth = 1.0;
@@ -33,7 +30,7 @@ export class PieChart {
 
     // 2. Create chart dimensions
 
-    log.silly(theClass, `${JSON.stringify(preparedChartData, null, 2)}`);
+    log.silly(this.constructor.name, `${JSON.stringify(preparedChartData, null, 2)}`);
     const dimensions = {
       width,
       height: width,

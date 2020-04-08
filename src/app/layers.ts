@@ -3,19 +3,16 @@ import {Style, Fill} from 'ol/style';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
-import WFS from 'ol/format/WFS';
 import Map from 'ol/Map';
 import TileLayer from 'ol/layer/Tile';
 import {Brolog} from 'brolog';
 import IconAnchorUnits from 'ol/style/IconAnchorUnits';
 import {EOWMap} from './eow-map';
-import {BehaviorSubject, Subscription} from 'rxjs';
+import {BehaviorSubject} from 'rxjs';
 import Feature from 'ol/Feature';
 import Stroke from 'ol/style/Stroke';
 import {bbox as bboxStrategy} from 'ol/loadingstrategy';
 import {LayersInfoManager, LayersSourceSetup} from './eow-layers';
-import LayerSwitcher from 'ol-layerswitcher';
-import {Group} from 'ol/layer';
 import Layer from 'ol/layer/Layer';
 import BaseLayer from 'ol/layer/Base';
 import Collection from 'ol/Collection';
@@ -24,7 +21,6 @@ import Icon from 'ol/style/Icon';
 import {Injectable} from '@angular/core';
 import {EowBaseService} from './eow-base-service';
 
-const theClass = 'Layers';
 const lookInGroups = true;
 
 export const iconStyle = new Style({
@@ -213,7 +209,7 @@ export class ApplicationLayers extends EowBaseService {
         const theQuery = buildQuery({extent, resolution, projection});
         const bboxOrQuery = theQuery ? `&cql_filter=${theQuery}%20AND%20${queryBBox}` : normalBBox;
         if (theQuery) {
-          this.log.verbose(theClass, `Dynamic query: ${theQuery}`);
+          this.log.verbose(this.constructor.name, `Dynamic query: ${theQuery}`);
         }
         return bboxOrQuery;
       };
@@ -247,7 +243,7 @@ export class ApplicationLayers extends EowBaseService {
               // will be created in the VectorLayer code below.
               const existingWaterBodiesLayer = waterBodiesLayers.getLayerInfo(name);
               if (existingWaterBodiesLayer) {
-                this.log.verbose(this.constructor.name, `observable on waterbodies vector source - features#: ${vectorSource.getFeatures().length}`)
+                this.log.verbose(this.constructor.name, `observable on waterbodies vector source - features#: ${vectorSource.getFeatures().length}`);
                 existingWaterBodiesLayer.observable.next(vectorSource);
               }
             } else {

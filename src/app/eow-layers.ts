@@ -7,8 +7,6 @@ import { debounce } from 'rxjs/operators';
 import {Injectable} from '@angular/core';
 import {EowBaseService} from './eow-base-service';
 
-const theClass = 'Layers';
-
 export interface LayersSourceSetup {
   /**
    * If to create this layer.  More for debug purposes.
@@ -203,16 +201,4 @@ export class EowLayers extends EowBaseService {
       layerPromises.push(this.layers.createLayerFromWMS(url, options, this.waterBodiesLayers));
     }
   }
-
-  /**
-   * LayerInfo has a field 'index' that needs to come from Layers.layerNames, which is a mapping from layer name to index in Maps layers array
-   */
-  // private getLayerIndex(layerInfo: LayersSourceSetup) {
-  //   const layerName = layerInfo.layerDisplayName || layerInfo.layerOrFeatureName;
-  //   if (this.layers.layerNames.hasOwnProperty(layerName)) {
-  //     return this.layers.layerNames.getName(layerName);
-  //   } else {
-  //     throw new Error(`layers.layerNames doesnt have layer with name: ${layerName}`);
-  //   }
-  // }
 }

@@ -1,16 +1,8 @@
-import {
-  Brolog,
-} from 'brolog';
 import { select } from 'd3-selection';
 import { scaleTime } from 'd3-scale';
 import { extent } from 'd3-array';
 import colors from '../colors.json';
 import {TimeSeriesItem, TimeSeriesItems} from '../eow-data-struct';
-import {brologLevel} from '../globals';
-
-const log = Brolog.instance(brologLevel);  // InjectorInstance.get<Brolog>(Brolog);
-
-const theClass = 'TimeSeriesChartMap';
 
 const widthFactor = 10;
 const pieWidth = 1.0;

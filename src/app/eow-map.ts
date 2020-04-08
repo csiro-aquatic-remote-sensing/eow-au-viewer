@@ -1,7 +1,7 @@
 import Map from 'ol/Map';
 import GeoJSON from 'ol/format/GeoJSON';
 import Feature from 'ol/Feature';
-import {BehaviorSubject, Subject, Subscription} from 'rxjs';
+import {BehaviorSubject} from 'rxjs';
 import Brolog from 'brolog';
 import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
@@ -16,7 +16,6 @@ import SideBarService from './sidebar/sidebar.service';
 import {EowBaseService} from './eow-base-service';
 import {SidebarStatsService} from './stats/stats.sidebar.service';
 
-const theClass = 'EOWMap';
 const defaultCoord = [133.945313, -26.431228];
 const canberra = [149.130005, -35.280937];
 const theZoom = 12;
@@ -90,7 +89,7 @@ export class EOWMap extends EowBaseService {
       });
 
       if (features.length) {
-        this.log.verbose(theClass, `Clicked on map at: ${JSON.stringify(coordinate)}  - fix the call to display Popup (do through sidebar)`);
+        this.log.verbose(this.constructor.name, `Clicked on map at: ${JSON.stringify(coordinate)}  - fix the call to display Popup (do through sidebar)`);
         this.sidebarStatsService.calculateStats(features);
         this.sideBarService.timeSeriesRawData = features;
         await this.sideBarService.buildPieChartPreparedData(features);

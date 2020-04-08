@@ -8,9 +8,9 @@ import {
   multiPolygon, point as turfPoint, Point,
   polygon,
   Polygon,
-  Feature as TurfFeature, lineString as turfLineString
+  Feature as TurfFeature
 } from '@turf/helpers';
-import {Feature as GeoJsonFeature, Polygon as GeoJSONPolygon} from '@turf/helpers/lib/geojson';
+import {Feature as GeoJsonFeature} from '@turf/helpers/lib/geojson';
 import bbox from '@turf/bbox';
 import {featureEach} from '@turf/meta';
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
@@ -19,7 +19,7 @@ import {brologLevel} from './globals';
 import Brolog from 'brolog';
 import bboxClip from '@turf/bbox-clip';
 import {EowDataStruct, PointsMap} from './eow-data-struct';
-import {fillStyle, ApplicationLayers, redLines} from './layers';
+import {ApplicationLayers} from './layers';
 import GeoJSON from 'ol/format/GeoJSON';
 import {Style} from 'ol/style';
 import Stroke from 'ol/style/Stroke';
@@ -28,7 +28,6 @@ import clustersKmeans from '@turf/clusters-kmeans';
 import {clusterEach} from '@turf/clusters';
 import {Md5} from 'ts-md5/dist/md5';
 
-const theClass = 'GisOps';
 const log = Brolog.instance(brologLevel);
 
 export class GisOps {
@@ -88,7 +87,7 @@ export class GisOps {
       const polygonObj = lineToPolygon(turfLine);
       dataDestination.push(polygonObj);
     } else {
-      log.verbose(theClass, `Turfline has < 3 coords: ${turfLine.geometry.coordinates.length} - `
+      log.verbose(GisOps.name, `Turfline has < 3 coords: ${turfLine.geometry.coordinates.length} - `
         + `${JSON.stringify(turfLine.geometry.coordinates)}`);
     }
   }
@@ -97,7 +96,7 @@ export class GisOps {
     const coordinates = simpleGeometry.getCoordinates();
     const turfLine = multiLineString(coordinates.filter(c => c.length > 2));
     turfLine.geometry.coordinates.forEach(c => {
-      log.silly(theClass, `convertMultilineString - size of arrays: ${c.length} -> ${JSON.stringify(c)}`);
+      log.silly(GisOps.name, `convertMultilineString - size of arrays: ${c.length} -> ${JSON.stringify(c)}`);
     });
     const polygonObj = lineToPolygon(turfLine);
     dataDestination.push(polygonObj);
@@ -195,11 +194,11 @@ export class GisOps {
           // Only add a water body once despite possible multiple clusters covering any water body
           const geomSha3 = GisOps.buildGeometryChecksum(f.geometry.coordinates);
           if (!seenPolygons.hasOwnProperty(geomSha3)) {
-            log.silly(theClass, `cluster filter - polygon not seen: ${geomSha3}`);
+            log.silly(GisOps.name, `cluster filter - polygon not seen: ${geomSha3}`);
             features.push(f);
             seenPolygons[geomSha3] = true;
           } else {
-            log.silly(theClass, `cluster filter - seen polygon: ${geomSha3}`);
+            log.silly(GisOps.name, `cluster filter - seen polygon: ${geomSha3}`);
           }
         } else {
           console.log(`cluster filter - coords <=0`);

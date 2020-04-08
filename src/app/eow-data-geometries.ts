@@ -1,4 +1,3 @@
-import GeoJSON from 'ol/format/GeoJSON';
 import {
   Feature, featureCollection,
   FeatureCollection,
@@ -6,22 +5,17 @@ import {
   point as turfPoint,
   Point, Polygon
 } from '@turf/helpers';
-import {
-  Brolog,
-} from 'brolog';
+import {Brolog} from 'brolog';
 import SimpleGeometry from 'ol/geom/SimpleGeometry';
-import {BehaviorSubject, interval, Subscription} from 'rxjs';
+import {BehaviorSubject, interval} from 'rxjs';
 import {featureEach} from '@turf/meta';
 import circle from '@turf/circle';
 import {EowDataStruct, PointsMap, SourcePointMarginsType} from './eow-data-struct';
-import {LayersInfo} from './eow-layers';
 import {EowDataLayer} from './eow-data-layer';
 import VectorSource from 'ol/source/Vector';
 import {debounce} from 'rxjs/operators';
 import {Injectable} from '@angular/core';
 import {EowBaseService} from './eow-base-service';
-
-const theClass = 'EowDataGeometries';
 
 /**
  * We need to determine the Waterbodies (defined through various other layers) and the contained EOW Data so we can perform actions on
@@ -119,7 +113,7 @@ export default class EowDataGeometries extends EowBaseService {
       const points = turfFeatureCollection(features);
       if (points.features.length !== this.pointsNumber) {
         this.points = points;
-        this.log.verbose(theClass, `update pointsObs - items#: ${this.points.features.length}`);
+        this.log.verbose(this.constructor.name, `update pointsObs - items#: ${this.points.features.length}`);
         this.pointsNumber = this.points.features.length;
         this._pointsObs.next(this.points);
       }
@@ -161,14 +155,14 @@ export default class EowDataGeometries extends EowBaseService {
 
         if (errorMarginPoints.length !== this.pointsErrorMarginNumber) {
           this.pointsErrorMargin = errorMarginPoints;
-          this.log.verbose(theClass, `update pointsErrorMarginObs - items#: ${errorMarginPoints.length}`);
+          this.log.verbose(this.constructor.name, `update pointsErrorMarginObs - items#: ${errorMarginPoints.length}`);
           this.pointsErrorMarginNumber = errorMarginPoints.length;
           this._pointsErrorMarginObs.next(errorMarginPoints);
         }
 
         if (allPoints.features.length !== this.allPointsNumber) {
           this.allPoints = allPoints;
-          this.log.verbose(theClass, `update allPointsObs - items#: ${allPoints.features.length}`);
+          this.log.verbose(this.constructor.name, `update allPointsObs - items#: ${allPoints.features.length}`);
           this.allPointsNumber = allPoints.features.length;
           this._allPointsObs.next(allPoints);
         }
@@ -199,7 +193,7 @@ export default class EowDataGeometries extends EowBaseService {
         });
 
         if (Object.keys(pointsMap).length !== this.pointsErrorMarginNumber) {
-          this.log.verbose(theClass, `update allPointsMapObs - items#: ${Object.keys(pointsMap).length}`);
+          this.log.verbose(this.constructor.name, `update allPointsMapObs - items#: ${Object.keys(pointsMap).length}`);
           this.pointsErrorMarginNumber = Object.keys(pointsMap).length;
           this._allPointsMapObs.next(pointsMap);
         }

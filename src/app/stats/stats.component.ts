@@ -12,7 +12,7 @@ import Brolog from 'brolog';
   templateUrl: './stats.component.html',
   styleUrls: ['./stats.component.css']
 })
-export class StatsComponent implements OnChanges { // extends EowBaseService implements OnInit {
+export class StatsComponent implements OnChanges {
   @Input() stats: Stats;
   @Input() pieChartPreparedData: PieItem[]; // Todo - move to raw Feature[]
   @Input() timeSeriesRawData: Feature[];
@@ -23,7 +23,7 @@ export class StatsComponent implements OnChanges { // extends EowBaseService imp
    */
   @Input() pieChartParentSelector: string;
 
-  constructor(@Inject(DOCUMENT) private htmlDocument: Document, private log: Brolog) { // TODO - I DON'T NEED TO PASS LOG AROUND
+  constructor(@Inject(DOCUMENT) private htmlDocument: Document) {
   }
 
   ngOnChanges() {
@@ -33,11 +33,11 @@ export class StatsComponent implements OnChanges { // extends EowBaseService imp
     }
     if (this.timeSeriesRawData) {
       // I DON"T LIKE THIS HERE AS UNRELATED OR MOVE 'eow-timeline' to the .html
-      new TimeSeriesChartHTML(this.htmlDocument, this.timeSeriesRawData, this.log).draw('eow-timeline');
+      new TimeSeriesChartHTML(this.htmlDocument, this.timeSeriesRawData).draw('eow-timeline');
     }
   }
 
-  setupEventHandlers() { // measurementStore: MeasurementStore) {
+  setupEventHandlers() {
   }
 
   getStatsItemAmountItem(statsItemAmount: StatsItemAmount) {

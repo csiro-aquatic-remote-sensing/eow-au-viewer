@@ -1,16 +1,12 @@
 import {Component, Inject, Input, OnDestroy, OnInit, Output} from '@angular/core';
 import {EowBaseService} from '../../eow-base-service';
 import {DOCUMENT} from '@angular/common';
-import Brolog from 'brolog';
-import orderBy from 'lodash/orderBy';
-
 import {EowDataLayer} from '../../eow-data-layer';
 import {UserService, UserType} from './user.service';
 import {MeasurementsService} from '../measurements/measurements.service';
 import VectorLayer from 'ol/layer/Vector';
 import {EOWMap} from '../../eow-map';
 import Map from 'ol/Map';
-import {BehaviorSubject} from 'rxjs';
 import VectorSource from 'ol/source/Vector';
 
 @Component({

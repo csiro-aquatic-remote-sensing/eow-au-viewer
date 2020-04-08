@@ -11,25 +11,19 @@ import {Brolog} from 'brolog';
 import {EOWMap} from './eow-map';
 import {EowLayers, LayersInfo} from './eow-layers';
 import {EowWaterBodyIntersection, PointsMap, SourcePointMarginsType} from './eow-data-struct';
-import {FeatureCollection, Feature as turfFeature, Point, Polygon} from '@turf/helpers';
+import {FeatureCollection, Point, Polygon} from '@turf/helpers';
 import EowDataCharts from './charts/eow-data-charts';
-import SimpleGeometry from 'ol/geom/SimpleGeometry';
 import Map from 'ol/Map';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
-import {combineLatest, Subject, Subscription} from 'rxjs';
+import {combineLatest, Subscription} from 'rxjs';
 import moment from 'moment';
 import {GisOps} from './gis-ops';
-import {isDebugLevel} from './globals';
 import SideBarService from './sidebar/sidebar.service';
-import {SideBarMessage, WaterBodyFeatures} from './types';
-import {jqxWindowComponent} from 'jqwidgets-framework/jqwidgets-ng/jqxwindow';
 import {SidebarStatsService} from './stats/stats.sidebar.service';
 import {HeaderStatsService} from './stats/stats.header.service';
 import {Debug} from './debug';
-// import {HeaderStatsService} from './stats/stats.header.service';
-
-const theClass = 'AppComponent';
+import {WaterBodyFeatures} from './types';
 
 // TODO - split this up!
 @Component({
@@ -119,7 +113,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.eowDataGeometries.getPointsErrorMargin(),
     ]);
     this.subscriptions.push(uberObserver.subscribe(async (value) => {
-      this.log.verbose(theClass, `uberObserver - value length: ${value.filter(v => v !== null).length}`);
+      this.log.verbose(this.constructor.name, `uberObserver - value length: ${value.filter(v => v !== null).length}`);
       const [points, allPoints, allPointsMap, errorMarginPoints] = value;
       if (points && allPoints && allPointsMap && errorMarginPoints) {
         handlePointsObserver(points);
@@ -128,7 +122,7 @@ export class AppComponent implements OnInit, OnDestroy {
         handleErrorMarginPoints(errorMarginPoints);
 
         if (this.ready()) {
-          this.log.verbose(theClass, 'userObserver subcribe complete - call main loop now');
+          this.log.verbose(this.constructor.name, 'userObserver subcribe complete - call main loop now');
           await this.calculateIntersectionsPlot();
         }
       }
@@ -155,24 +149,24 @@ export class AppComponent implements OnInit, OnDestroy {
       this.points = points;
       this.newPoints = true;
       const pointsLength = this.points ? this.points.features.length : 'null';
-      this.log.verbose(theClass, `  pointsObs subscription updated - points#: ${pointsLength}`);
+      this.log.verbose(this.constructor.name, `  pointsObs subscription updated - points#: ${pointsLength}`);
     };
 
     const handleAllPointsObserver = (allPoints: FeatureCollection<Point>) => {
       this.sourceNErrorMarginPoints = allPoints;
       const theSourceNErrorMarginPointsLength = this.sourceNErrorMarginPoints ? this.sourceNErrorMarginPoints.features.length : 'null';
-      this.log.verbose(theClass, `  sourceNErrorMarginPoints subscription updated - points#: ${theSourceNErrorMarginPointsLength}`);
+      this.log.verbose(this.constructor.name, `  sourceNErrorMarginPoints subscription updated - points#: ${theSourceNErrorMarginPointsLength}`);
     };
 
     const handlePointsMapObserver = (allPointsMap: PointsMap) => {
       this.allPointsMap = allPointsMap;
       const theAllPointsMapObsLength = this.allPointsMap ? Object.keys(this.allPointsMap).length : 'null';
-      this.log.verbose(theClass, `  allPointsMap subscription updated - points#: ${theAllPointsMapObsLength}`);
+      this.log.verbose(this.constructor.name, `  allPointsMap subscription updated - points#: ${theAllPointsMapObsLength}`);
     };
 
     const handleErrorMarginPoints = (pointsErrorMargins: SourcePointMarginsType[]) => {
       this.pointsErrorMargins = pointsErrorMargins;
-      this.log.verbose(theClass, `  pointsErrorMargins subscription updated - points#: ${pointsErrorMargins.length}`);
+      this.log.verbose(this.constructor.name, `  pointsErrorMargins subscription updated - points#: ${pointsErrorMargins.length}`);
     };
   }
 
@@ -199,33 +193,31 @@ export class AppComponent implements OnInit, OnDestroy {
 
     if (this.ready()) {
       const theFeatures = givenWaterBodyFeatures ? givenWaterBodyFeatures : this.waterBodyFeatures;   // choose argument or global data
-      this.log.verbose(theClass, `Resolution: ${this.map.getView().getResolution()} - ${dateStart.format(`HH:mm:ss.sss`)}`);
-      // Maybe debug, maybe not.  Don't perform calculations when zoomed out too far
+      this.log.verbose(this.constructor.name, `Resolution: ${this.map.getView().getResolution()} - ${dateStart.format(`HH:mm:ss.sss`)}`);
+      // Maybe debug, this.constructor.name not.  Don't perform calculations when zoomed out too far
       if (this.map.getView().getZoom() >= 7) {
         console.log(`zoom: ${this.map.getView().getZoom()}`);
-        this.log.silly(theClass, `  *** -> calculateIntersectionsPlot loop -`);
-        this.log.silly(theClass, `    points#: ${this.points.features.length}, allPointsMap#: ${Object.keys(this.allPointsMap).length}, `
+        this.log.silly(this.constructor.name, `  *** -> calculateIntersectionsPlot loop -`);
+        this.log.silly(this.constructor.name, `    points#: ${this.points.features.length}, allPointsMap#: ${Object.keys(this.allPointsMap).length}, `
           + `sourceNErrorMarginPoints#: ${this.sourceNErrorMarginPoints.features.length}, waterBodyLayers#: ${this.waterBodiesLayers.length}`);
         for (const waterBodyLayerName of Object.keys(theFeatures)) {
           // Get the features in the view
           const waterBodyFeatures: Feature[] = theFeatures[waterBodyLayerName];
           // const clippedFeatures = bboxClip(waterBodyFeatures, this.map.getView().calculateExtent(this.map.getSize()));
-          this.log.verbose(theClass, `     waterBodyLayer loop for: ${waterBodyLayerName} - # Features in View unfiltered: ${waterBodyFeatures.length}`);
+          this.log.verbose(this.constructor.name, `     waterBodyLayer loop for: ${waterBodyLayerName} - # Features in View unfiltered: ${waterBodyFeatures.length}`);
           // Convert to polygons
           const waterBodyFeatureFiltered: FeatureCollection<Polygon> = await GisOps.filterFromClusteredEOWDataBbox(waterBodyFeatures,
             this.points, this.layers, 'EOW Points box');  // filterFromClusteredEOWDataBbox
-          this.log.verbose(theClass, `     waterBodyLayer loop for: ${waterBodyLayerName} - # Features in View FILTERED: ${waterBodyFeatureFiltered.features.length}`);
+          this.log.verbose(this.constructor.name, `     waterBodyLayer loop for: ${waterBodyLayerName} - # Features in View FILTERED: ${waterBodyFeatureFiltered.features.length}`);
           // intersectAndDraw EOWData in polygons
           this.intersectAndDraw(waterBodyLayerName, waterBodyFeatureFiltered, this.points, this.allPointsMap, this.sourceNErrorMarginPoints);
         }
       } else {
-        console.warn(theClass, `Not performating calculations or drawing charts - zoomed too far out: ${this.map.getView().getZoom()}`);
+        console.warn(this.constructor.name, `Not performating calculations or drawing charts - zoomed too far out: ${this.map.getView().getZoom()}`);
       }
-      // } else {
-      //   this.log.verbose(theClass, `not ready for calculating and drawing charts`);
     }
     const dateEnd = moment();
-    this.log.info(theClass, `Time to perform calculateIntersectionsPlot Loop: ${dateEnd.diff(dateStart)}`);
+    this.log.info(this.constructor.name, `Time to perform calculateIntersectionsPlot Loop: ${dateEnd.diff(dateStart)}`);
   }
 
   private ready(): boolean {
@@ -240,7 +232,7 @@ export class AppComponent implements OnInit, OnDestroy {
     Debug.debugFeatureCollection(points, '-> intersectAndDraw');
     const eowWaterBodyIntersections = await GeometryOps.calculateLayerIntersections(points, sourceNErrorMarginPoints, allPointsMap, waterBodyPolygons, layerName);
     Debug.debugEowWaterBodyIntersections(eowWaterBodyIntersections, '-> intersectAndDraw (int eowWaterBodyIntersections)');
-    this.eowDataCharts.plotCharts(eowWaterBodyIntersections, layerName);
+    await this.eowDataCharts.plotCharts(eowWaterBodyIntersections, layerName);
     await this.eowDataCharts.drawErrorMarginPoints(this.pointsErrorMargins);
   }
 

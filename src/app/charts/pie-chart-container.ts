@@ -6,11 +6,7 @@ import GeoJSON from 'ol/format/GeoJSON';
 import {lineString as turfLineString} from '@turf/helpers';
 import Brolog from 'brolog';
 import {ApplicationLayers} from '../layers';
-import {Subject} from 'rxjs';
-import {SideBarMessage} from '../types';
 import Feature from 'ol/Feature';
-
-const theClass = 'PieChartContainer';
 
 const debugDrawLines = true; // If true then draw line from center of pie chart to the features that the chart is for
 
@@ -49,7 +45,7 @@ export class PieChartContainer extends ChartContainer {
       };
       const format = new GeoJSON();
       const lineFeatures = allEOWDataPoints().map(p => {
-        this.log.silly(theClass, `Draw chart to EOWData line: ${JSON.stringify(point)}, ${JSON.stringify(p)}`);
+        this.log.silly(this.constructor.name, `Draw chart to EOWData line: ${JSON.stringify(point)}, ${JSON.stringify(p)}`);
         const ls = turfLineString([point, p], {name: 'FUChart to EOWData line'});
         return format.readFeature(ls, {
           dataProjection: 'EPSG:4326',
