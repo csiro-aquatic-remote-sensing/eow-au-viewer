@@ -21,7 +21,7 @@ export class PieChart {
    */
   static drawD3(preparedChartData: PieItems, elementIdOrClass: string, sizeScaleFactor: number) {
     const width = widthFactor * sizeScaleFactor;
-    const fontSize = 0.8 * sizeScaleFactor;
+    const fontSize = 0.85 * sizeScaleFactor + 'px';
     const fontWeight = 15;
     const theFUColours = PieChart.getFUColours();
 
