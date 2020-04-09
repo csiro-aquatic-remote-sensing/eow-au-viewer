@@ -167,6 +167,11 @@ This will also bring the release tag from `develop` (ie. pre-release) to `master
 In github, find the release (tag) under code.  Uncheck the `This is a pre-release` box.
 
 It is possible that more than one development `pre-production` releases had been made between production release.  The production release in github should be updated with the previous pre-production release notes so as to give a complete picture of the full extent of the changes. 
+
+Back in your local development environment, pull the latest code to deploy from:
+
+    git co master
+    git pull
   
 Deploy to the production site - https://research.csiro.au/static/eyeonwater
 
